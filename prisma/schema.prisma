@@ -1,0 +1,426 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum BookingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  COMPLETED
+  IN_PROGRESS
+  CHECKED_OUT
+  RETURNED
+  OVERDUE
+}
+
+enum UserRole {
+  STUDENT
+  LECTURER 
+  FACULTY   
+  TECHNICIAN
+  ADMIN_TECHNICIAN
+  LAB_MANAGER
+  ADMIN
+  OTHER
+}
+
+enum RegistrationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  INVITED
+  EXPIRED
+  SUSPENDED
+}
+
+enum ProjectStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  IN_PROGRESS
+  COMPLETED
+  ON_HOLD
+  CANCELLED
+  REJECTED
+}
+
+enum MaintenanceStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  PENDING
+}
+
+enum MaintenanceType {
+  PREVENTIVE
+  CORRECTIVE
+  EMERGENCY
+  ROUTINE
+  CALIBRATION
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  SHORT_ANSWER
+}
+
+enum TestStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ConsumableCategory {
+  CONSUMABLE
+  SPARE
+}
+
+enum MaintenanceOrderState {
+  NONE
+  PENDING_ORDER
+  ORDERED
+  RECEIVED
+}
+
+model User {
+  id                   String             @id @default(cuid())
+  firstName            String
+  lastName             String
+  email                String             @unique
+  password             String
+  role                 UserRole
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  phoneNumber          String?
+  lastLogin            DateTime?          @default(now())
+  resetToken           String?
+  verificationToken    String?
+  department           String?
+  position             String?
+  profileImage         String?
+  resetExpiry          DateTime?
+  status               RegistrationStatus @default(PENDING)
+  verificationExpiry   DateTime?
+  employeeId           String?            @unique
+  studentId            String?            @unique
+  yearOfStudy          Int?
+  instructorId         String?
+  associatedInstructor String?
+  affiliatedInstitution String?
+  program              String?
+  facultyId            String?
+  registrationComplete Boolean            @default(false)
+
+  // Relations
+  equipmentBookings    EquipmentBooking[]   @relation("UserEquipmentBookings")
+  createdProjects      Project[]            @relation("CreatedProjects")
+  testAttempts         SafetyTestAttempt[]  @relation("UserTestAttempts")
+  createdTests         SafetyTest[]         @relation("CreatedSafetyTests")
+  invitedMembers       ProjectMember[]      @relation("InvitedByUser")
+  projectMemberships   ProjectMember[]      @relation("ProjectMemberships")
+  faculty              Faculty?             @relation("FacultyLecturers", fields: [facultyId], references: [id])
+  assignedMaintenances Maintenance[]        @relation("AssignedMaintenances")
+  createdMaintenances  Maintenance[]        @relation("CreatedMaintenances")
+  eventParticipations  EventParticipation[] @relation("UserEventParticipations")
+  events               Event[]              @relation("UserEvents")
+  equipment            Equipment[]          @relation("UserEquipment")
+  createdEvents        Event[]              @relation("EventCreator")
+}
+
+model Event {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  startDate       DateTime
+  endDate         DateTime
+  location        String? // General location (deprecated, use venue instead)
+  venue           String? // Specific venue name or identifier
+  maxParticipants Int?
+  createdById     String
+  createdBy       User     @relation("EventCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  participants EventParticipation[] @relation("EventParticipations")
+  users        User[]               @relation("UserEvents")
+
+  // Media (kept for backward compatibility)
+  imageUrl String? @db.Text
+}
+
+model EventParticipation {
+  id       String   @id @default(cuid())
+  user     User     @relation("UserEventParticipations", fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+  event    Event    @relation("EventParticipations", fields: [eventId], references: [id], onDelete: Cascade)
+  eventId  String
+  joinedAt DateTime @default(now())
+
+  @@unique([userId, eventId])
+}
+
+model Equipment {
+  id                 String    @id @default(cuid())
+  name               String
+  description        String?
+  model              String?
+  serialNumber       String?   @unique
+  location           String?
+  status             String    @default("AVAILABLE")
+  category           String
+  manufacturer       String?
+  purchaseDate       DateTime?
+  warrantyExpiry     DateTime?
+  image              String?
+  manualUrl          String?
+  notes              String?
+  estimatedPrice     Float?
+  actualPrice        Float?
+  requiresSafetyTest Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  dailyCapacity      Int?      @default(5)
+
+  // Relations
+  bookings     EquipmentBooking[] @relation("EquipmentBookings")
+  maintenances Maintenance[]
+  consumables  Consumable[]  @relation("EquipmentConsumables")
+  users        User[]        @relation("UserEquipment")
+  safetyTests  SafetyTest[]  // Associated safety tests
+}
+
+model Consumable {
+  id              String             @id @default(cuid())
+  name            String
+  description     String?
+  category        ConsumableCategory // Use the new enum
+  unit            String // e.g., "kg", "liter", "piece"
+  currentStock    Float
+  minimumStock    Float              @default(0)
+  unitCost        Float? // Cost per unit for tracking
+  location        String?
+  supplier        String?
+  lastRestockDate DateTime?
+  expiryDate      DateTime?
+  image           String?
+  notes           String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  // Relations
+  allocations ConsumableAllocation[]
+  equipment   Equipment[]  @relation("EquipmentConsumables")
+}
+
+model ConsumableAllocation {
+  id             String            @id @default(cuid())
+  consumable     Consumable        @relation(fields: [consumableId], references: [id])
+  consumableId   String
+  userId         String
+  booking        EquipmentBooking? @relation(fields: [bookingId], references: [id])
+  bookingId      String?
+  maintenance    Maintenance?      @relation(fields: [maintenanceId], references: [id])
+  maintenanceId  String?
+  quantity       Float
+  allocatedBy    String 
+  purpose        String?
+  allocationDate DateTime          @default(now())
+  notes          String?
+  createdAt      DateTime          @default(now())
+
+  @@index([consumableId])
+  @@index([userId])
+  @@index([bookingId])
+  @@index([maintenanceId])
+}
+
+model SafetyTest {
+  id          String            @id @default(cuid())
+  title       String?
+  url         String?           // Optional URL for the test
+  testData    Json              // Stores questions, answers, and correct answers as JSON
+  passMark    Int               @default(70) // Percentage required to pass
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  
+  // Relations
+  createdById String
+  createdBy   User              @relation("CreatedSafetyTests", fields: [createdById], references: [id])
+  equipmentId String            // Required equipment association
+  equipment   Equipment         @relation(fields: [equipmentId], references: [id])
+  attempts    SafetyTestAttempt[]
+
+  @@index([createdById])
+  @@index([equipmentId])
+}
+
+model SafetyTestAttempt {
+  id          String      @id @default(cuid())
+  userId      String
+  testId      String
+  score       Float?
+  status      String      @default("ATTEMPTING") // ATTEMPTING, PASSED, FAILED
+  startedAt   DateTime    @default(now())
+  completedAt DateTime?
+  userAnswers Json        // Store user's answers as JSON
+  test        SafetyTest  @relation(fields: [testId], references: [id])
+  user        User        @relation("UserTestAttempts", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([testId])
+  @@index([userId])
+  @@index([status])
+}
+
+model EquipmentBooking {
+  id                    String                 @id @default(cuid())
+  userId                String
+  equipmentId           String
+  startDate             DateTime
+  endDate               DateTime
+  bookingHours          Int?
+  bookingTime           String?
+  status                BookingStatus          @default(APPROVED)
+  purpose               String?
+  notes                 String?
+
+  approvedBy            String?
+  approvedAt            DateTime?
+  checkedOut            Boolean                @default(false)
+  checkedIn             Boolean                @default(false)
+  checkedOutAt          DateTime?
+  checkedInAt           DateTime?
+  isReminderSent        Boolean                @default(false)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  projectId             String?
+  equipment             Equipment              @relation("EquipmentBookings", fields: [equipmentId], references: [id], onDelete: Cascade)
+  project               Project?               @relation(fields: [projectId], references: [id])
+  user                  User                   @relation("UserEquipmentBookings", fields: [userId], references: [id], onDelete: Cascade)
+  consumableAllocations ConsumableAllocation[]
+
+  @@index([userId])
+  @@index([equipmentId])
+  @@index([status])
+  @@index([startDate])
+  @@index([endDate])
+}
+
+model Faculty {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lecturers User[]   @relation("FacultyLecturers")
+
+  @@index([id])
+}
+
+model Maintenance {
+  id          String                @id @default(cuid())
+  title       String
+  description String?
+  status      MaintenanceStatus     @default(SCHEDULED)
+  type        MaintenanceType       @default(PREVENTIVE)
+  startDate   DateTime
+  endDate     DateTime?
+  notes       String?
+  priority    String?
+  orderStatus MaintenanceOrderState @default(NONE) // New field
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  equipment   Equipment @relation(fields: [equipmentId], references: [id])
+  equipmentId String
+
+  createdBy   User   @relation("CreatedMaintenances", fields: [createdById], references: [id])
+  createdById String
+
+  assignedTo   User?   @relation("AssignedMaintenances", fields: [assignedToId], references: [id])
+  assignedToId String?
+
+  consumableAllocations ConsumableAllocation[]
+
+  @@index([equipmentId])
+  @@index([createdById])
+  @@index([assignedToId])
+}
+
+model Project {
+  id                String             @id @default(cuid())
+  title             String
+  description       String?
+  status            ProjectStatus      @default(DRAFT)
+  startDate         DateTime?
+  endDate           DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  creatorId         String
+  equipmentBookings EquipmentBooking[]
+  creator           User               @relation("CreatedProjects", fields: [creatorId], references: [id])
+  documents         ProjectDocument[]
+  members           ProjectMember[]    @relation("ProjectMembers")
+
+  @@index([creatorId])
+}
+
+model ProjectMember {
+  id          String    @id @default(cuid())
+  projectId   String
+  userId      String?
+  role        String    @default("MEMBER")
+  unverifiedEmail String[]
+  joinedAt    DateTime?
+  updatedAt   DateTime  @updatedAt
+  invitedAt   DateTime? @default(now())
+  invitedById String?
+  status      String    @default("PENDING") // PENDING, ACCEPTED, REVOKED, EXPIRED
+  token       String?   @unique
+  expiresAt   DateTime?
+
+  // Relations
+  project Project @relation("ProjectMembers", fields: [projectId], references: [id], onDelete: Cascade)
+  user    User?    @relation("ProjectMemberships", fields: [userId], references: [id], onDelete: Cascade)
+
+  // Invitation related fields
+  invitedBy User? @relation("InvitedByUser", fields: [invitedById], references: [id])
+
+  // Add explicit fields for Prisma Client
+  createdAt DateTime @default(now())
+
+  // Indexes
+  @@unique([projectId, userId])
+  @@index([userId])
+  @@index([token])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([invitedById])
+  @@index([createdAt])
+  // Add explicit type for the include options
+  @@map("ProjectMember")
+}
+
+model ProjectDocument {
+  id        String   @id @default(cuid())
+  projectId String
+  url       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
