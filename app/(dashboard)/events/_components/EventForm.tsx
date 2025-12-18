@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -20,53 +19,55 @@ import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { Event } from "@prisma/client";
 
+// Form schema with proper types for form fields
 const formSchema = z.object({
   name: z.string().min(1, "Event name is required."),
   description: z.string().optional(),
   startDate: z.string().min(1, "Start date is required."),
   endDate: z.string().min(1, "End date is required."),
   venue: z.string().optional(),
-  maxParticipants: z.coerce.number().int().min(0).optional(),
+  maxParticipants: z.number().int().min(0).optional(),
   imageUrl: z.string().optional(),
   createdById: z.string().min(1, "Creator ID is required."),
 });
 
+type FormValues = z.infer<typeof formSchema>;
+
 export type EventFormValues = z.infer<typeof formSchema>;
 
 interface EventFormProps {
-  initialData?: Event;
-  onSubmit: (values: EventFormValues) => void;
-  createdById: string; // Pass the ID of the user creating/editing the event
+  initialData?: Partial<FormValues> & { id?: string };
+  onSubmit: (values: FormValues) => void;
+  createdById: string;
 }
 
 export function EventForm({ initialData, onSubmit, createdById }: EventFormProps) {
-  const form = useForm<EventFormValues>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData
-      ? {
-          ...initialData,
-          startDate: initialData.startDate.toISOString(),
-          endDate: initialData.endDate.toISOString(),
-          maxParticipants: initialData.maxParticipants || undefined,
-          imageUrl: initialData.imageUrl || undefined,
-        }
-      : {
-          name: "",
-          description: "",
-          startDate: new Date().toISOString(),
-          endDate: new Date().toISOString(),
-          venue: "",
-          maxParticipants: undefined,
-          imageUrl: "",
-          createdById: createdById,
-        },
+    defaultValues: {
+      name: initialData?.name || "",
+      description: initialData?.description || "",
+      startDate: initialData?.startDate || new Date().toISOString(),
+      endDate: initialData?.endDate || new Date().toISOString(),
+      venue: initialData?.venue || "",
+      maxParticipants: initialData?.maxParticipants,
+      imageUrl: initialData?.imageUrl || "",
+      createdById: initialData?.createdById || createdById,
+    },
   });
+
+  const handleSubmit = (data: FormValues) => {
+    const formattedData: FormValues = {
+      ...data,
+      createdById: data.createdById || createdById,
+    };
+    onSubmit(formattedData);
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
         <FormField
           control={form.control}
           name="name"
@@ -196,7 +197,16 @@ export function EventForm({ initialData, onSubmit, createdById }: EventFormProps
             <FormItem>
               <FormLabel>Max Participants</FormLabel>
               <FormControl>
-                <Input type="number" placeholder="e.g., 100" {...field} />
+                <Input 
+                  type="number" 
+                  placeholder="e.g., 100" 
+                  {...field}
+                  value={field.value ?? ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    field.onChange(value === "" ? undefined : Number(value));
+                  }}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

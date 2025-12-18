@@ -1,9 +1,9 @@
 
-import { getEventById, createEvent, updateEvent } from "@/lib/actions/event";
+import { createEvent, getEventById, updateEvent } from "@/lib/actions/event";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { EventForm, EventFormValues } from "../_components/EventForm";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 
 interface EventPageProps {
   params: {
@@ -12,7 +12,7 @@ interface EventPageProps {
 }
 
 export default async function EventPage({ params }: EventPageProps) {
-  const { id } = params;
+  const { id } = await params;
 
   const session = await getServerSession(authOptions);
   const createdById = session?.user?.id;
@@ -27,6 +27,13 @@ export default async function EventPage({ params }: EventPageProps) {
   if (!isNewEvent && !eventData) {
     return <div>Event not found.</div>;
   }
+
+  // Convert Date objects to string for initialData if eventData exists
+  const formattedEventData = eventData ? {
+    ...eventData,
+    startDate: eventData.startDate.toISOString(),
+    endDate: eventData.endDate.toISOString(),
+  } : undefined;
 
   const handleSubmit = async (data: EventFormValues) => {
     "use server";
@@ -46,7 +53,7 @@ export default async function EventPage({ params }: EventPageProps) {
       <h1 className="text-3xl font-bold tracking-tight text-gray-900">
         {isNewEvent ? "Create New Event" : "Edit Event"}
       </h1>
-      <EventForm initialData={eventData || undefined} onSubmit={handleSubmit} createdById={createdById} />
+      <EventForm initialData={formattedEventData} onSubmit={handleSubmit} createdById={createdById} />
     </div>
   );
 }

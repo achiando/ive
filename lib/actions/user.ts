@@ -3,8 +3,8 @@
 
 import { sendStatusUpdateEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
-import { RegistrationStatus, User } from "@prisma/client";
-import { unstable_cache as cache } from "next/cache";
+import { Faculty, RegistrationStatus, User } from "@prisma/client";
+import { unstable_cache as cache, revalidatePath } from 'next/cache';
 
 /**
  * Fetches all users from the database.
@@ -37,18 +37,28 @@ export const getUsers = cache(
  * Caches the result for 1 hour.
  */
 export const getUserById = cache(
-  async (id: string) => {
-    const user = await prisma.user.findUnique({
-      where: { id },
-      include: {
-        faculty: true,
-      },
-    });
-    return user;
+  async (id: string | undefined | null) => {
+    if (!id) {
+      console.error('No user ID provided to getUserById');
+      return null;
+    }
+    
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id },
+        include: {
+          faculty: true,
+        },
+      });
+      return user;
+    } catch (error) {
+      console.error('Error fetching user by ID:', error);
+      return null;
+    }
   },
   ["user_by_id"],
   { revalidate: 3600 }
-);
+) as (id: string | undefined | null) => Promise<(User & { faculty: Faculty | null }) | null>;
 
 /**
  * Calculates the number of new users per month.
@@ -220,6 +230,8 @@ export const getUserStatusCounts = cache(
       PENDING: 0,
       APPROVED: 0,
       REJECTED: 0,
+      INVITED: 0,
+      EXPIRED: 0,
       SUSPENDED: 0,
     };
 
@@ -240,8 +252,12 @@ export async function getUserSelections(userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     include: {
-      events: { include: { event: true } },
-      equipment: { include: { equipment: true } },
+      eventParticipations: { 
+        include: { 
+          event: true 
+        } 
+      },
+      equipment: true, // Direct relation to equipment
     },
   });
 
@@ -249,9 +265,27 @@ export async function getUserSelections(userId: string) {
     return { events: [], equipment: [] };
   }
 
+  // Type the participation object
+  type Participation = {
+    event: {
+      id: string;
+      name: string;
+      description: string | null;
+      startDate: Date;
+      endDate: Date;
+      location: string | null;
+      venue: string | null;
+      maxParticipants: number | null;
+      createdById: string;
+      imageUrl: string | null;
+      createdAt: Date;
+      updatedAt: Date;
+    };
+  };
+
   return {
-    events: user.events.map((p) => p.event),
-    equipment: user.equipment.map((b) => b.equipment),
+    events: (user as any).eventParticipations?.map((p: Participation) => p.event) || [],
+    equipment: user.equipment || [],
   };
 }
 
@@ -293,7 +327,7 @@ export async function updateUserSelections(
       }
     });
 
-    revalidatePath(`/status/pending`);
+    revalidatePath(`/pending`);
     return { success: true, message: "Selections updated successfully." };
   } catch (error) {
     console.error("Error updating user selections:", error);

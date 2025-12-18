@@ -1,8 +1,8 @@
 
-import { getUserById, createUser, updateUser } from "@/lib/actions/user";
+import { createUser, getUserById, updateUser } from "@/lib/actions/user";
+import { hash } from "bcryptjs";
 import { redirect } from "next/navigation";
 import { UserForm, UserFormValues } from "../_components/UserForm";
-import { hash } from "bcryptjs";
 
 interface UserPageProps {
   params: {
@@ -11,7 +11,8 @@ interface UserPageProps {
 }
 
 export default async function UserPage({ params }: UserPageProps) {
-  const { id } = params;
+  const { id } = await params;
+  
 
   const isNewUser = id === 'new';
   const userData = isNewUser ? null : await getUserById(id);
