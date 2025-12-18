@@ -37,13 +37,13 @@ export function useSession(required = false) {
           setUser(data.user);
         } else if (required) {
           const callbackUrl = encodeURIComponent(window.location.href);
-          router.push(`/auth/signin?callbackUrl=${callbackUrl}`);
+          router.push(`/login?callbackUrl=${callbackUrl}`);
         }
       } catch (error) {
         console.error('Session check failed:', error);
         if (required) {
           const callbackUrl = encodeURIComponent(window.location.href);
-          router.push(`/auth/signin?callbackUrl=${callbackUrl}`);
+          router.push(`/login?callbackUrl=${callbackUrl}`);
         }
       } finally {
         setLoading(false);

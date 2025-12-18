@@ -1,15 +1,15 @@
 
-import DashboardClientLayout from "@/components/main/DashboardClientLayout";
+import { Sidebar } from "@/components/main/Sidebar";
 import { ReactNode } from "react";
 
-interface DashboardLayoutProps {
-    children: ReactNode;
-}
 
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
+export default function DashboardLayout({ children }: { children: ReactNode }) {
     return (
-        <DashboardClientLayout>
-            {children}
-        </DashboardClientLayout>
+       <div className="flex h-screen bg-gray-50 overflow-hidden">
+           <Sidebar />
+           <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+             {children}
+           </main>
+       </div>
     );
 }

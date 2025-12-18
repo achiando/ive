@@ -9,79 +9,22 @@ import { EquipmentBooking } from '@prisma/client'; // Keep only necessary Prisma
 import { format } from 'date-fns';
 import { AlertCircle, ArrowLeft, Calendar, CheckCircle, Clock, Wrench } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import { useState } from 'react';
 
 interface EquipmentViewProps {
   equipment: EquipmentWithRelations;
   userRole: string; // UserRole from Prisma is an enum, but here it's used as a string
   onUpdateStatus: (id: string, status: EquipmentStatus) => Promise<any>; // Prop for status update
-  fetchUserProjects: () => Promise<Project[]>; // New action prop to fetch user projects
 }
 
-export function EquipmentView({ equipment, userRole, onUpdateStatus, fetchUserProjects }: EquipmentViewProps) {
+export function EquipmentView({ equipment, userRole, onUpdateStatus }: EquipmentViewProps) {
   const router = useRouter();
-  const [isMaintenanceDialogOpen, setIsMaintenanceDialogOpen] = useState(false);
 
-  // --- Booking dialog state ---
-  const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [isProjectSelectOpen, setIsProjectSelectOpen] = useState(false);
-  const [showNoProjectsDialog, setShowNoProjectsDialog] = useState(false);
+
 
   // New state to store fetched projects
   const [projects, setProjects] = useState<Project[]>([]);
-  const [isLoadingProjects, setIsLoadingProjects] = useState(false);
 
-  // Removed useEffect for loading equipment details, as it's passed as a prop
-
-  const hasApprovedProjects = useMemo(() => {
-    return Array.isArray(projects) && projects.length > 0;
-  }, [projects]);
-
-  const handleBookEquipment = useCallback(async () => {
-    setIsLoadingProjects(true);
-    try {
-      const fetchedProjects = await fetchUserProjects();
-      setProjects(fetchedProjects);
-      if (fetchedProjects.length === 0) {
-        setShowNoProjectsDialog(true);
-      } else {
-        setIsProjectSelectOpen(true);
-      }
-    } catch (error) {
-      console.error("Failed to fetch user projects:", error);
-      // Optionally show an error toast
-    } finally {
-      setIsLoadingProjects(false);
-    }
-  }, [fetchUserProjects]);
-
-  const handleProjectSelected = (project: Project) => {
-    setSelectedProject(project);
-    setIsProjectSelectOpen(false);
-    setIsBookingDialogOpen(true);
-  };
-
-  const handleProjectSelectDialogClose = (open: boolean) => {
-    setIsProjectSelectOpen(open);
-    if (!open && !selectedProject) {
-      // Optionally reset
-    }
-  };
-
-  const handleBookingDialogClose = () => {
-    setIsBookingDialogOpen(false);
-    setSelectedProject(null);
-  };
-
-  const handleNoProjectsDialogClose = useCallback(() => {
-    setShowNoProjectsDialog(false);
-  }, []);
-
-  const handleMaintenanceSuccess = () => {
-    // toast.success('Maintenance scheduled successfully'); // Removed toast
-    setIsMaintenanceDialogOpen(false);
-  };
 
   const getStatusBadge = (status?: EquipmentStatus) => { // Changed type to EquipmentStatus
     // Default to outline variant if status is not provided
@@ -308,7 +251,7 @@ export function EquipmentView({ equipment, userRole, onUpdateStatus, fetchUserPr
                   <Wrench className="mr-2 h-4 w-4" />
                   Log Maintenance
                 </Button>
-                <Button size="sm" onClick={() => setIsMaintenanceDialogOpen(true)}>
+                <Button size="sm" onClick={() => console.log('Mark for Maintenance')}>
                   <Wrench className="mr-2 h-4 w-4" />
                   Mark for Maintenance
                 </Button>
@@ -356,7 +299,7 @@ export function EquipmentView({ equipment, userRole, onUpdateStatus, fetchUserPr
                 </div>
               )}
               
-              <Button className="w-full mt-4" onClick={handleBookEquipment}>
+              <Button className="w-full mt-4" >
                 <Calendar className="mr-2 h-4 w-4" />
                 Book Equipment
               </Button>

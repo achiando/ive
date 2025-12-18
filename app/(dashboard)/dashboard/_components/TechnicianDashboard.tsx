@@ -1,7 +1,7 @@
+import { AlertTriangle, CheckCircle, Clock, Wrench } from 'lucide-react';
 import { DashboardStats } from './DashboardStats';
 import { MaintenanceAlerts } from './MaintenanceAlerts';
 import { UpcomingEvents } from './UpcomingEvents';
-import { Wrench, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
 
 interface TechnicianDashboardProps {
   dashboardData?: {
@@ -15,10 +15,9 @@ interface TechnicianDashboardProps {
     upcomingMaintenance?: any[];
   };
   isLoading: boolean;
-  currentUserId: string;
 }
 
-export function TechnicianDashboard({ dashboardData, isLoading, currentUserId }: TechnicianDashboardProps) {
+export function TechnicianDashboard({ dashboardData, isLoading }: TechnicianDashboardProps) {
   // Safely get values with defaults
   const stats = dashboardData?.stats || {};
   const recentMaintenance = dashboardData?.recentMaintenance || [];
@@ -28,31 +27,31 @@ export function TechnicianDashboard({ dashboardData, isLoading, currentUserId }:
     <div className="space-y-6">
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <DashboardStats 
-          title="Assigned Maintenance" 
-          value={stats?.assignedMaintenance?.toString() || '0'} 
-          description="Tasks assigned to you" 
+        <DashboardStats
+          title="Assigned Maintenance"
+          value={stats?.assignedMaintenance?.toString() || '0'}
+          description="Tasks assigned to you"
           icon={<Wrench className="h-4 w-4 text-muted-foreground" />}
           isLoading={isLoading}
         />
-        <DashboardStats 
-          title="Pending Tasks" 
-          value={stats?.pendingMaintenance?.toString() || '0'} 
-          description="Require attention" 
+        <DashboardStats
+          title="Pending Tasks"
+          value={stats?.pendingMaintenance?.toString() || '0'}
+          description="Require attention"
           icon={<AlertTriangle className="h-4 w-4 text-muted-foreground" />}
           isLoading={isLoading}
         />
-        <DashboardStats 
-          title="In Progress" 
-          value={stats?.inProgressMaintenance?.toString() || '0'} 
-          description="Currently working on" 
+        <DashboardStats
+          title="In Progress"
+          value={stats?.inProgressMaintenance?.toString() || '0'}
+          description="Currently working on"
           icon={<Clock className="h-4 w-4 text-muted-foreground" />}
           isLoading={isLoading}
         />
-        <DashboardStats 
-          title="Completed This Month" 
-          value={stats?.completedMaintenance?.toString() || '0'} 
-          description="Tasks completed" 
+        <DashboardStats
+          title="Completed This Month"
+          value={stats?.completedMaintenance?.toString() || '0'}
+          description="Tasks completed"
           icon={<CheckCircle className="h-4 w-4 text-muted-foreground" />}
           isLoading={isLoading}
         />
@@ -61,24 +60,31 @@ export function TechnicianDashboard({ dashboardData, isLoading, currentUserId }:
       {/* Main Content */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         {/* Recent Maintenance */}
-        <MaintenanceAlerts 
-            maintenanceItems={recentMaintenance} 
-            isLoading={isLoading}
-            showAssignedOnly={true}
-          />
-          <UpcomingEvents 
-            events={upcomingMaintenance.map(maintenance => ({
-              id: maintenance.id,
-              name: maintenance.equipment?.name || 'Maintenance',
-              startDate: maintenance.scheduledDate,
-              endDate: maintenance.dueDate || new Date(new Date(maintenance.scheduledDate).getTime() + 60 * 60 * 1000), // Default 1 hour duration
-              venue: maintenance.location || 'Lab',
-              description: maintenance.notes || 'Scheduled maintenance',
-              createdById: maintenance.assignedToId || '',
-              status: maintenance.status
-            }))} 
-            isLoading={isLoading}
-          />
+        <MaintenanceAlerts
+          maintenanceItems={recentMaintenance}
+          isLoading={isLoading}
+          showAssignedOnly={true}
+        />
+        <UpcomingEvents
+          events={upcomingMaintenance.map(maintenance => ({
+            id: maintenance.id,
+            name: maintenance.equipment?.name || 'Maintenance',
+            startDate: maintenance.scheduledDate,
+            endDate: maintenance.dueDate || new Date(new Date(maintenance.scheduledDate).getTime() + 60 * 60 * 1000),
+            venue: maintenance.location || 'Lab',
+            description: maintenance.notes || 'Scheduled maintenance',
+            createdById: maintenance.assignedToId || '',
+            status: maintenance.status,
+            location: maintenance.location || 'Lab',
+            maxParticipants: null,
+            createdAt: maintenance.createdAt || new Date(),
+            updatedAt: maintenance.updatedAt || new Date(),
+            _count: {
+              participants: 0
+            }
+          }))}
+          isLoading={isLoading}
+        />
       </div>
     </div>
   );

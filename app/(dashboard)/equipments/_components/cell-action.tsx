@@ -117,7 +117,10 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
           )}
           {!isMaintenance && (
             <DropdownMenuItem 
-              onClick={() => handleStatusUpdate(EquipmentStatus.MAINTENANCE)}
+              onClick={() => {
+                handleStatusUpdate(EquipmentStatus.MAINTENANCE);
+                window.location.href = `/maintenance/new?equipmentId=${data.id}`;
+              }}
               className="text-yellow-600 hover:!text-yellow-600"
             >
               <span className="flex items-center">
@@ -128,8 +131,10 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
           
           <DropdownMenuSeparator />
           <DropdownMenuItem 
-            onClick={() => setShowDeleteDialog(true)}
-            className="text-red-600 hover:!text-red-600"
+            onClick={() => {
+              window.location.href = `/maintenance/new?equipmentId=${data.id}`;
+            }}
+            className="text-purple-600 hover:!text-purple-600"
           >
             <span className="flex items-center">
               <Trash2 className="h-4 w-4 mr-2" /> Delete

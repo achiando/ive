@@ -24,33 +24,18 @@ export default async function EquipmentViewPage({
     );
   }
 
+  let equipmentData;
+  let error = null;
+
   try {
-    const equipmentData = await getEquipmentById(id);
+    equipmentData = await getEquipmentById(id);
+  } catch (err) {
+    error = err;
+    console.error('Error fetching equipment:', err);
+  }
 
-    if (!equipmentData) {
-      return (
-        <div className="text-center">
-          <p className="text-lg font-semibold">Equipment not found</p>
-          <Button asChild variant="link">
-            <Link href="/equipments">Go back to all equipments</Link>
-          </Button>
-        </div>
-      );
-    }
-
-    const handleUpdateStatus = async (equipmentId: string, status: string) => {
-      "use server";
-      const result = await updateEquipmentStatus(equipmentId, status);
-      if (!result.success) {
-        console.error("Failed to update equipment status:", result.message);
-        // Optionally revalidate path or handle error more gracefully
-      }
-      redirect(`/equipments/${equipmentId}/view`); // Revalidate and refresh the page
-    };
-
-    return <EquipmentView equipment={equipmentData as EquipmentWithRelations} onUpdateStatus={handleUpdateStatus} userRole="ADMIN" fetchUserProjects={fetchUserProjects} />; // Pass the new action
-  } catch (error) {
-    console.error('Error fetching equipment:', error);
+  // Handle errors outside try/catch
+  if (error) {
     return (
       <div className="text-center">
         <p className="text-lg font-semibold">Error loading equipment</p>
@@ -60,4 +45,33 @@ export default async function EquipmentViewPage({
       </div>
     );
   }
+
+  if (!equipmentData) {
+    return (
+      <div className="text-center">
+        <p className="text-lg font-semibold">Equipment not found</p>
+        <Button asChild variant="link">
+          <Link href="/equipments">Go back to all equipments</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  const handleUpdateStatus = async (equipmentId: string, status: string) => {
+    "use server";
+    const result = await updateEquipmentStatus(equipmentId, status);
+    if (!result.success) {
+      console.error("Failed to update equipment status:", result.message);
+    }
+    redirect(`/equipments/${equipmentId}/view`);
+  };
+
+  return (
+    <EquipmentView
+      equipment={equipmentData as EquipmentWithRelations}
+      onUpdateStatus={handleUpdateStatus}
+      userRole="ADMIN"
+      fetchUserProjects={fetchUserProjects}
+    />
+  );
 }

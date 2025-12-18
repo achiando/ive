@@ -14,3 +14,6 @@
 - Implemented consumable bulk upload (server action, bulk upload page).
 - Implemented consumable analytics (server action, analytics dashboard component, analytics page).
 - Updated equipment bulk upload sample CSV to include valid `EquipmentStatus` options.
+- Implemented maintenance management (CRUD server actions, form, add/edit page, listing page with table, columns, cell actions, and report page).
+- Reviewed `MaintenanceForm.tsx` and confirmed it meets requirements for equipment selection and consumable allocation.
+- Fixed type errors in `MaintenanceForm.tsx` for `equipmentList` and `technicianList` by adjusting state types to match partial data returned by actions.

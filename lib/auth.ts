@@ -73,15 +73,15 @@ export const authOptions: NextAuthOptions = {
   },
 
   pages: {
-    signIn: "/auth/signin",
+    signIn: "/auth/login",
     error: "/auth/error",
   },
 // In your auth.ts file, update the JWT configuration
  jwt: {
     secret: process.env.NEXTAUTH_SECRET,
-    encryption: true,
-    signingKey: '{"kty":"oct","kid":"--","alg":"HS256","k":"--"}',
-    encryptionKey: '{"kty":"oct","kid":"--","alg":"A128CBC-HS256","k":"--"}',
+    // encryption: true,
+    // signingKey: '{"kty":"oct","kid":"--","alg":"HS256","k":"--"}',
+    // encryptionKey: '{"kty":"oct","kid":"--","alg":"A128CBC-HS256","k":"--"}',
   },
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === "development",

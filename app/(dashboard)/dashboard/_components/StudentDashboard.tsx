@@ -1,7 +1,6 @@
+import { AlertCircle, Calendar, CheckCircle, Clock } from 'lucide-react';
 import { DashboardStats } from './DashboardStats';
 import { RecentBookings } from './RecentBookings';
-import { UpcomingEvents } from './UpcomingEvents';
-import { Calendar, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface StudentDashboardProps {
   dashboardData: {
@@ -24,7 +23,9 @@ export function StudentDashboard({ dashboardData, isLoading }: StudentDashboardP
       {/* Welcome Message */}
       <div className="rounded-lg bg-primary/10 p-6">
         <h2 className="text-2xl font-bold tracking-tight">Welcome back!</h2>
-        <p className="text-muted-foreground">Here's what's happening with your equipment bookings and lab access.</p>
+        <p className="text-muted-foreground">
+          Here&apos;s what&apos;s happening with your equipment bookings and lab access.
+        </p>
       </div>
 
       {/* Stats Grid */}
