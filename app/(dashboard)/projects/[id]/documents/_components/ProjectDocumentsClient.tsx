@@ -105,7 +105,7 @@ export function ProjectDocumentsClient({ project, initialDocuments, userRole }: 
                 <Button 
                   onClick={handleAddDocument} 
                   disabled={isAddingDocument || !newDocumentUrl.trim()}
-                  className="w-full"
+                
                 >
                   {isAddingDocument ? (
                     <>
@@ -114,7 +114,7 @@ export function ProjectDocumentsClient({ project, initialDocuments, userRole }: 
                     </>
                   ) : 'Upload Document'}
                 </Button>
-                <Button variant="outline" onClick={() => router.push(`/projects/${project.id}/members`)}>
+                <Button variant="outline" onClick={() => router.push(`/projects/${project.id}/members`)} >
                   Add Team Members
                 </Button>
                 </div>

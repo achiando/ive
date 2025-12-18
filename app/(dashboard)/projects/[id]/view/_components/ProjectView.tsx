@@ -1,25 +1,23 @@
 "use client";
 
-import { useRouter, usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { UserRole, Project as BaseProject } from '@prisma/client';
-import { ProjectWithDetails } from '@/types/project';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ProjectWithDetails } from '@/types/project';
+import { Project as BaseProject, ProjectMember, UserRole } from '@prisma/client';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format, parseISO } from 'date-fns';
-import { CellAction as ProjectActions } from '../../_components/cell-action'; // Re-using CellAction for project actions
-import { DocumentCard } from '../documents/_components/DocumentCard'; // Import DocumentCard
-import { MemberCard } from '../members/_components/MemberCard'; // Import MemberCard
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { generateQRCodeDataURL } from '@/lib/qr-code';
-import { Download, File as FileIcon, ImageIcon, Trash2, Video, Users } from 'lucide-react';
-import Image from 'next/image';
+import { File as FileIcon, Users } from 'lucide-react';
 import { toast } from 'sonner';
-import { deleteProjectDocument, getProjectMembers, updateProjectMemberStatus, removeProjectMember } from '@/lib/actions/project';
+import { CellAction } from '../../../_components/cell-action';
+import { DocumentCard } from '../../documents/_components/DocumentCard';
+import { MemberCard } from '../../members/_components/MemberCard';
 
 type Project = BaseProject & {
   createdAt: string | Date;
@@ -38,20 +36,15 @@ interface ProjectDetailsProps {
 interface ProjectDocument {
   id: string;
   url: string;
-  fileType?: string;
+  fileType: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  projectId: string;
 }
 
-const getFileIcon = (url: string) => {
-  const extension = url.split('.').pop()?.toLowerCase();
-  const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(extension || '');
-  const isVideo = ['mp4', 'webm', 'ogg'].includes(extension || '');
-  
-  if (isImage) return <ImageIcon className="w-6 h-6 text-blue-500" />;
-  if (isVideo) return <Video className="w-6 h-6 text-red-500" />;
-  return <FileIcon className="w-6 h-6 text-gray-500" />;
-};
 
-export function ProjectView({ project, userRole, onAction, backPath = '/projects' }: ProjectDetailsProps) {
+
+export function ProjectView({ project, userRole, backPath = '/projects' }: ProjectDetailsProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [activeTab, setActiveTab] = useState('overview');
@@ -62,24 +55,7 @@ export function ProjectView({ project, userRole, onAction, backPath = '/projects
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [teamMembers, setTeamMembers] = useState<Array<{ name: string; regNumber: string }>>([]);
 
-  useEffect(() => {
-    // Load team members from localStorage (as per user's initial request, though this might change)
-    const loadTeamMembers = () => {
-      try {
-        const storedTeamData = localStorage.getItem('projectTeamMembers');
-        if (storedTeamData) {
-          const allTeamData = JSON.parse(storedTeamData);
-          const projectTeamData = allTeamData.find((data: any) => data.projectId === project.id);
-          if (projectTeamData && projectTeamData.teamMembers) {
-            setTeamMembers(projectTeamData.teamMembers);
-          }
-        }
-      } catch (err) {
-        console.error('Error loading team members:', err);
-      }
-    };
-    loadTeamMembers();
-  }, [project.id]);
+
 
   // Generate QR code when dialog opens
   const generateQrCode = async () => {
@@ -327,7 +303,7 @@ export function ProjectView({ project, userRole, onAction, backPath = '/projects
     <div className="space-y-6">
       <div className="flex justify-between items-start">
         <div className="flex space-x-2">
-          <ProjectActions 
+          <CellAction 
             data={project} 
             // onAction={onAction} // CellAction handles its own actions
             // variant="outline"

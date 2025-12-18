@@ -11,6 +11,7 @@ const publicRoutes = [
     '/auth/forgot-password',
     '/auth/reset-password',
     '/api/auth',
+    'invite/*'
 ];
 
 // Routes accessible to users with PENDING status

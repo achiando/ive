@@ -80,7 +80,7 @@ export async function fetchUserProjects(): Promise<ProjectWithDetails[]> {
   return projects;
 }
 
-export async function getProjectById(projectId: string): Promise<ProjectWithDetails | null> {
+export async function getProjectById(projectId: string, publicView: boolean = false): Promise<ProjectWithDetails | null> {
   if (!projectId || typeof projectId !== 'string') {
     console.error('Invalid projectId provided to getProjectById:', projectId);
     return null;
@@ -88,10 +88,6 @@ export async function getProjectById(projectId: string): Promise<ProjectWithDeta
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
   const userRole = session?.user?.role;
-
-  if (!userId) {
-    throw new Error("User not authenticated.");
-  }
 
   const project = await prisma.project.findUnique({
     where: { id: projectId },
@@ -108,6 +104,14 @@ export async function getProjectById(projectId: string): Promise<ProjectWithDeta
 
   if (!project) {
     return null;
+  }
+
+  if (publicView) {
+    return project; // Allow public viewing without further authorization checks
+  }
+
+  if (!userId) {
+    throw new Error("User not authenticated.");
   }
 
   // Check if the user is authorized to view this project
@@ -435,6 +439,20 @@ export async function joinProjectWithToken(token: string, userId: string): Promi
 
   if (projectMember.userId) {
     throw new Error("This invite link has already been used.");
+  }
+
+  // Check the joining user's registration status
+  const joiningUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { status: true },
+  });
+
+  if (!joiningUser) {
+    throw new Error("Joining user not found.");
+  }
+
+  if (joiningUser.status !== RegistrationStatus.APPROVED && joiningUser.status !== RegistrationStatus.PENDING) {
+    throw new Error(`Your account status is '${joiningUser.status}'. Please contact support for assistance.`);
   }
 
   // Check if the user is already a member of this project

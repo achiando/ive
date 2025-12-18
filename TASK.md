@@ -49,3 +49,7 @@
 - **Refactored ProjectForm Submission:**
     - Created `app/(dashboard)/projects/_actions.ts` to wrap `createProject` and `updateProject` server actions.
     - Modified `app/(dashboard)/projects/_components/ProjectForm.tsx` to call these new server actions, ensuring proper server-side redirection after form submission.
+- **Enhanced Project Invite Functionality:**
+    - Modified `app/(dashboard)/projects/[id]/members/_components/ProjectMembersClient.tsx` to display generated invite links and their corresponding QR codes in a dialog.
+    - Updated `joinProjectWithToken` in `lib/actions/project.ts` to include a check for the joining user's `RegistrationStatus`. Users with `APPROVED` or `PENDING` status can proceed; others receive an error message to contact support.
+    - Confirmed `app/(public)/invite/[projectId]/page.tsx` correctly handles project details display, login redirection, and error feedback from `joinProjectWithToken`.
