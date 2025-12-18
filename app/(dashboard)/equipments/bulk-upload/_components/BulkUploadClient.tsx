@@ -122,6 +122,7 @@ export function BulkUploadClient() {
       "name", "description", "category", "model", "serialNumber",
       "location", "status", "dailyCapacity", "imageUrl", "manualUrl"
     ];
+    const validStatuses = Object.values(EquipmentStatus).join(', ');
     const sampleData = [
       {
         name: "Microscope X100",
@@ -130,7 +131,7 @@ export function BulkUploadClient() {
         model: "MX100",
         serialNumber: "SN-MX100-001",
         location: "Lab 101",
-        status: "AVAILABLE",
+        status: `AVAILABLE (Options: ${validStatuses})`,
         dailyCapacity: 1,
         imageUrl: "https://example.com/microscope.jpg",
         manualUrl: "https://example.com/microscope_manual.pdf"
@@ -142,7 +143,7 @@ export function BulkUploadClient() {
         model: "3DP-PRO",
         serialNumber: "SN-3DP-PRO-002",
         location: "Workshop",
-        status: "IN_USE",
+        status: `IN_USE (Options: ${validStatuses})`,
         dailyCapacity: 1,
         imageUrl: "",
         manualUrl: ""

@@ -13,3 +13,4 @@
 - Implemented consumable allocations management (CRUD actions, listing page with table columns, cell actions).
 - Implemented consumable bulk upload (server action, bulk upload page).
 - Implemented consumable analytics (server action, analytics dashboard component, analytics page).
+- Updated equipment bulk upload sample CSV to include valid `EquipmentStatus` options.
