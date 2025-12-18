@@ -3,11 +3,12 @@ import {
   EquipmentBooking as PrismaEquipmentBooking,
   Maintenance as PrismaMaintenance,
   Project as PrismaProject,
-  ProjectMember as PrismaProjectMember, // Ensure this is imported
+  ProjectMember as PrismaProjectMember,
+  User as PrismaUser,
+  UserRole, // Ensure this is imported
 } from '@prisma/client';
 
 // Export UserRole directly from Prisma client
-export { PrismaUserRole as UserRole };
 
 // EquipmentStatus enum for frontend consistency and validation
 export enum EquipmentStatus {

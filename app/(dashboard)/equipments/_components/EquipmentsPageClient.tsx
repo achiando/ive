@@ -130,6 +130,7 @@ export function EquipmentsPageClient({ equipments }: EquipmentsPageClientProps) 
         </div>
         <div className="flex items-center gap-2">
           {canAddEquipment && (
+            <>
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
@@ -149,6 +150,12 @@ export function EquipmentsPageClient({ equipments }: EquipmentsPageClientProps) 
                 </div>
               </DialogContent>
             </Dialog>
+            
+                <Button variant="outline" onClick={() => router.push('/equipments/bulk-upload')}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Bulk Upload
+                </Button>
+            </>
           )}
           <div className="flex items-center space-x-2">
             <Button

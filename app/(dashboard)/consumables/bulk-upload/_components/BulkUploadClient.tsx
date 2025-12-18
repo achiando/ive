@@ -9,9 +9,8 @@ import { useState, useCallback, ChangeEvent } from "react";
 import { useDropzone } from "react-dropzone";
 import * as XLSX from "xlsx";
 import Papa from "papaparse";
-import { EquipmentFormValues } from "../../_components/EquipmentForm"; // Assuming this path is correct
-import { bulkCreateEquipment, BulkEquipmentInput } from "@/lib/actions/bulk-equipment"; // Import the server action
-import { EquipmentStatus } from "@/types/equipment"; // Import EquipmentStatus enum
+import { bulkCreateConsumable, BulkConsumableInput } from "@/lib/actions/bulk-consumable"; // Import the server action
+import { ConsumableCategory } from "@prisma/client";
 
 interface UploadResult {
   fileName: string;
@@ -78,21 +77,22 @@ export function BulkUploadClient() {
         return;
       }
 
-      // Convert parsed data to BulkEquipmentInput[]
-      const equipmentToUpload: BulkEquipmentInput[] = parsedData.map((item: any) => ({
+      // Convert parsed data to BulkConsumableInput[]
+      const consumablesToUpload: BulkConsumableInput[] = parsedData.map((item: any) => ({
         name: item.name,
         description: item.description,
-        category: item.category,
-        model: item.model,
-        serialNumber: item.serialNumber,
+        category: item.category as ConsumableCategory, // Ensure category is valid enum
+        unit: item.unit,
+        currentStock: parseFloat(item.currentStock),
+        minimumStock: parseFloat(item.minimumStock),
+        unitCost: item.unitCost ? parseFloat(item.unitCost) : undefined,
         location: item.location,
-        status: item.status, // Ensure this matches EquipmentStatus enum values
-        dailyCapacity: parseInt(item.dailyCapacity),
-        imageUrl: item.imageUrl,
-        manualUrl: item.manualUrl,
+        supplier: item.supplier,
+        notes: item.notes,
+        image: item.image,
       }));
 
-      const result = await bulkCreateEquipment(equipmentToUpload);
+      const result = await bulkCreateConsumable(consumablesToUpload);
 
       if (result.failureCount > 0) {
         setUploadResult({
@@ -105,7 +105,7 @@ export function BulkUploadClient() {
         setUploadResult({
           fileName: file.name,
           status: "success",
-          message: `Successfully uploaded ${result.successCount} equipment items.`,
+          message: `Successfully uploaded ${result.successCount} consumable items.`,
         });
       }
 
@@ -119,33 +119,35 @@ export function BulkUploadClient() {
 
   const handleDownloadSample = () => {
     const headers = [
-      "name", "description", "category", "model", "serialNumber",
-      "location", "status", "dailyCapacity", "imageUrl", "manualUrl"
+      "name", "description", "category", "unit", "currentStock",
+      "minimumStock", "unitCost", "location", "supplier", "notes", "image"
     ];
     const sampleData = [
       {
-        name: "Microscope X100",
-        description: "High-resolution optical microscope",
-        category: "Lab Equipment",
-        model: "MX100",
-        serialNumber: "SN-MX100-001",
-        location: "Lab 101",
-        status: "AVAILABLE",
-        dailyCapacity: 1,
-        imageUrl: "https://example.com/microscope.jpg",
-        manualUrl: "https://example.com/microscope_manual.pdf"
+        name: "9V Battery",
+        description: "Alkaline 9V battery for general use",
+        category: "CONSUMABLE",
+        unit: "pcs",
+        currentStock: 100,
+        minimumStock: 20,
+        unitCost: 1.50,
+        location: "Shelf B3",
+        supplier: "Electronics Inc.",
+        notes: "Good for multimeters and small circuits",
+        image: "https://example.com/9v_battery.jpg"
       },
       {
-        name: "3D Printer Pro",
-        description: "Industrial grade 3D printer",
-        category: "Tools",
-        model: "3DP-PRO",
-        serialNumber: "SN-3DP-PRO-002",
-        location: "Workshop",
-        status: "IN_USE",
-        dailyCapacity: 1,
-        imageUrl: "",
-        manualUrl: ""
+        name: "Resistor Kit",
+        description: "Assorted resistor values, 1/4W",
+        category: "SPARE",
+        unit: "kits",
+        currentStock: 10,
+        minimumStock: 2,
+        unitCost: 15.00,
+        location: "Drawer 5",
+        supplier: "Component Co.",
+        notes: "",
+        image: ""
       }
     ];
 
@@ -153,7 +155,7 @@ export function BulkUploadClient() {
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.setAttribute('download', 'equipment_sample.csv');
+    link.setAttribute('download', 'consumable_sample.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -162,8 +164,8 @@ export function BulkUploadClient() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Bulk Upload Equipment</CardTitle>
-        <CardDescription>Upload a CSV or Excel file to add multiple equipment entries.</CardDescription>
+        <CardTitle>Bulk Upload Consumables</CardTitle>
+        <CardDescription>Upload a CSV or Excel file to add multiple consumable entries.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div

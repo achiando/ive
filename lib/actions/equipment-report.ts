@@ -1,9 +1,9 @@
 // lib/actions/equipment-report.ts
 'use server';
 
-import prisma from '@/lib/prisma';
-import { EquipmentStatus, BookingStatus, MaintenanceStatus, MaintenanceType } from '@prisma/client';
+
 import { endOfDay, startOfDay } from 'date-fns';
+import { prisma } from '../prisma';
 
 interface EquipmentReportData {
   totalEquipment: number;
