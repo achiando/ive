@@ -1,21 +1,18 @@
 "use client";
 
-import { useState } from 'react';
-import { ProjectWithDetails } from '@/types/project';
-import { UserRole, ProjectStatus } from '@prisma/client';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { format, isFuture } from 'date-fns';
-import { Calendar, Clock, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-// import { BookingDialog } from '@/components/booking/BookingDialog'; // Not yet implemented
-// import { StatusBadge } from './StatusBadge'; // Not yet implemented
-import { ProjectActions } from './cell-action'; // Re-using cell-action for dropdown
-import { useSession } from 'next-auth/react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { useSession } from '@/hooks/useSession';
+import { ProjectWithDetails } from '@/types/project';
+import { ProjectStatus } from '@prisma/client';
+import { format } from 'date-fns';
+import { Plus } from 'lucide-react';
+import { useState } from 'react';
+import { CellAction as ProjectActions } from './cell-action'; // Re-using cell-action for dropdown
 
 interface ProjectCardProps {
   project: ProjectWithDetails;
-  userRole: UserRole;
   onAction: (action: string, project: ProjectWithDetails) => void;
   onClick?: () => void;
   className?: string;
@@ -33,11 +30,8 @@ const StatusBadge = ({ status }: { status: ProjectStatus }) => {
       case 'CANCELLED':
         return 'destructive';
       case 'IN_PROGRESS':
-        return 'outline';
       case 'COMPLETED':
-        return 'success'; // Assuming a 'success' variant exists or can be added
       case 'ON_HOLD':
-        return 'warning'; // Assuming a 'warning' variant exists or can be added
       case 'DRAFT':
       default:
         return 'outline';
@@ -58,12 +52,11 @@ const StatusBadge = ({ status }: { status: ProjectStatus }) => {
 
 export function ProjectCard({ 
   project, 
-  userRole, 
   onAction, 
   onClick,
   className = '' 
 }: ProjectCardProps) {
-  const { data: session } = useSession();
+  const { isStudent, isLecturer, isFaculty } = useSession();
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
   const membersCount = project.members?.length || 0;
   
@@ -94,11 +87,7 @@ export function ProjectCard({
   //   return (aDate?.getTime() || 0) - (bDate?.getTime() || 0);
   // });
   
-  const canBook = [
-    UserRole.ADMIN, 
-    UserRole.LAB_MANAGER, 
-    UserRole.STUDENT
-  ].includes(userRole);
+const canBook = isStudent || isLecturer || isFaculty;
   
   return (
     <Card 

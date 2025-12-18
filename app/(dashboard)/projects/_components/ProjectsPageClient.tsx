@@ -2,16 +2,15 @@
 
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
-import Link from "next/link";
-import { Plus, Table, LayoutGrid } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ProjectStatus, UserRole } from "@prisma/client";
 import { ProjectWithDetails } from "@/types/project";
-import { columns } from "./columns";
+import { ProjectStatus, UserRole } from "@prisma/client";
+import { LayoutGrid, Plus, Table } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+import { columns } from "./columns";
 import { ProjectCard } from "./ProjectCard"; // Import ProjectCard
 
 interface ProjectsPageClientProps {
@@ -127,7 +126,6 @@ export function ProjectsPageClient({ projects }: ProjectsPageClientProps) {
             <ProjectCard 
               key={project.id} 
               project={project} 
-              userRole={session?.user?.role as UserRole} // Pass userRole from session
               onAction={handleProjectAction}
               onClick={() => router.push(`/projects/${project.id}/view`)}
             />

@@ -418,6 +418,7 @@ model ProjectDocument {
   id        String   @id @default(cuid())
   projectId String
   url       String
+  fileType  String?  // Added fileType field
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from "@/components/ui/textarea";
-import { createProject, ProjectFormValues, updateProject } from '@/lib/actions/project';
+import { ProjectFormValues } from '@/lib/actions/project';
 import { ProjectWithDetails } from '@/types/project';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ProjectStatus, UserRole } from '@prisma/client';
@@ -18,6 +18,7 @@ import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
+import { handleCreateProject, handleUpdateProject } from '../_actions'; // Import new server actions
 
 interface ProjectFormProps {
   initialData?: ProjectWithDetails;
@@ -81,35 +82,25 @@ export function ProjectForm({ initialData, projectId }: ProjectFormProps) {
     setIsSubmitting(true);
     
     try {
-      let project;
       if (initialData) {
         // Update existing project
         if (!projectId) {
           throw new Error("Project ID is required for updating.");
         }
-        project = await updateProject(projectId, data);
+        await handleUpdateProject(projectId, data); // Call server action
         toast.success('Project updated successfully', {
           description: `"${data.title}" has been updated.`,
         });
       } else {
         // Create new project
-        project = await createProject(data);
+        await handleCreateProject(data); // Call server action
         toast.success('Project created successfully', {
           description: `"${data.title}" has been created.`,
         });
       }
       
-      // Redirect after successful operation
-      if (project?.id) {
-        if (!initialData) { // Only for new projects, redirect to documents upload
-          router.push(`/projects/${project.id}/documents`);
-        } else { // For existing projects, go back to view
-          router.push(`/projects/${project.id}/view`);
-        }
-      } else {
-        router.push('/projects');
-      }
-      router.refresh();
+      // Redirection is now handled by the server actions
+      router.refresh(); // Refresh the router to reflect changes and trigger re-fetch if needed
       
     } catch (error: any) {
       console.error('Error creating/updating project:', error);

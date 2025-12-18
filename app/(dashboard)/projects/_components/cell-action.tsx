@@ -19,14 +19,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { deleteProject, updateProject } from "@/lib/actions/project";
-import type { ProjectStatus, UserRole } from "@prisma/client";
-import { Check, MoreHorizontal, Trash2, X, Eye, Edit, Users, FileText } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { ProjectWithDetails } from "@/types/project";
-import { useSession } from "next-auth/react";
-import { toast } from "sonner";
+import { useSession } from '@/hooks/useSession';
+import { deleteProject, updateProject } from '@/lib/actions/project';
+import { ProjectWithDetails } from '@/types/project';
+import type { ProjectStatus } from '@prisma/client';
+import { Check, Edit, Eye, FileText, MoreHorizontal, Trash2, Users, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface CellActionProps {
   data: ProjectWithDetails;
@@ -34,13 +34,12 @@ interface CellActionProps {
 
 export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const router = useRouter();
-  const { data: session } = useSession();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const userRole = session?.user?.role;
-  const isCreator = session?.user?.id === data.creatorId;
-  const isAdminOrManager = userRole === UserRole.ADMIN || userRole === UserRole.LAB_MANAGER;
+  const { isAdmin, isLabManager, user } = useSession();
+  const isCreator = user?.id === data.creatorId;
+  const isAdminOrManager = isAdmin || isLabManager;
 
   const handleDelete = async () => {
     setIsLoading(true);

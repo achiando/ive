@@ -81,6 +81,10 @@ export async function fetchUserProjects(): Promise<ProjectWithDetails[]> {
 }
 
 export async function getProjectById(projectId: string): Promise<ProjectWithDetails | null> {
+  if (!projectId || typeof projectId !== 'string') {
+    console.error('Invalid projectId provided to getProjectById:', projectId);
+    return null;
+  }
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
   const userRole = session?.user?.role;
@@ -203,8 +207,14 @@ export async function updateProject(projectId: string, data: Partial<ProjectForm
   const isCreator = existingProject.creatorId === userId;
   const isPrivileged = userRole === UserRole.ADMIN || userRole === UserRole.LAB_MANAGER;
 
-  if (!isCreator && !isPrivileged) {
+  // Only creator can edit project details. Privileged users can only change status.
+  if (!isCreator && !isPrivileged) { // If not creator and not privileged, throw error
     throw new Error("Not authorized to update this project.");
+  }
+  
+  // If user is privileged but not creator, they can only update status
+  if (!isCreator && isPrivileged && Object.keys(data).some(key => key !== 'status')) {
+    throw new Error("Privileged users can only update project status, not other details.");
   }
 
   const validatedData = projectFormSchema.partial().omit({ userEmail: true, projectImage: true }).parse(data);
@@ -212,10 +222,10 @@ export async function updateProject(projectId: string, data: Partial<ProjectForm
   const updatedProject = await prisma.project.update({
     where: { id: projectId },
     data: {
-      title: validatedData.title,
-      description: validatedData.description,
-      startDate: validatedData.startDate ? new Date(validatedData.startDate) : undefined,
-      endDate: validatedData.endDate ? new Date(validatedData.endDate) : undefined,
+      title: isCreator ? validatedData.title : undefined,
+      description: isCreator ? validatedData.description : undefined,
+      startDate: isCreator && validatedData.startDate ? new Date(validatedData.startDate) : undefined,
+      endDate: isCreator && validatedData.endDate ? new Date(validatedData.endDate) : undefined,
       status: (isPrivileged && validatedData.status) ? validatedData.status : undefined, // Only privileged users can change status
     },
     include: {
@@ -253,6 +263,7 @@ export async function deleteProject(projectId: string): Promise<void> {
   const isCreator = existingProject.creatorId === userId;
   const isPrivileged = userRole === UserRole.ADMIN || userRole === UserRole.LAB_MANAGER;
 
+  // Only creator or Admin/Lab Manager can delete the project
   if (!isCreator && !isPrivileged) {
     throw new Error("Not authorized to delete this project.");
   }
@@ -281,8 +292,10 @@ export async function addProjectDocument(projectId: string, url: string, fileTyp
 
   const isCreator = project.creatorId === userId;
   const isMember = project.members.some(member => member.userId === userId);
+  const isPrivileged = session?.user?.role === UserRole.ADMIN || session?.user?.role === UserRole.LAB_MANAGER;
 
-  if (!isCreator && !isMember) {
+
+  if (!isCreator && !isMember && !isPrivileged) {
     throw new Error("Not authorized to add documents to this project.");
   }
 
@@ -315,8 +328,10 @@ export async function deleteProjectDocument(documentId: string): Promise<void> {
 
   const isCreator = document.project.creatorId === userId;
   const isMember = document.project.members.some(member => member.userId === userId);
+  const isPrivileged = session?.user?.role === UserRole.ADMIN || session?.user?.role === UserRole.LAB_MANAGER;
 
-  if (!isCreator && !isMember) {
+
+  if (!isCreator && !isMember && !isPrivileged) {
     throw new Error("Not authorized to delete this document.");
   }
 
@@ -344,8 +359,10 @@ export async function getProjectDocuments(projectId: string): Promise<ProjectDoc
 
   const isCreator = project.creatorId === userId;
   const isMember = project.members.some(member => member.userId === userId);
+  const isPrivileged = session?.user?.role === UserRole.ADMIN || session?.user?.role === UserRole.LAB_MANAGER;
 
-  if (!isCreator && !isMember) {
+
+  if (!isCreator && !isMember && !isPrivileged) {
     throw new Error("Not authorized to view documents for this project.");
   }
 
@@ -374,9 +391,11 @@ export async function generateProjectInviteToken(projectId: string): Promise<str
   }
 
   const isCreator = project.creatorId === invitedById;
-  // Only creator can generate invite links
-  if (!isCreator) {
-    throw new Error("Only the project creator can generate invite links.");
+  const isPrivileged = session?.user?.role === UserRole.ADMIN || session?.user?.role === UserRole.LAB_MANAGER;
+
+  // Only creator or privileged users can generate invite links
+  if (!isCreator && !isPrivileged) {
+    throw new Error("Not authorized to generate invite links for this project.");
   }
 
   const token = uuidv4();

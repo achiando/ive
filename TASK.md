@@ -17,3 +17,35 @@
 - Implemented maintenance management (CRUD server actions, form, add/edit page, listing page with table, columns, cell actions, and report page).
 - Reviewed `MaintenanceForm.tsx` and confirmed it meets requirements for equipment selection and consumable allocation.
 - Fixed type errors in `MaintenanceForm.tsx` for `equipmentList` and `technicianList` by adjusting state types to match partial data returned by actions.
+- **Implemented Project Management Feature:**
+    - Defined `ProjectWithDetails` type in `types/project.ts`.
+    - Implemented comprehensive server actions in `lib/actions/project.ts` for:
+        - Project CRUD (create, fetch all, fetch by ID, update, delete).
+        - Project Document management (add, delete, get all).
+        - Project Member management (get all, update status, remove).
+        - Project Invitation logic (generate token, join with token).
+    - Created `lib/qr-code.ts` for QR code generation.
+    - Developed UI components and pages:
+        - `app/(dashboard)/projects/[id]/page.tsx`: Handles both project creation (id='new') and editing.
+        - `app/(dashboard)/projects/_components/ProjectForm.tsx`: Reusable form for project creation/editing.
+        - `app/(dashboard)/projects/page.tsx`: Main listing page for projects.
+        - `app/(dashboard)/projects/_components/ProjectsPageClient.tsx`: Client-side logic for project listing, including table/grid view toggle, search, and filtering.
+        - `app/(dashboard)/projects/_components/columns.tsx`: Defines columns for the project data table.
+        - `app/(dashboard)/projects/_components/cell-action.tsx`: Provides actions for individual project rows (view, edit, manage members/documents, approve/reject, delete).
+        - `app/(dashboard)/projects/_components/ProjectCard.tsx`: Component for displaying projects in a grid view.
+        - `app/(dashboard)/projects/[id]/view/page.tsx`: Server component to fetch and display a single project's details.
+        - `app/(dashboard)/projects/[id]/view/_components/ProjectView.tsx`: Client component for detailed project view with tabbed interface (Overview, Documents, Members, Bookings, Settings).
+        - `app/(dashboard)/projects/[id]/documents/page.tsx`: Server component for project documents.
+        - `app/(dashboard)/projects/[id]/documents/_components/ProjectDocumentsClient.tsx`: Client component for listing, adding (via URL), and deleting project documents.
+        - `app/(dashboard)/projects/[id]/documents/_components/DocumentCard.tsx`: Reusable card component for displaying project documents.
+        - `app/(dashboard)/projects/[id]/members/page.tsx`: Server component for project members.
+        - `app/(dashboard)/projects/[id]/members/_components/ProjectMembersClient.tsx`: Client component for listing, inviting, and managing project members.
+        - `app/(dashboard)/projects/[id]/members/_components/MemberCard.tsx`: Reusable card component for displaying project members.
+        - `app/(public)/invite/[projectId]/page.tsx`: Public page for joining projects via invite links, handling authentication and membership requests.
+- **Fixed `PrismaClientValidationError`:** Added a check for `projectId` in `getProjectById` to ensure it's a valid string before querying the database.
+- **Adjusted Project Permissions:**
+    - `updateProject`: Only the project creator can edit project details. Privileged users (Admin/Lab Manager) can only change the project status.
+    - `deleteProject`: Only the project creator or privileged users (Admin/Lab Manager) can delete a project.
+- **Refactored ProjectForm Submission:**
+    - Created `app/(dashboard)/projects/_actions.ts` to wrap `createProject` and `updateProject` server actions.
+    - Modified `app/(dashboard)/projects/_components/ProjectForm.tsx` to call these new server actions, ensuring proper server-side redirection after form submission.

@@ -10,7 +10,7 @@ interface ProjectPageProps {
 }
 
 export default async function ProjectPage({ params }: ProjectPageProps) {
-  const { id } = params;
+  const { id } = await params;
 
   const isNewProject = id === 'new';
   let initialData = undefined;
