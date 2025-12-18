@@ -1,11 +1,11 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { PrismaClient } from "@prisma/client";
 import { compare } from "bcryptjs";
 import { NextAuthOptions } from "next-auth";
 import { Adapter } from "next-auth/adapters";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { prisma } from "./prisma";
 
-const prisma = new PrismaClient();
+
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as Adapter,
@@ -76,7 +76,13 @@ export const authOptions: NextAuthOptions = {
     signIn: "/auth/signin",
     error: "/auth/error",
   },
-
+// In your auth.ts file, update the JWT configuration
+ jwt: {
+    secret: process.env.NEXTAUTH_SECRET,
+    encryption: true,
+    signingKey: '{"kty":"oct","kid":"--","alg":"HS256","k":"--"}',
+    encryptionKey: '{"kty":"oct","kid":"--","alg":"A128CBC-HS256","k":"--"}',
+  },
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === "development",
 };

@@ -1,9 +1,7 @@
-
-import { prisma } from "@/lib/prisma";
-import { unstable_cache as cache } from "next/cache";
-import { Event } from "@prisma/client";
-import { revalidatePath } from "next/cache";
+"use server";
 import { EventFormValues } from "@/app/(dashboard)/events/_components/EventForm"; // Assuming this type will be defined
+import { prisma } from "@/lib/prisma";
+import { unstable_cache as cache, revalidatePath } from "next/cache";
 
 /**
  * Fetches all events from the database.
@@ -58,7 +56,6 @@ export const getEventById = cache(
  * Creates a new event.
  */
 export async function createEvent(data: EventFormValues) {
-  "use server";
   try {
     const event = await prisma.event.create({
       data: {
@@ -84,7 +81,6 @@ export async function createEvent(data: EventFormValues) {
  * Updates an existing event.
  */
 export async function updateEvent(id: string, data: EventFormValues) {
-  "use server";
   try {
     const event = await prisma.event.update({
       where: { id },
@@ -112,7 +108,6 @@ export async function updateEvent(id: string, data: EventFormValues) {
  * Deletes an event by its ID.
  */
 export async function deleteEvent(id: string) {
-  "use server";
   try {
     await prisma.event.delete({
       where: { id },

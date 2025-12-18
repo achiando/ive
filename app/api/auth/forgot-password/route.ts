@@ -1,14 +1,25 @@
 import { sendPasswordResetEmail } from '@/lib/email';
 import { prisma } from '@/lib/prisma';
+import { hash } from 'bcryptjs';
 import crypto from 'crypto';
 import { NextResponse } from 'next/server';
+import { RateLimiterMemory } from 'rate-limiter-flexible';
 
-export const runtime = 'nodejs'; // Use Node.js runtime for crypto module
+// Rate limiting: 5 requests per 15 minutes per IP
+const rateLimiter = new RateLimiterMemory({
+  points: 5,
+  duration: 15 * 60, // 15 minutes
+});
 
-
+export const runtime = 'nodejs';
 
 export async function POST(request: Request) {
+  const ip = request.headers.get('x-forwarded-for') || 'unknown';
+  
   try {
+    // Apply rate limiting
+    await rateLimiter.consume(ip);
+
     const { email } = await request.json();
 
     if (!email) {
@@ -21,9 +32,10 @@ export async function POST(request: Request) {
     // Find user by email
     const user = await prisma.user.findUnique({
       where: { email },
+      select: { id: true, email: true, firstName: true } // Only select needed fields
     });
 
-    // Don't reveal if user doesn't exist for security reasons
+    // Always return success to prevent email enumeration
     if (!user) {
       return NextResponse.json(
         { message: 'If an account with that email exists, you will receive a password reset link' },
@@ -31,22 +43,23 @@ export async function POST(request: Request) {
       );
     }
 
-    // Generate reset token and expiry (1 hour from now)
+    // Generate and hash reset token
     const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+    const hashedToken = await hash(resetToken, 12);
+    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
 
-    // Save the reset token to the user
+    // Save hashed token to database
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        resetToken,
+        resetToken: hashedToken,
       },
     });
 
-    // Create reset URL
-    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}`;
+    // Create reset URL with unhashed token
+    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}&email=${encodeURIComponent(user.email)}`;
 
-    // Send email
+    // Send email with the unhashed token
     await sendPasswordResetEmail(
       user.email,
       user.firstName || 'User',
@@ -56,10 +69,18 @@ export async function POST(request: Request) {
     return NextResponse.json({
       message: 'If an account with that email exists, you will receive a password reset link'
     });
-  } catch (error) {
-    console.error('Error in forgot password:', error);
+
+  } catch (error: any) {
+    if (error.remainingPoints === 0) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429, headers: { 'Retry-After': '900' } }
+      );
+    }
+    
+    console.error('Password reset error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'An error occurred while processing your request' },
       { status: 500 }
     );
   }

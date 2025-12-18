@@ -40,10 +40,6 @@ export const columns: ColumnDef<UserWithCounts>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "id",
-    header: "User ID",
-  },
-  {
     accessorFn: row => `${row.firstName} ${row.lastName}`,
     id: 'fullName',
     header: ({ column }) => {
@@ -64,7 +60,31 @@ export const columns: ColumnDef<UserWithCounts>[] = [
   },
   {
     accessorKey: "role",
-    header: "Role",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Role
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
+  },
+  {
+    accessorKey: "status",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Status
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
   },
   {
     id: 'projects',
@@ -78,7 +98,17 @@ export const columns: ColumnDef<UserWithCounts>[] = [
   },
   {
     accessorKey: "createdAt",
-    header: "Date Joined",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Date Joined
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
     cell: ({ row }) => format(new Date(row.getValue("createdAt")), "PPP"),
   },
   {

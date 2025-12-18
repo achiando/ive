@@ -110,6 +110,20 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
               </DropdownMenuItem>
             </>
           )}
+
+          {data.status !== 'SUSPENDED' && data.status !== 'PENDING' && ( // Only show suspend if not pending and not already suspended
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => handleStatusUpdate('SUSPENDED')}
+                className="text-orange-600 hover:!text-orange-600"
+              >
+                <span className="flex items-center">
+                  <X className="h-4 w-4 mr-2" /> Suspend
+                </span>
+              </DropdownMenuItem>
+            </>
+          )}
           
           <DropdownMenuSeparator />
           <DropdownMenuItem 

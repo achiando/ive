@@ -1,40 +1,20 @@
 // @/components/auth/login-form.tsx
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { signIn } from "next-auth/react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
 
-
-function getRedirectPath(role: string | string[]): string {
-    if (Array.isArray(role)) {
-      if (role.includes('ADMIN') || role.includes('MANAGER')) return '/manager/dashboard';
-      if (role.includes('TECHNICIAN')) return '/manager/dashboard';
-      if (role.includes('STUDENT')) return '/manager/dashboard';
-    }
-    
-    switch (role) {
-      case 'ADMIN':
-      case 'MANAGER':
-        return '/manager/dashboard';
-      case 'TECHNICIAN':
-        return '/manager/dashboard';
-      case 'STUDENT':
-        return '/manager/dashboard';
-      default:
-        return '/manager/dashboard';
-    }
-  }
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -79,14 +59,12 @@ export default function LoginForm() {
         const userRole = session?.user?.role;
         
         // Get the appropriate redirect path based on role
-        const redirectPath = getRedirectPath(userRole);
-        
         toast("Login Successful",{
           description: "Welcome back!",
         });
         
         setTimeout(() => {
-            router.push(redirectPath);
+            router.push('/dashboard');
             router.refresh();
           }, 1000);
       }

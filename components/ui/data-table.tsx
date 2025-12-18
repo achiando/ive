@@ -1,6 +1,5 @@
 "use client"
 
-import * as React from "react"
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -13,7 +12,10 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
+import * as React from "react"
 
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   Table,
   TableBody,
@@ -22,8 +24,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -31,6 +31,7 @@ interface DataTableProps<TData, TValue> {
   filterColumnId: string
   filterColumnPlaceholder: string
   onRowSelectionChange?: (selectedRows: string[]) => void // Add this prop
+  children?: React.ReactNode // New prop for custom filters
 }
 
 export function DataTable<TData, TValue>({
@@ -39,6 +40,7 @@ export function DataTable<TData, TValue>({
   filterColumnId,
   filterColumnPlaceholder,
   onRowSelectionChange, // Destructure the new prop
+  children, // Destructure the new prop
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -86,6 +88,9 @@ export function DataTable<TData, TValue>({
           }
           className="max-w-sm"
         />
+        <div className="ml-auto flex items-center space-x-2">
+          {children} {/* Render children here */}
+        </div>
       </div>
       <div className="rounded-md border">
         <Table>

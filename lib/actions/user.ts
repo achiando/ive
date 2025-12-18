@@ -1,4 +1,6 @@
 
+"use server";
+
 import { sendStatusUpdateEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import { RegistrationStatus, User } from "@prisma/client";
@@ -9,8 +11,9 @@ import { unstable_cache as cache } from "next/cache";
  * Caches the result for 1 hour.
  */
 export const getUsers = cache(
-  async () => {
+  async (status?: RegistrationStatus) => {
     const users = await prisma.user.findMany({
+      where: status ? { status } : {},
       orderBy: {
         createdAt: "desc",
       },
@@ -196,5 +199,104 @@ export async function sendCustomEmail(to: string, subject: string, html: string)
   } catch (error) {
     console.error("Error sending custom email:", error);
     return { success: false, message: "Failed to send email." };
+  }
+}
+
+
+/**
+ * Fetches the count of users by their registration status.
+ */
+export const getUserStatusCounts = cache(
+  async () => {
+    const counts = await prisma.user.groupBy({
+      by: ['status'],
+      _count: {
+        status: true,
+      },
+    });
+
+    // Initialize all statuses with 0
+    const statusCounts: { [key in RegistrationStatus]: number } = {
+      PENDING: 0,
+      APPROVED: 0,
+      REJECTED: 0,
+      SUSPENDED: 0,
+    };
+
+    // Populate counts from the database query
+    counts.forEach(item => {
+      if (item.status) {
+        statusCounts[item.status] = item._count.status;
+      }
+    });
+
+    return statusCounts;
+  },
+  ['user_status_counts'],
+  { revalidate: 3600 }
+);
+
+export async function getUserSelections(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      events: { include: { event: true } },
+      equipment: { include: { equipment: true } },
+    },
+  });
+
+  if (!user) {
+    return { events: [], equipment: [] };
+  }
+
+  return {
+    events: user.events.map((p) => p.event),
+    equipment: user.equipment.map((b) => b.equipment),
+  };
+}
+
+export async function updateUserSelections(
+  userId: string,
+  eventIds: string[],
+  equipmentIds: string[]
+) {
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Clear existing selections
+      await tx.eventParticipation.deleteMany({ where: { userId } });
+      await tx.equipmentBooking.deleteMany({ where: { userId } });
+
+      // Add new event selections
+      if (eventIds.length > 0) {
+        await tx.eventParticipation.createMany({
+          data: eventIds.map((eventId) => ({
+            userId,
+            eventId,
+            status: "REGISTERED",
+          })),
+        });
+      }
+
+      // Add new equipment selections
+      if (equipmentIds.length > 0) {
+        await tx.equipmentBooking.createMany({
+          data: equipmentIds.map((equipmentId) => ({
+            userId,
+            equipmentId,
+            // You might need to define start and end dates for bookings
+            // For now, this is a simplified version.
+            startDate: new Date(),
+            endDate: new Date(),
+            status: "PENDING",
+          })),
+        });
+      }
+    });
+
+    revalidatePath(`/status/pending`);
+    return { success: true, message: "Selections updated successfully." };
+  } catch (error) {
+    console.error("Error updating user selections:", error);
+    return { success: false, message: "Failed to update selections." };
   }
 }

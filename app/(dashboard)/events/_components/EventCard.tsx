@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useSession } from '@/hooks/useSession'; // Custom useSession hook
-import { deleteEvent } from '@/lib/actions/event'; // Server action for deleting event
+// import { deleteEvent } from '@/lib/actions/event'; // Server action for deleting event - REMOVED
 
 export type EventWithVenue = {
   id: string;
@@ -42,7 +42,7 @@ interface EventCardProps {
   className?: string;
   variant?: 'default' | 'compact';
   onEdit?: (event: EventWithVenue) => void;
-  onDelete?: (eventId: string) => void;
+  onDelete?: (eventId: string) => Promise<void>; // Modified to accept a Promise<void>
 }
 
 export function EventCard({ 
@@ -56,10 +56,6 @@ export function EventCard({
 }: EventCardProps) {
   const router = useRouter();
   const { user, loading, hasAnyRole } = useSession(); // Use custom useSession hook
-
-  if (loading) {
-    return <div>Loading event card...</div>;
-  }
   
   const [isDeleting, setIsDeleting] = useState(false);
   
@@ -73,27 +69,9 @@ export function EventCard({
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this event?')) return;
     
-    try {
+    if (onDelete) {
       setIsDeleting(true);
-      const result = await deleteEvent(event.id); // Call server action
-      if (result.success) {
-        toast.success('Event deleted', {
-          description: 'The event has been deleted successfully.',
-        });
-        if (onDelete) {
-          onDelete(event.id);
-        }
-      } else {
-        toast.error('Error', {
-          description: result.message || 'Failed to delete event. Please try again.',
-        });
-      }
-    } catch (error) {
-      console.error('Error deleting event:', error);
-      toast.error('Error', {
-        description: 'Failed to delete event. An unexpected error occurred.',
-      });
-    } finally {
+      await onDelete(event.id); // Call the prop function
       setIsDeleting(false);
     }
   };
@@ -109,6 +87,10 @@ export function EventCard({
   const eventDate = new Date(event.startDate);
   const formattedDate = format(eventDate, 'MMM d, yyyy');
   const formattedTime = format(eventDate, 'h:mm a');
+
+  if (loading) {
+    return <div>Loading event card...</div>;
+  }
 
   if (variant === 'compact') {
     return (
