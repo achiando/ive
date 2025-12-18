@@ -8,3 +8,4 @@
 - Updated `Project` type definition in `types/equipment.ts` for type compatibility.
 - Implemented bulk equipment upload page with file parsing, server action integration, and result display.
 - Implemented equipment report page with charts, statistics, and PDF export.
+- Fixed type incompatibility for `initialData` in `app/(dashboard)/events/[id]/page.tsx` by explicitly picking fields and converting Date objects to strings.

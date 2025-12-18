@@ -31,7 +31,7 @@ export default async function EventPage({ params }: EventPageProps) {
 
   const handleSubmit = async (data: EventFormValues) => {
     "use server";
-    
+
     if (isNewEvent) {
       await createEvent({ ...data, createdById: createdById });
     } else {
@@ -42,23 +42,28 @@ export default async function EventPage({ params }: EventPageProps) {
     redirect("/events");
   };
 
-  // In your EventPage component, before passing data to EventForm
-const sanitizedEventData = eventData ? {
-  ...eventData,
-  description: eventData.description ?? undefined,
-  // Add any other fields that might be null
-} : undefined;
+  const sanitizedEventData = eventData ? {
+    id: eventData.id,
+    name: eventData.name,
+    startDate: eventData.startDate.toISOString(),
+    endDate: eventData.endDate.toISOString(),
+    description: eventData.description ?? undefined,
+    venue: eventData.venue ?? undefined,
+    maxParticipants: eventData.maxParticipants ?? undefined, // Convert null to undefined
+    imageUrl: eventData.imageUrl ?? undefined,
+    createdById: eventData.createdById,
+  } : undefined;
 
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold tracking-tight text-gray-900">
         {isNewEvent ? "Create New Event" : "Edit Event"}
       </h1>
-      <EventForm 
-    initialData={sanitizedEventData} 
-    onSubmit={handleSubmit} 
-    createdById={createdById} 
-  />
+      <EventForm
+        initialData={sanitizedEventData}
+        onSubmit={handleSubmit}
+        createdById={createdById}
+      />
     </div>
   );
 }
