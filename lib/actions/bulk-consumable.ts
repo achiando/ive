@@ -2,9 +2,10 @@
 'use server';
 
 import { z } from 'zod';
-import prisma from '@/lib/prisma';
+
 import { ConsumableCategory } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
+import { prisma } from '../prisma';
 
 // Define a schema for the incoming bulk data, which should align with ConsumableFormValues
 const bulkConsumableSchema = z.object({
@@ -40,14 +41,14 @@ export async function bulkCreateConsumable(consumableData: BulkConsumableInput[]
   for (const item of consumableData) {
     const validation = bulkConsumableSchema.safeParse(item);
 
-    if (!validation.success) {
-      results.failureCount++;
-      results.failedItems.push({
-        data: item,
-        errors: validation.error.errors.map(err => err.message),
-      });
-      continue;
-    }
+  if (!validation.success) {
+  results.failureCount++;
+  results.failedItems.push({
+    data: item,
+    errors: Object.values(validation.error.flatten().fieldErrors).flat(),
+  });
+  continue;
+}
 
     const validatedData = validation.data;
 

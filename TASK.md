@@ -15,33 +15,37 @@
 - Implemented consumable analytics (server action, analytics dashboard component, analytics page).
 - Updated equipment bulk upload sample CSV to include valid `EquipmentStatus` options.
 - Implemented maintenance management (CRUD server actions, form, add/edit page, listing page with table, columns, cell actions, and report page).
-- Reviewed `MaintenanceForm.tsx` and confirmed it meets requirements for equipment selection and consumable allocation.
-- Fixed type errors in `MaintenanceForm.tsx` for `equipmentList` and `technicianList` by adjusting state types to match partial data returned by actions.
+- Fixed type incompatibility in `ConsumableWithRelations` by adjusting the `equipment` property type in `types/consumable.ts` to match the data fetched by `getAllConsumables`.
+- Fixed type error in `ConsumableAllocationForm.tsx` by importing `MaintenanceWithRelations` instead of `MaintenanceDetails` from `types/maintenance.ts`.
+- Fixed type incompatibility in `MaintenanceWithRelations` by adjusting `maintenanceId` to `string | null` within `consumableAllocations` in `types/maintenance.ts`.
+- Fixed type error in `app/(dashboard)/dashboard/_components/Dashboard.tsx` by adding `currentUserId: string;` to `TechnicianDashboardProps` in `app/(dashboard)/dashboard/_components/TechnicianDashboard.tsx`.
+- Fixed type error in `app/(dashboard)/equipments/[id]/view/page.tsx` by adding `fetchUserProjects: () => Promise<any>;` to `EquipmentViewProps` in `app/(dashboard)/equipments/[id]/view/_components/EquipmentView.tsx`.
+- Fixed type error in `app/(dashboard)/equipments/report/_components/EquipmentReportClient.tsx` by correcting prop names for `DateRangePicker` from `dateRange` and `setDateRange` to `date` and `onDateChange` respectively.
+- Fixed type error in `app/(dashboard)/maintenance/report/_components/MaintenanceReportClient.tsx` by correcting prop names for `DateRangePicker` from `dateRange` and `setDateRange` to `date` and `onDateChange` respectively.
+- Fixed type error in `app/(dashboard)/projects/[id]/documents/_components/DocumentCard.tsx` by handling `document.fileType` being `null` when passed to the `type` prop of the `<source>` element.
+- Fixed type error in `app/(dashboard)/projects/_components/columns.tsx` by modifying `getStatusVariant` to return valid `Badge` variants and applying custom styling via `className`.
+- Fixed type error in `app/(dashboard)/users/_components/UserRoleStats.tsx` by adding `FACULTY` to `roleIcons` and explicitly typing `roleIcons` as `Record<UserRole, JSX.Element>`.
+- **Fixed type error in `app/(dashboard)/users/_components/UsersPageClient.tsx`**: Updated `UsersPageClientProps` to use `UserWithCounts[]` for the `users` prop and added the corresponding import.
+- **Fixed type error in `app/(public)/invite/[projectId]/_components/InviteClient.tsx`**: Replaced `sessionStatus === 'loading'` with `sessionLoading` in the disabled prop of the join project button.
+- **Fixed type error in `lib/actions/booking.ts`**: Imported `BookingAnalyticsData` from `types/booking.ts`.
+- **Fixed type error in `lib/actions/equipment.ts`**: Updated the `select` statement in `getProjectsForEquipment` to include all fields required by the `Project` type.
+- **Fixed type error in `lib/email.ts`**: Removed duplicate `title` property from the `PENDING` object in `statusMap`.
+- **Implemented Booking Analytics:**
+    - Created `app/(dashboard)/bookings/_components/BookingAnalytics.tsx` component.
+    - Added `getBookingAnalytics` server action to `lib/actions/booking.ts`.
+    - Integrated analytics data fetching and rendering into `app/(dashboard)/bookings/page.tsx` and `app/(dashboard)/bookings/_components/BookingsPageClient.tsx`.
+- **Implemented Consumable Allocation Management:**
+    - Defined `ConsumableAllocationFormData` in `types/consumable.ts`.
+    - Created `app/(dashboard)/consumables/allocations/_components/ConsumableAllocationForm.tsx` component.
+    - Modified `lib/actions/consumable-allocation.ts` to handle `userId` and `allocatedBy` from session, and added authorization for `updateConsumableAllocation`.
+    - Implemented `app/(dashboard)/consumables/allocations/[id]/page.tsx` to handle both creation (id='new') and editing of allocations.
+    - Updated `app/(dashboard)/consumables/allocations/_components/ConsumableAllocationsPageClient.tsx` with a "New Allocation" button.
+    - Updated `app/(dashboard)/consumables/allocations/_components/cell-action.tsx` with an "Edit" option.
+- **Enhanced Session Management for Pending Page:**
+    - Updated `UserSession` type in `hooks/useSession.ts` to include `status: RegistrationStatus;`.
+    - Modified `app/(status)/pending/_components/pending-page-client.tsx` to use the custom `useSession` hook and adjusted `handleRefreshStatus` to align with the custom hook's behavior.
+    - **Fixed `session.user.status` not being included in `getServerSession`**: Modified `lib/auth.ts` to include the `status` field in the JWT token and the session object during the `jwt` and `session` callbacks.
 - **Implemented Project Management Feature:**
-    - Defined `ProjectWithDetails` type in `types/project.ts`.
-    - Implemented comprehensive server actions in `lib/actions/project.ts` for:
-        - Project CRUD (create, fetch all, fetch by ID, update, delete).
-        - Project Document management (add, delete, get all).
-        - Project Member management (get all, update status, remove).
-        - Project Invitation logic (generate token, join with token).
-    - Created `lib/qr-code.ts` for QR code generation.
-    - Developed UI components and pages:
-        - `app/(dashboard)/projects/[id]/page.tsx`: Handles both project creation (id='new') and editing.
-        - `app/(dashboard)/projects/_components/ProjectForm.tsx`: Reusable form for project creation/editing.
-        - `app/(dashboard)/projects/page.tsx`: Main listing page for projects.
-        - `app/(dashboard)/projects/_components/ProjectsPageClient.tsx`: Client-side logic for project listing, including table/grid view toggle, search, and filtering.
-        - `app/(dashboard)/projects/_components/columns.tsx`: Defines columns for the project data table.
-        - `app/(dashboard)/projects/_components/cell-action.tsx`: Provides actions for individual project rows (view, edit, manage members/documents, approve/reject, delete).
-        - `app/(dashboard)/projects/_components/ProjectCard.tsx`: Component for displaying projects in a grid view.
-        - `app/(dashboard)/projects/[id]/view/page.tsx`: Server component to fetch and display a single project's details.
-        - `app/(dashboard)/projects/[id]/view/_components/ProjectView.tsx`: Client component for detailed project view with tabbed interface (Overview, Documents, Members, Bookings, Settings).
-        - `app/(dashboard)/projects/[id]/documents/page.tsx`: Server component for project documents.
-        - `app/(dashboard)/projects/[id]/documents/_components/ProjectDocumentsClient.tsx`: Client component for listing, adding (via URL), and deleting project documents.
-        - `app/(dashboard)/projects/[id]/documents/_components/DocumentCard.tsx`: Reusable card component for displaying project documents.
-        - `app/(dashboard)/projects/[id]/members/page.tsx`: Server component for project members.
-        - `app/(dashboard)/projects/[id]/members/_components/ProjectMembersClient.tsx`: Client component for listing, inviting, and managing project members.
-        - `app/(dashboard)/projects/[id]/members/_components/MemberCard.tsx`: Reusable card component for displaying project members.
-        - `app/(public)/invite/[projectId]/page.tsx`: Public page for joining projects via invite links, handling authentication and membership requests.
 - **Fixed `PrismaClientValidationError`:** Added a check for `projectId` in `getProjectById` to ensure it's a valid string before querying the database.
 - **Adjusted Project Permissions:**
     - `updateProject`: Only the project creator can edit project details. Privileged users (Admin/Lab Manager) can only change the project status.

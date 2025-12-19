@@ -103,7 +103,6 @@ export async function sendStatusUpdateEmail(email: string, name: string, status:
     PENDING: {
       subject: 'Account Status Update',
       title: 'Account Under Review',
-      title: 'Account Under Review',
       description: 'Your account is currently under review by our team. We will notify you once a decision has been made.'
     }
   };

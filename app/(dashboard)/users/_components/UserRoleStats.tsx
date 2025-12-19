@@ -2,10 +2,9 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
-import { Users, UserCheck, UserX, UserPlus, UserMinus } from 'lucide-react';
-import { User, UserRole, RegistrationStatus } from '@prisma/client';
-import { useEffect, useState } from 'react';
+import { RegistrationStatus, User, UserRole } from '@prisma/client';
+import { UserCheck, UserPlus, Users, UserX } from 'lucide-react';
+import { JSX } from 'react';
 
 interface UserRoleStatsProps {
   users: User[];
@@ -32,13 +31,14 @@ const statusIcons = {
   [RegistrationStatus.SUSPENDED]: <UserX className="h-4 w-4 text-red-500" />,
 };
 
-const roleIcons = {
+const roleIcons: Record<UserRole, JSX.Element> = {
   [UserRole.ADMIN]: <Users className="h-4 w-4 text-muted-foreground" />,
   [UserRole.ADMIN_TECHNICIAN]: <Users className="h-4 w-4 text-muted-foreground" />,
   [UserRole.TECHNICIAN]: <Users className="h-4 w-4 text-muted-foreground" />,
   [UserRole.LECTURER]: <Users className="h-4 w-4 text-muted-foreground" />,
   [UserRole.STUDENT]: <Users className="h-4 w-4 text-muted-foreground" />,
   [UserRole.LAB_MANAGER]: <Users className="h-4 w-4 text-muted-foreground" />,
+  [UserRole.FACULTY]: <Users className="h-4 w-4 text-muted-foreground" />, // Added FACULTY
   [UserRole.OTHER]: <Users className="h-4 w-4 text-muted-foreground" />,
 };
 

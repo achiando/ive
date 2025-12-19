@@ -1,6 +1,6 @@
 "use client";
 
-import { Image as ImageIcon, PackageCheck, PackageMinus, AlertTriangle, Eye, Pencil } from "lucide-react";
+import { AlertTriangle, Eye, Image as ImageIcon, PackageCheck, PackageMinus, Pencil } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo } from "react";
@@ -55,7 +55,7 @@ export function ConsumableCard({ consumable }: ConsumableCardProps) {
                 <span className="hidden sm:inline">Out of Stock</span>
               </Badge>
             ) : isLowStock ? (
-              <Badge variant="warning" className="flex items-center gap-1 text-xs bg-yellow-500 text-white">
+              <Badge variant="destructive" className="flex items-center gap-1 text-xs bg-yellow-500 text-white">
                 <AlertTriangle className="h-3 w-3" />
                 <span className="hidden sm:inline">Low Stock</span>
               </Badge>

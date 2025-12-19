@@ -55,7 +55,7 @@ export function DocumentCard({ document, canManageDocuments, onDeleteSuccess }: 
           />
         ) : isVideo ? (
           <video className="w-full h-full object-cover">
-            <source src={document.url} type={document.fileType} />
+            <source src={document.url} type={document.fileType ?? undefined} />
             Your browser does not support the video tag.
           </video>
         ) : (

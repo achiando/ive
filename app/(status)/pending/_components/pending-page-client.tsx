@@ -1,18 +1,17 @@
 'use client';
 
 import { Button } from "@/components/ui/button";
-import { signOut, useSession } from "next-auth/react";
-import { useRouter } from 'next/navigation';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, MapPin, Users, AlertCircle, Cpu, Hash, ChevronDown, Plus, Loader2, RefreshCw, Check, CheckCircle2, Lock } from "lucide-react";
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
-import { Event, Equipment } from "@prisma/client";
 import { updateUserSelections } from "@/lib/actions/user";
-import { EventCard } from "@/app/(dashboard)/events/_components/EventCard";
+import { cn } from "@/lib/utils";
+import { Equipment, Event } from "@prisma/client";
+import { Calendar, CheckCircle2, ChevronDown, Clock, Cpu, Loader2, Lock, Plus, RefreshCw } from "lucide-react";
+import { Session } from "next-auth";
+import { signOut } from "next-auth/react";
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 type ViewMode = 'summary' | 'add-event' | 'add-equipment';
 
@@ -29,15 +28,16 @@ interface PendingPageClientProps {
     events: Event[];
     equipment: Equipment[];
   };
+  session: Session | null;
 }
 
 export function PendingPageClient({
   initialEvents,
   initialEquipment,
   initialUserSelections,
+  session,
 }: PendingPageClientProps) {
   const router = useRouter();
-  const { data: session, update } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -60,10 +60,6 @@ export function PendingPageClient({
   const handleSignOut = async () => {
     await signOut({ redirect: false });
     router.push('/auth/login');
-  };
-
-  const handleDashboard = () => {
-    router.push('/dashboard');
   };
 
   const toggleEventSelection = (event: Event) => {
@@ -118,8 +114,8 @@ export function PendingPageClient({
   const handleRefreshStatus = async () => {
     try {
       setIsRefreshing(true);
-      await update(); // This re-fetches the session
-      const response = await fetch('/api/auth/session'); // a second check
+      // No direct update() call needed for custom useSession, it will react to session changes
+      const response = await fetch('/api/auth/session'); // Fetch latest session data
       
       if (!response.ok) {
         throw new Error('Failed to refresh session');

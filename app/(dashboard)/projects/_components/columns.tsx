@@ -70,24 +70,24 @@ export const columns: ColumnDef<ProjectWithDetails>[] = [
     },
     cell: ({ row }) => {
       const status: ProjectStatus = row.getValue("status");
-      const getStatusVariant = (status: ProjectStatus) => {
+      const getStatusVariantAndClass = (status: ProjectStatus) => {
         switch (status) {
           case 'APPROVED':
-            return 'default';
+            return { variant: 'default' as const, className: '' };
           case 'PENDING_APPROVAL':
-            return 'secondary';
+            return { variant: 'secondary' as const, className: '' };
           case 'REJECTED':
           case 'CANCELLED':
-            return 'destructive';
+            return { variant: 'destructive' as const, className: '' };
           case 'IN_PROGRESS':
-            return 'outline';
+            return { variant: 'outline' as const, className: '' };
           case 'COMPLETED':
-            return 'success'; // Assuming a 'success' variant exists or can be added
+            return { variant: 'secondary' as const, className: 'bg-green-500 text-white' }; // Custom green
           case 'ON_HOLD':
-            return 'warning'; // Assuming a 'warning' variant exists or can be added
+            return { variant: 'secondary' as const, className: 'bg-yellow-500 text-white' }; // Custom yellow
           case 'DRAFT':
           default:
-            return 'outline';
+            return { variant: 'outline' as const, className: '' };
         }
       };
 
@@ -95,8 +95,10 @@ export const columns: ColumnDef<ProjectWithDetails>[] = [
         return status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, char => char.toUpperCase());
       };
 
+      const { variant, className } = getStatusVariantAndClass(status);
+
       return (
-        <Badge variant={getStatusVariant(status)}>
+        <Badge variant={variant} className={className}>
           {formatStatus(status)}
         </Badge>
       );

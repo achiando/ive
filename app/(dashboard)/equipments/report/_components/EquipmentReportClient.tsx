@@ -95,7 +95,7 @@ export function EquipmentReportClient() {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Equipment Usage Report</h1>
         <div className="flex items-center space-x-2">
-          <DateRangePicker dateRange={dateRange} setDateRange={setDateRange} />
+          <DateRangePicker date={dateRange} onDateChange={setDateRange} />
           <Button onClick={handleExportPdf} disabled={isLoading}>
             <Download className="mr-2 h-4 w-4" />
             Export PDF

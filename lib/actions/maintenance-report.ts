@@ -1,9 +1,10 @@
 // lib/actions/maintenance-report.ts
 'use server';
 
-import prisma from '@/lib/prisma';
-import { MaintenanceStatus, MaintenanceType } from '@prisma/client';
-import { endOfDay, startOfDay, format } from 'date-fns';
+
+import { MaintenanceStatus } from '@prisma/client';
+import { endOfDay, startOfDay } from 'date-fns';
+import { prisma } from '../prisma';
 
 interface MaintenanceReportData {
   totalMaintenances: number;

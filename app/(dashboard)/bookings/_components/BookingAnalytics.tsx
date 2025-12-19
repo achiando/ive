@@ -1,238 +1,177 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { DateRange } from "react-day-picker";
-import { format } from "date-fns";
-import { getBookingAnalytics } from "@/lib/actions/booking"; // Import server action
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookingAnalyticsData, BookingStatus } from "@/types/booking";
-
-// Tremor components
-import { BarChart, DonutChart, LineChart, Legend } from "@tremor/react";
-
-// PDF export libraries
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
 interface BookingAnalyticsProps {
-  initialData: BookingAnalyticsData;
+  data: BookingAnalyticsData;
 }
 
-export function BookingAnalytics({ initialData }: BookingAnalyticsProps) {
-  const [reportData, setReportData] = useState<BookingAnalyticsData>(initialData);
-  const [isLoading, setIsLoading] = useState(false);
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: undefined,
-    to: undefined,
-  });
-  const reportRef = useRef<HTMLDivElement>(null);
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF19AF'];
 
-  useEffect(() => {
-    fetchReportData();
-  }, [dateRange]); // Refetch when date range changes
+export function BookingAnalytics({ data }: BookingAnalyticsProps) {
+  const {
+    totalBookings,
+    bookingsByStatus,
+    bookingsByEquipment,
+    bookingsByUser,
+    averageBookingDuration,
+    peakBookingTimes,
+  } = data;
 
-  const fetchReportData = async () => {
-    setIsLoading(true);
-    try {
-      const data = await getBookingAnalytics(); // getBookingAnalytics already handles date range internally if needed
-      setReportData(data);
-    } catch (error) {
-      console.error("Failed to fetch booking analytics data:", error);
-      // Optionally set an error state to display to the user
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Prepare data for charts
+  const statusChartData = bookingsByStatus.map(item => ({
+    name: item.status.replace(/_/g, ' '), // Format status for display
+    value: item.count,
+  }));
 
-  const handleExportPdf = async () => {
-    if (!reportRef.current) return;
-    setIsLoading(true);
-    try {
-      const input = reportRef.current;
-      const canvas = await html2canvas(input, { scale: 2 });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 297; // A4 height in mm
-      const imgHeight = canvas.height * imgWidth / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
+  const equipmentChartData = bookingsByEquipment.map(item => ({
+    name: item.equipmentName,
+    value: item.count,
+  }));
 
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+  const userChartData = bookingsByUser.map(item => ({
+    name: item.userName,
+    value: item.count,
+  }));
 
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-      pdf.save("booking_analytics_report.pdf");
-    } catch (error) {
-      console.error("Failed to generate PDF:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const formattedDateRange = dateRange?.from
-    ? `${format(dateRange.from, "LLL dd, y")} - ${dateRange.to ? format(dateRange.to, "LLL dd, y") : "Present"}`
-    : "All Time";
+  const peakTimeChartData = peakBookingTimes.map(item => ({
+    hour: `${item.hour}:00`,
+    count: item.count,
+  }));
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Booking Analytics</h1>
-        <div className="flex items-center space-x-2">
-          <DateRangePicker dateRange={dateRange} setDateRange={setDateRange} />
-          <Button onClick={handleExportPdf} disabled={isLoading}>
-            <Download className="mr-2 h-4 w-4" />
-            Export PDF
-          </Button>
-        </div>
-      </div>
-
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card>
-        <CardHeader>
-          <CardTitle>Report Overview</CardTitle>
-          <CardDescription>
-            Summary of booking activities from {formattedDateRange}.
-          </CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            className="h-4 w-4 text-muted-foreground"
+          >
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87m-4-12a4 4 0 0 1 0 7.75" />
+          </svg>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="text-center py-10">Loading report data...</div>
-          ) : reportData ? (
-            <div ref={reportRef} className="space-y-8 p-4">
-              {/* General Statistics */}
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{reportData.totalBookings}</div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Avg. Duration</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{reportData.averageBookingDuration} hrs</div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Approved</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {reportData.bookingsByStatus.find(s => s.status === BookingStatus.APPROVED)?.count || 0}
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Pending</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {reportData.bookingsByStatus.find(s => s.status === BookingStatus.PENDING)?.count || 0}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+          <div className="text-2xl font-bold">{totalBookings}</div>
+          <p className="text-xs text-muted-foreground">
+            Total equipment bookings made
+          </p>
+        </CardContent>
+      </Card>
 
-              {/* Charts Section */}
-              <div className="grid gap-6 lg:grid-cols-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Bookings by Status</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <DonutChart
-                      data={reportData.bookingsByStatus.map(item => ({
-                        name: item.status.replace(/_/g, ' '),
-                        value: item.count
-                      }))}
-                      category="value"
-                      index="name"
-                      variant="pie"
-                      valueFormatter={(number: number) => `${number}`}
-                      className="h-40"
-                    />
-                    <Legend
-                      categories={reportData.bookingsByStatus.map(item => item.status.replace(/_/g, ' '))}
-                      className="mt-3"
-                    />
-                  </CardContent>
-                </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Avg. Booking Duration</CardTitle>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            className="h-4 w-4 text-muted-foreground"
+          >
+            <rect width="20" height="14" x="2" y="6" rx="2" />
+            <path d="M22 12H2" />
+          </svg>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{averageBookingDuration.toFixed(2)} hours</div>
+          <p className="text-xs text-muted-foreground">
+            Average duration per booking
+          </p>
+        </CardContent>
+      </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Top Equipment Bookings</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <BarChart
-                      data={reportData.bookingsByEquipment.map(item => ({
-                        name: item.equipmentName,
-                        value: item.count
-                      }))}
-                      index="name"
-                      categories={["value"]}
-                      colors={["blue"]}
-                      yAxisWidth={48}
-                      className="h-40"
-                    />
-                  </CardContent>
-                </Card>
+      <Card className="col-span-full lg:col-span-2">
+        <CardHeader>
+          <CardTitle>Bookings by Status</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={200}>
+            <PieChart>
+              <Pie
+                data={statusChartData}
+                cx="50%"
+                cy="50%"
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+                label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+              >
+                {statusChartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value, name) => [`${value} bookings`, name]} />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
-                <Card className="lg:col-span-2">
-                  <CardHeader>
-                    <CardTitle>Peak Booking Times (by hour)</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <LineChart
-                      data={reportData.peakBookingTimes.map(item => ({
-                        hour: `${item.hour}:00`,
-                        bookings: item.count
-                      }))}
-                      index="hour"
-                      categories={["bookings"]}
-                      colors={["indigo"]}
-                      yAxisWidth={48}
-                      className="h-60"
-                    />
-                  </CardContent>
-                </Card>
+      <Card className="col-span-full md:col-span-2">
+        <CardHeader>
+          <CardTitle>Top 5 Booked Equipment</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={equipmentChartData.slice(0, 5)}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} interval={0} />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="value" fill="#8884d8" name="Bookings" />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Top Users by Bookings</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <BarChart
-                      data={reportData.bookingsByUser.map(item => ({
-                        name: item.userName,
-                        value: item.count
-                      }))}
-                      index="name"
-                      categories={["value"]}
-                      colors={["teal"]}
-                      yAxisWidth={48}
-                      className="h-40"
-                    />
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-10 text-muted-foreground">No report data available.</div>
-          )}
+      <Card className="col-span-full md:col-span-2">
+        <CardHeader>
+          <CardTitle>Top 5 Users by Bookings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={userChartData.slice(0, 5)}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} interval={0} />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="value" fill="#82ca9d" name="Bookings" />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Card className="col-span-full">
+        <CardHeader>
+          <CardTitle>Peak Booking Times (Hourly)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={peakTimeChartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="hour" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="count" fill="#ffc658" name="Bookings" />
+            </BarChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
     </div>

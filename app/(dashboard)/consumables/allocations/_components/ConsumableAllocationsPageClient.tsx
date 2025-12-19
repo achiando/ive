@@ -5,6 +5,9 @@ import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { Fragment, useMemo, useState } from "react";
 import { columns } from "./columns"; // This will be created next
+import { Button } from "@/components/ui/button"; // Import Button
+import Link from "next/link"; // Import Link
+import { PlusCircle } from "lucide-react"; // Import PlusCircle
 
 interface ConsumableAllocationsPageClientProps {
   allocations: any[]; // TODO: Define a proper type for ConsumableAllocationWithRelations
@@ -53,6 +56,12 @@ export function ConsumableAllocationsPageClient({ allocations }: ConsumableAlloc
             View and manage all consumable allocations.
           </p>
         </div>
+        <Button asChild>
+          <Link href="/dashboard/consumables/allocations/new">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            New Allocation
+          </Link>
+        </Button>
       </div>
 
       {/* Main Content Area */}

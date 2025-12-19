@@ -3,7 +3,7 @@ import { Consumable as PrismaConsumable, ConsumableAllocation as PrismaConsumabl
 
 export type ConsumableWithRelations = PrismaConsumable & {
   allocations?: PrismaConsumableAllocation[];
-  equipment?: PrismaEquipment[];
+  equipment?: { id: string; name: string; }[];
 };
 
 export type ConsumableAllocationWithRelations = PrismaConsumableAllocation & {
@@ -11,3 +11,12 @@ export type ConsumableAllocationWithRelations = PrismaConsumableAllocation & {
   user?: PrismaUser; // If you want to include the user who made the allocation
   // You might also want to include booking or maintenance details if they are linked
 };
+
+export interface ConsumableAllocationFormData {
+  consumableId: string;
+  quantity: number;
+  purpose: string;
+  allocationDate: Date;
+  bookingId?: string | null;
+  maintenanceId?: string | null;
+}

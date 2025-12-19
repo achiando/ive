@@ -1,15 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, ChevronDownIcon, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -17,9 +13,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 import { BookingDetails } from "@/types/booking";
+import { toast } from "sonner";
 
 interface ProjectBookingFormProps {
   projectId?: string; // Passed from parent, if booking is project-specific

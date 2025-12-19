@@ -1,7 +1,6 @@
+import { createConsumable, getConsumableById, updateConsumable } from "@/lib/actions/consumable";
 import { redirect } from "next/navigation";
 import { ConsumableForm, ConsumableFormValues } from "../_components/ConsumableForm";
-import { createConsumable, getConsumableById, updateConsumable } from "@/lib/actions/consumable";
-import { toast } from "sonner"; // Assuming toast is available for client-side notifications
 
 interface ConsumablePageProps {
   params: {
@@ -39,14 +38,20 @@ export default async function ConsumablePage({ params }: ConsumablePageProps) {
     }
   };
 
-  // Transform consumableData to ConsumableFormValues if it exists
-  const initialData = consumableData ? {
-    ...consumableData,
-    currentStock: consumableData.currentStock,
-    minimumStock: consumableData.minimumStock,
-    unitCost: consumableData.unitCost ?? undefined,
-    equipmentIds: consumableData.equipment.map(eq => eq.id),
-  } : undefined;
+const initialData = consumableData ? {
+  name: consumableData.name,
+  description: consumableData.description ?? '',
+  category: consumableData.category,
+  unit: consumableData.unit,
+  currentStock: consumableData.currentStock,
+  minimumStock: consumableData.minimumStock,
+  unitCost: consumableData.unitCost ?? 0, // Provide a default value
+  location: consumableData.location ?? '',
+  supplier: consumableData.supplier ?? '',
+  notes: consumableData.notes ?? '',
+  image: consumableData.image ?? '',
+  equipmentIds: consumableData.equipment.map(eq => eq.id),
+} : undefined;
 
   return (
     <div className="space-y-8">

@@ -10,7 +10,8 @@ import {
 import { prisma } from '@/lib/prisma';
 import {
   BookingDetails,
-  BookingStatus
+  BookingStatus,
+  BookingAnalyticsData
 } from '@/types/booking';
 import { Prisma, UserRole } from '@prisma/client';
 import { getServerSession } from 'next-auth';
@@ -105,6 +106,159 @@ interface GetBookingsParams {
   page?: number;
   pageSize?: number;
   equipmentId?: string;
+}
+
+export async function getBookingAnalytics(): Promise<BookingAnalyticsData> {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    throw new Error('Unauthorized');
+  }
+
+  const user = session.user as { id: string; role: UserRole };
+
+  // Base where clause for authorization
+  const whereClause: Prisma.EquipmentBookingWhereInput = {};
+  const isAdminRole = (role: UserRole): boolean => {
+    return role === UserRole.ADMIN || role === UserRole.LAB_MANAGER || role === UserRole.ADMIN_TECHNICIAN;
+  };
+
+  if (!isAdminRole(user.role)) {
+    whereClause.OR = [
+      { userId: user.id },
+      {
+        project: {
+          OR: [
+            { creatorId: user.id },
+            { members: { some: { userId: user.id } } },
+          ],
+        },
+      },
+    ];
+  }
+
+  try {
+    // Total Bookings
+    const totalBookings = await prisma.equipmentBooking.count({
+      where: whereClause,
+    });
+
+    // Bookings by Status
+    const bookingsByStatus = await prisma.equipmentBooking.groupBy({
+      by: ['status'],
+      _count: {
+        status: true,
+      },
+      where: whereClause,
+    });
+
+    // Bookings by Equipment (Top 5)
+    const bookingsByEquipment = await prisma.equipmentBooking.groupBy({
+      by: ['equipmentId'],
+      _count: {
+        equipmentId: true,
+      },
+      orderBy: {
+        _count: {
+          equipmentId: 'desc',
+        },
+      },
+      take: 5,
+      where: whereClause,
+    });
+
+    const equipmentNames = await prisma.equipment.findMany({
+      where: {
+        id: {
+          in: bookingsByEquipment.map(b => b.equipmentId),
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    const formattedBookingsByEquipment = bookingsByEquipment.map(item => ({
+      equipmentName: equipmentNames.find(e => e.id === item.equipmentId)?.name || 'Unknown Equipment',
+      count: item._count.equipmentId,
+    }));
+
+    // Bookings by User (Top 5)
+    const bookingsByUser = await prisma.equipmentBooking.groupBy({
+      by: ['userId'],
+      _count: {
+        userId: true,
+      },
+      orderBy: {
+        _count: {
+          userId: 'desc',
+        },
+      },
+      take: 5,
+      where: whereClause,
+    });
+
+    const userDetails = await prisma.user.findMany({
+      where: {
+        id: {
+          in: bookingsByUser.map(b => b.userId),
+        },
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+      },
+    });
+
+    const formattedBookingsByUser = bookingsByUser.map(item => ({
+      userName: userDetails.find(u => u.id === item.userId)?.firstName + ' ' + userDetails.find(u => u.id === item.userId)?.lastName || 'Unknown User',
+      count: item._count.userId,
+    }));
+
+    // Average Booking Duration (in hours)
+    const totalDurationResult = await prisma.equipmentBooking.aggregate({
+      _sum: {
+        bookingHours: true,
+      },
+      where: whereClause,
+    });
+    const totalBookingHours = totalDurationResult._sum.bookingHours || 0;
+    const averageBookingDuration = totalBookings > 0 ? totalBookingHours / totalBookings : 0;
+
+    // Peak Booking Times (Hourly)
+    const allBookings = await prisma.equipmentBooking.findMany({
+      where: whereClause,
+      select: {
+        startDate: true,
+      },
+    });
+
+    const peakBookingTimesMap = new Map<number, number>();
+    allBookings.forEach(booking => {
+      const hour = booking.startDate.getHours();
+      peakBookingTimesMap.set(hour, (peakBookingTimesMap.get(hour) || 0) + 1);
+    });
+
+    const peakBookingTimes = Array.from(peakBookingTimesMap.entries())
+      .map(([hour, count]) => ({ hour, count }))
+      .sort((a, b) => a.hour - b.hour); // Sort by hour
+
+    return {
+      totalBookings,
+      bookingsByStatus: bookingsByStatus.map(item => ({
+        status: item.status as BookingStatus,
+        count: item._count.status,
+      })),
+      bookingsByEquipment: formattedBookingsByEquipment,
+      bookingsByUser: formattedBookingsByUser,
+      averageBookingDuration,
+      peakBookingTimes,
+    };
+  } catch (error) {
+    console.error('Error fetching booking analytics:', error);
+    throw new Error('Failed to fetch booking analytics.');
+  }
 }
 
 export async function createBooking(data: CreateBookingData): Promise<BookingDetails> {
@@ -209,12 +363,12 @@ export async function getBookingById(bookingId: string): Promise<BookingDetails 
 
     // Authorization check: Only allow access to own bookings, or if user is admin/manager/technician
     const user = session.user as { id: string; role: UserRole };
-    const allowedRoles = [UserRole.ADMIN, UserRole.LAB_MANAGER, UserRole.ADMIN_TECHNICIAN, UserRole.TECHNICIAN] as const;
+    const allowedRoles: UserRole[] = [UserRole.ADMIN, UserRole.LAB_MANAGER, UserRole.ADMIN_TECHNICIAN, UserRole.TECHNICIAN];
     const hasAccess =
       booking.userId === user.id ||
       booking.project?.creatorId === user.id || // Project creator can see
       (booking.project?.members && booking.project.members.some(member => member.userId === user.id)) ||
-      (allowedRoles as readonly string[]).includes(user.role);
+      allowedRoles.includes(user.role);
 
     if (!hasAccess) {
       throw new Error('Forbidden: You do not have access to this booking.');
@@ -241,8 +395,8 @@ export async function getBookings(params: GetBookingsParams = {}): Promise<{ dat
   const where: Prisma.EquipmentBookingWhereInput = {};
 
   // Type guard to check if a role is an admin role
-  const isAdminRole = (role: UserRole): role is 'ADMIN' | 'LAB_MANAGER' | 'ADMIN_TECHNICIAN' => {
-    return [UserRole.ADMIN, UserRole.LAB_MANAGER, UserRole.ADMIN_TECHNICIAN].includes(role as any);
+  const isAdminRole = (role: UserRole): boolean => {
+    return role === UserRole.ADMIN || role === UserRole.LAB_MANAGER || role === UserRole.ADMIN_TECHNICIAN;
   };
 
   // Filter by current user's bookings or projects they are involved in
@@ -331,8 +485,8 @@ export async function getBookings(params: GetBookingsParams = {}): Promise<{ dat
       data: formattedBookings,
       total,
     };
-  } catch (error) {
-    console.error('Error fetching bookings:', error);
+  } catch (error: any) {
+    console.error('Error fetching bookings:', error.message, error.stack);
     throw new Error('Failed to fetch bookings.');
   }
 }
@@ -366,7 +520,6 @@ export async function updateBooking(bookingId: string, data: UpdateBookingData):
     if (!existingBooking) {
       throw new Error('Booking not found.');
     }
-   const user = session.user as { id: string; role: UserRole };
     const allowedRoles = [UserRole.ADMIN, UserRole.LAB_MANAGER, UserRole.ADMIN_TECHNICIAN, UserRole.TECHNICIAN] as const;
     const hasAccess =
       existingBooking.userId === user.id ||
@@ -380,8 +533,8 @@ export async function updateBooking(bookingId: string, data: UpdateBookingData):
 
     // If status is being updated, ensure only authorized roles can do it
     if (data.status && data.status !== existingBooking.status) {
-      const canChangeStatus = [UserRole.ADMIN, UserRole.LAB_MANAGER, UserRole.ADMIN_TECHNICIAN, UserRole.TECHNICIAN] as const;
-      if (!canChangeStatus) {
+      const allowedStatusChangeRoles: UserRole[] = [UserRole.ADMIN, UserRole.LAB_MANAGER, UserRole.ADMIN_TECHNICIAN, UserRole.TECHNICIAN];
+      if (!allowedStatusChangeRoles.includes(user.role)) {
         throw new Error('Forbidden: You do not have permission to change booking status.');
       }
       data.approvedBy = user.id;
@@ -494,7 +647,7 @@ export async function updateBookingStatus(
     }
 
     // Authorization check: Only allow status updates by admin/manager/technician
-    const canChangeStatus = [UserRole.ADMIN, UserRole.LAB_MANAGER, UserRole.ADMIN_TECHNICIAN, UserRole.TECHNICIAN] as const;
+    const canChangeStatus: UserRole[] = [UserRole.ADMIN, UserRole.LAB_MANAGER, UserRole.ADMIN_TECHNICIAN, UserRole.TECHNICIAN];
     if (!canChangeStatus) {
       return { success: false, message: 'Forbidden: You do not have permission to change booking status.' };
     }
@@ -554,6 +707,54 @@ export async function updateBookingStatus(
   } catch (error) {
     console.error('Error updating booking status:', error);
     return { success: false, message: 'Failed to update booking status.' };
+  }
+}
+
+export async function deleteBooking(bookingId: string): Promise<{ success: boolean; message?: string }> {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return { success: false, message: 'Unauthorized' };
+  }
+
+  const user = session.user as { id: string; role: UserRole };
+
+  try {
+    const existingBooking = await prisma.equipmentBooking.findUnique({
+      where: { id: bookingId },
+      include: {
+        project: true,
+      },
+    });
+
+    if (!existingBooking) {
+      return { success: false, message: 'Booking not found.' };
+    }
+
+    // Authorization check: Only allow deletion by booking owner, project creator, or admin/manager/technician
+    const allowedRoles: UserRole[] = [UserRole.ADMIN, UserRole.LAB_MANAGER, UserRole.ADMIN_TECHNICIAN, UserRole.TECHNICIAN];
+    const hasAccess =
+      existingBooking.userId === user.id ||
+      existingBooking.project?.creatorId === user.id ||
+      (allowedRoles as readonly string[]).includes(user.role);
+
+    if (!hasAccess) {
+      return { success: false, message: 'Forbidden: You do not have permission to delete this booking.' };
+    }
+
+    await prisma.equipmentBooking.delete({
+      where: { id: bookingId },
+    });
+
+    revalidatePath('/dashboard/bookings');
+    if (existingBooking.projectId) {
+      revalidatePath(`/dashboard/projects/${existingBooking.projectId}/bookings`);
+    }
+    revalidatePath(`/dashboard/equipments/${existingBooking.equipmentId}`);
+
+    return { success: true, message: 'Booking deleted successfully.' };
+  } catch (error) {
+    console.error('Error deleting booking:', error);
+    return { success: false, message: 'Failed to delete booking.' };
   }
 }
 

@@ -1,11 +1,13 @@
-import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
+
 import { Button } from "@/components/ui/button";
+import { authOptions } from "@/lib/auth";
 import { AlertTriangle } from "lucide-react";
+import { getServerSession } from "next-auth";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export default async function RejectedPage() {
-  const session = await auth();
+  const session = await getServerSession(authOptions);
 
   if (!session?.user) {
     redirect("/auth/login");

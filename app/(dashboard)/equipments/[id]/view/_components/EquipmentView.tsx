@@ -15,6 +15,7 @@ interface EquipmentViewProps {
   equipment: EquipmentWithRelations;
   userRole: string; // UserRole from Prisma is an enum, but here it's used as a string
   onUpdateStatus: (id: string, status: EquipmentStatus) => Promise<any>; // Prop for status update
+  fetchUserProjects: () => Promise<any>; // Added fetchUserProjects
 }
 
 export function EquipmentView({ equipment, userRole, onUpdateStatus }: EquipmentViewProps) {

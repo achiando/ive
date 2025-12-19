@@ -1,4 +1,4 @@
-import { UserRole } from '@prisma/client';
+import { UserRole, RegistrationStatus } from '@prisma/client'; // Import RegistrationStatus
 import { useSession as useNextAuthSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -8,6 +8,7 @@ type UserSession = {
   name: string | null;
   email: string | null;
   role: UserRole;
+  status: RegistrationStatus; // Add status field
 };
 
 type RoleCheck = {

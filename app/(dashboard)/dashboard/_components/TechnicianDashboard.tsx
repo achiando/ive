@@ -15,6 +15,7 @@ interface TechnicianDashboardProps {
     upcomingMaintenance?: any[];
   };
   isLoading: boolean;
+  currentUserId: string; // Added currentUserId
 }
 
 export function TechnicianDashboard({ dashboardData, isLoading }: TechnicianDashboardProps) {

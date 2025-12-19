@@ -19,14 +19,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Eye, MoreHorizontal, Pencil, Trash2, Check, UserPlus } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { BookingDetails, BookingStatus } from "@/types/booking";
+import { UserRole } from "@prisma/client";
+import { Check, MoreHorizontal, PackageSearch, Pencil, Trash2, X } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { BookingDetails, BookingStatus } from "@/types/booking";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useSession } from "next-auth/react";
-import { UserRole } from "@prisma/client";
 import { RejectBookingDialog } from "./RejectBookingDialog";
 
 interface CellActionProps {
@@ -124,12 +124,18 @@ export const CellAction: React.FC<CellActionProps> = ({
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           {canEdit && (
-            <DropdownMenuItem onClick={() => router.push(`/dashboard/bookings/${data.id}`)}>
+            <DropdownMenuItem onClick={() => router.push(`/bookings/${data.id}`)}>
               <span className="flex items-center">
                 <Pencil className="h-4 w-4 mr-2" /> Edit
               </span>
             </DropdownMenuItem>
+            
           )}
+           <DropdownMenuItem onClick={() => router.push(`/consummables/allocation/?bookingId=${data.id}`)}>
+              <span className="flex items-center">
+                <PackageSearch className="h-4 w-4 mr-2" /> Allocate Consumables
+              </span>
+            </DropdownMenuItem>
 
           {canManage && (
             <>

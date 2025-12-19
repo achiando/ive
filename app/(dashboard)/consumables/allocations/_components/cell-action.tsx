@@ -19,12 +19,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Eye, MoreHorizontal, Trash2 } from "lucide-react";
+import { deleteConsumableAllocation } from "@/lib/actions/consumable-allocation";
+import { ConsumableAllocationWithRelations } from "@/types/consumable";
+import { Edit, MoreHorizontal, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ConsumableAllocationWithRelations } from "@/types/consumable";
-import { deleteConsumableAllocation } from "@/lib/actions/consumable-allocation";
 
 interface CellActionProps {
   data: ConsumableAllocationWithRelations;
@@ -66,12 +66,12 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
             </span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          {/* No edit page for allocations, but a view page might be useful */}
-          {/* <DropdownMenuItem onClick={() => router.push(`/consumables/allocations/${data.id}/view`)}>
+          
+          <DropdownMenuItem onClick={() => router.push(`/dashboard/consumables/allocations/${data.id}`)}>
             <span className="flex items-center">
-              <Eye className="h-4 w-4 mr-2" /> View
+              <Edit className="h-4 w-4 mr-2" /> Edit
             </span>
-          </DropdownMenuItem> */}
+          </DropdownMenuItem>
           
           <DropdownMenuItem 
             onClick={() => setShowDeleteDialog(true)}

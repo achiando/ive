@@ -1,9 +1,9 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { getBookings, updateBookingStatus, deleteBooking } from "@/lib/actions/booking";
+import { getBookings, updateBookingStatus, deleteBooking, getBookingAnalytics } from "@/lib/actions/booking";
 import { BookingsPageClient } from "./_components/BookingsPageClient";
-import { BookingStatus } from "@/types/booking"; // Import BookingStatus enum
+import { BookingStatus, BookingAnalyticsData } from "@/types/booking"; // Import BookingStatus enum and BookingAnalyticsData
 import { revalidatePath } from "next/cache";
 
 interface BookingsPageProps {
@@ -35,6 +35,8 @@ export default async function BookingsPage({ searchParams }: BookingsPageProps) 
     pageSize,
   });
 
+  const analyticsData: BookingAnalyticsData = await getBookingAnalytics();
+
   const handleUpdateBookingStatus = async (id: string, newStatus: BookingStatus, reason?: string) => {
     "use server";
     const result = await updateBookingStatus(id, newStatus, reason);
@@ -61,6 +63,7 @@ export default async function BookingsPage({ searchParams }: BookingsPageProps) 
       bookings={bookings}
       onUpdateBookingStatus={handleUpdateBookingStatus}
       onDeleteBooking={handleDeleteBooking}
+      analyticsData={analyticsData} // Pass analytics data
     />
   );
 }

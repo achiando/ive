@@ -18,7 +18,7 @@ export type MaintenanceWithRelations = PrismaMaintenance & {
   } | null;
   consumableAllocations: Array<{
     id: string;
-    maintenanceId: string;
+    maintenanceId: string | null; // Changed to allow null
     consumableId: string;
     quantity: number;
     consumable: {

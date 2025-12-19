@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
-import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { ProjectWithDetails } from '@/types/project';
-import { Badge } from '@/components/ui/badge';
+import { CheckCircle, Loader2, XCircle } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import { handleJoinProjectInvite } from '../../_actions'; // Import the new server action
 
 interface InviteClientProps {
@@ -103,7 +103,7 @@ export function InviteClient({ project, token }: InviteClientProps) {
           <Button 
             onClick={handleJoinProject} 
             className="w-full" 
-            disabled={joining || !token || sessionStatus === 'loading'}
+            disabled={joining || !token}
           >
             {joining ? (
               <>

@@ -1,10 +1,10 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
-import { getBookingById, createBooking, updateBooking } from "@/lib/actions/booking";
-import ProjectBookingForm, { BookingFormData } from "../_components/ProjectBookingForm"; // Import BookingFormData
-import { BookingDetails } from "@/types/booking";
+import { createBooking, getBookingById, updateBooking } from "@/lib/actions/booking";
 import { getEquipments } from "@/lib/actions/equipment";
+import { authOptions } from "@/lib/auth";
+import { BookingDetails } from "@/types/booking";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import ProjectBookingForm, { BookingFormData } from "../_components/ProjectBookingForm"; // Import BookingFormData
 
 interface BookingPageProps {
   params: {
@@ -16,8 +16,8 @@ interface BookingPageProps {
 }
 
 export default async function BookingPage({ params, searchParams }: BookingPageProps) {
-  const { id } = params;
-  const { projectId: searchProjectId } = searchParams; // Get projectId from search params
+  const { id } = await params;
+  const { projectId: searchProjectId } = await searchParams; // Get projectId from search params
 
   const session = await getServerSession(authOptions);
 
@@ -46,7 +46,8 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
   const equipmentList = await getEquipments();
 
   const handleFormSubmit = async (formData: BookingFormData) => {
-    "use server";
+    "use server"; // Mark as server action
+    console.log("handleFormSubmit called with:", { formData, isNewBooking, initialData, userId, searchProjectId });
     try {
       if (isNewBooking) {
         await createBooking({
@@ -81,7 +82,7 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
         onSuccess={handleSubmitSuccess}
         equipmentList={equipmentList}
         userId={userId}
-        onSubmit={handleFormSubmit} // Pass the server action wrapper
+        onSubmit={handleFormSubmit} // Pass the server action
         projectId={searchProjectId} // Pass projectId from search params to the form
       />
     </div>

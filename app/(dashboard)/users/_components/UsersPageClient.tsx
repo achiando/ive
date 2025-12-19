@@ -9,12 +9,13 @@ import { UserRoleStats } from "./UserRoleStats";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { User, UserRole, RegistrationStatus } from "@prisma/client";
+import { UserWithCounts } from "./columns";
 import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface UsersPageClientProps {
-  users: User[];
+  users: UserWithCounts[];
 }
 
 export function UsersPageClient({ users }: UsersPageClientProps) {

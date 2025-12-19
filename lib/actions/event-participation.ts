@@ -1,13 +1,12 @@
+"use server";
 
 import { prisma } from "@/lib/prisma";
-import { unstable_cache as cache } from "next/cache";
-import { revalidatePath } from "next/cache";
+import { unstable_cache as cache, revalidatePath } from "next/cache";
 
 /**
  * Registers a user for an event.
  */
 export async function registerForEvent(eventId: string, userId: string) {
-  "use server";
   try {
     const existingParticipation = await prisma.eventParticipation.findUnique({
       where: {

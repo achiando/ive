@@ -1,10 +1,10 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
 import { EquipmentFormValues } from "@/app/(dashboard)/equipments/_components/EquipmentForm";
+import { prisma } from "@/lib/prisma";
 import { Project } from "@/types/equipment"; // Import Project type
 import { ProjectStatus } from "@prisma/client"; // Import ProjectStatus enum from Prisma
+import { revalidatePath } from "next/cache";
 
 export async function getEquipments() {
   try {
@@ -122,8 +122,13 @@ export async function getProjectsForEquipment(equipmentId: string): Promise<Proj
       select: {
         id: true,
         title: true,
+        description: true,
+        status: true,
         startDate: true,
         endDate: true,
+        createdAt: true,
+        updatedAt: true,
+        creatorId: true,
       },
     });
 
@@ -131,8 +136,13 @@ export async function getProjectsForEquipment(equipmentId: string): Promise<Proj
     return projects.map(p => ({
       id: p.id,
       title: p.title,
-      startDate: p.startDate?.toISOString() || null, // Convert Date to string
-      endDate: p.endDate?.toISOString() || null,     // Convert Date to string
+      description: p.description,
+      status: p.status,
+      startDate: p.startDate,
+      endDate: p.endDate,
+      createdAt: p.createdAt,
+      updatedAt: p.updatedAt,
+      creatorId: p.creatorId
     }));
   } catch (error) {
     console.error(`Error fetching projects for equipment ID ${equipmentId}:`, error);

@@ -3,25 +3,28 @@
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Table, LayoutGrid } from "lucide-react"; // Added LayoutGrid for grid view toggle
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { BookingAnalyticsData, BookingDetails, BookingStatus } from "@/types/booking"; // Import the type
+import { LayoutGrid, PlusCircle, Table } from "lucide-react"; // Added LayoutGrid for grid view toggle
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Fragment, useMemo, useState } from "react";
-import Link from "next/link";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BookingDetails, BookingStatus } from "@/types/booking";
-import { columns } from "./columns";
+import { BookingAnalytics } from "./BookingAnalytics"; // Import the new component
 import { BookingList } from "./BookingList"; // Import BookingList
+import { columns } from "./columns";
 
 interface BookingsPageClientProps {
   bookings: BookingDetails[];
   onUpdateBookingStatus: (id: string, status: BookingStatus, reason?: string) => Promise<{ success: boolean; message?: string }>;
   onDeleteBooking: (id: string) => Promise<void>;
+  analyticsData: BookingAnalyticsData; // Add analyticsData prop
 }
 
 export function BookingsPageClient({
   bookings,
   onUpdateBookingStatus,
   onDeleteBooking,
+  analyticsData, // Destructure analyticsData
 }: BookingsPageClientProps) {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
@@ -123,7 +126,7 @@ export function BookingsPageClient({
             <LayoutGrid className="h-4 w-4" />
           </Button>
           <Button asChild>
-            <Link href="/dashboard/bookings/new">
+            <Link href="/bookings/new">
               <PlusCircle className="mr-2 h-4 w-4" />
               New Booking
             </Link>
@@ -131,13 +134,16 @@ export function BookingsPageClient({
         </div>
       </div>
 
+      {/* Render BookingAnalytics component */}
+      <BookingAnalytics data={analyticsData} />
+
       {/* Main Content Area */}
       {viewMode === 'table' ? (
         <DataTable
           columns={columns(onUpdateBookingStatus, onDeleteBooking)}
           data={filteredBookings}
-          filterColumnId="purpose" 
-          filterColumnPlaceholder="Filter by purpose..." 
+          filterColumnId="purpose"
+          filterColumnPlaceholder="Filter by purpose..."
         >
           {renderFilters(true)}
         </DataTable>
