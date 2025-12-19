@@ -5,6 +5,8 @@ import { sendStatusUpdateEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import { Faculty, RegistrationStatus, User } from "@prisma/client";
 import { unstable_cache as cache, revalidatePath } from 'next/cache';
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 /**
  * Fetches all users from the database.
@@ -61,6 +63,92 @@ export const getUserById = cache(
 ) as (id: string | undefined | null) => Promise<(User & { faculty: Faculty | null }) | null>;
 
 /**
+ * Fetches the currently authenticated user's profile with extended details.
+ */
+export async function getCurrentUser() {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return null;
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      include: {
+        faculty: true,
+        _count: {
+          select: {
+            createdProjects: true,
+            equipmentBookings: true,
+            projectMemberships: true,
+            eventParticipations: true,
+          },
+        },
+        equipmentBookings: {
+          select: {
+            id: true,
+            startDate: true,
+            endDate: true,
+            status: true,
+            equipment: {
+              select: {
+                name: true,
+              },
+            },
+          },
+          orderBy: {
+            startDate: 'asc',
+          },
+          where: {
+            endDate: {
+              gte: new Date(), // Only upcoming bookings
+            },
+          },
+          take: 3, // Limit to 3 upcoming bookings
+        },
+        projectMemberships: {
+          select: {
+            project: {
+              select: {
+                id: true,
+                title: true,
+                status: true,
+                startDate: true,
+                endDate: true,
+              },
+            },
+          },
+          orderBy: {
+            project: {
+              startDate: 'desc',
+            },
+          },
+          take: 3, // Limit to 3 recent projects
+        },
+      },
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    // Flatten projectMemberships to include project details directly
+    const recentProjects = user.projectMemberships.map(pm => pm.project);
+
+    // Return user data with flattened projects and bookings
+    return {
+      ...user,
+      recentProjects,
+      projectMemberships: undefined, // Remove the original projectMemberships to avoid redundancy
+    };
+  } catch (error) {
+    console.error('Error fetching current user profile:', error);
+    return null;
+  }
+}
+
+/**
  * Calculates the number of new users per month.
  * Caches the result for 1 hour.
  */
@@ -105,6 +193,50 @@ export async function updateUser(id: string, data: Partial<User>) {
     data,
   });
   return user;
+}
+
+/**
+ * Updates the current user's profile.
+ * This function is intended for users to update their own non-sensitive profile information.
+ */
+export async function updateMyProfile(
+  userId: string,
+  data: {
+    firstName?: string;
+    lastName?: string;
+    phoneNumber?: string | null;
+    department?: string | null;
+    position?: string | null;
+    profileImage?: string | null;
+    employeeId?: string | null;
+    studentId?: string | null;
+    yearOfStudy?: number | null;
+    program?: string | null;
+  }
+) {
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phoneNumber: data.phoneNumber,
+        department: data.department,
+        position: data.position,
+        profileImage: data.profileImage,
+        employeeId: data.employeeId,
+        studentId: data.studentId,
+        yearOfStudy: data.yearOfStudy,
+        program: data.program,
+        updatedAt: new Date(), // Manually update updatedAt
+      },
+    });
+    revalidatePath('/me'); // Revalidate the profile page
+    return { success: true, user: updatedUser };
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    return { success: false, message: 'Failed to update profile.' };
+  }
 }
 
 /**

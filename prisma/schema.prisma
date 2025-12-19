@@ -17,8 +17,12 @@ enum UserRole {
   LAB_MANAGER
   ADMIN
   OTHER
+  FACULTY
 }
-
+enum ConsumableCategory {
+  CONSUMABLE
+  SPARE
+}
 enum RegistrationStatus {
   PENDING
   APPROVED
@@ -39,6 +43,10 @@ enum BookingStatus {
   REJECTED
   CANCELLED
   COMPLETED
+  IN_PROGRESS
+  CHECKED_OUT
+  RETURNED
+  OVERDUE
 }
 
 enum MaintenanceStatus {
@@ -115,10 +123,25 @@ model User {
   email              String             @unique
   emailVerified      DateTime?
   password           String
-  image              String?
+  phoneNumber          String?
+  lastLogin            DateTime?          @default(now())
+  resetToken           String?
+  verificationToken    String?
+  department           String?
+  position             String?
+  profileImage         String?
+  resetExpiry          DateTime?
+  status               RegistrationStatus @default(PENDING)
+  verificationExpiry   DateTime?
+  employeeId           String?            @unique
+  studentId            String?            @unique
+  yearOfStudy          Int?
+  instructorId         String?
+  associatedInstructor String?
+  affiliatedInstitution String?
+  program              String?
+  facultyId            String?
   role               UserRole           @default(STUDENT)
-  status             RegistrationStatus @default(PENDING)
-  registrationComplete Boolean          @default(false)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   accounts           Account[]
@@ -165,7 +188,7 @@ model Equipment {
   updatedAt     DateTime         @updatedAt
   maintenances  Maintenance[]
   bookings      EquipmentBooking[]
-  consumables   Consumable[]
+  consumables   Consumable[]     @relation("EquipmentConsumables")
   safetyTestAttempts SafetyTestAttempt[] // Add this relation
 }
 
@@ -191,13 +214,22 @@ model Consumable {
   description   String?        @db.Text
   quantity      Int
   unit          String?
-  minStockLevel Int            @default(0)
+  category        ConsumableCategory // Use the new enum
+  currentStock    Float
+  minimumStock    Float              @default(0)
+  unitCost        Float? // Cost per unit for tracking
+  location        String?
+  supplier        String?
+  lastRestockDate DateTime?
+  expiryDate      DateTime?
+  image           String?
+  notes           String?
   status        ConsumableStatus @default(AVAILABLE)
-  equipmentId   String?
-  equipment     Equipment?     @relation(fields: [equipmentId], references: [id])
+
   createdAt     DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   allocations   ConsumableAllocation[]
+ equipment   Equipment[]  @relation("EquipmentConsumables")
 }
 
 model ConsumableAllocation {

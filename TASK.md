@@ -30,6 +30,12 @@
 - **Fixed type error in `lib/actions/booking.ts`**: Imported `BookingAnalyticsData` from `types/booking.ts`.
 - **Fixed type error in `lib/actions/equipment.ts`**: Updated the `select` statement in `getProjectsForEquipment` to include all fields required by the `Project` type.
 - **Fixed type error in `lib/email.ts`**: Removed duplicate `title` property from the `PENDING` object in `statusMap`.
+- **Implemented User Profile and Edit Functionality:**
+    - Created `app/(dashboard)/me/page.tsx` for displaying the current user's profile.
+    - Created `app/(dashboard)/me/edit/page.tsx` for editing the current user's profile.
+    - Created `app/(dashboard)/me/_components/ProfileForm.tsx` for the profile editing form.
+    - Added `getCurrentUser` server action to `lib/actions/user.ts` to fetch the authenticated user's full profile.
+    - Added `updateMyProfile` server action to `lib/actions/user.ts` to allow users to update their own non-sensitive profile information.
 - **Implemented SOP (Safety Test) Feature:**
     - **Schema:** Added `SafetyTestFrequency` enum, `SafetyTest` model (with `manualUrl`, `manualType`), and `SafetyTestAttempt` model to `prisma/schema.prisma`.
     - **Types:** Created `types/safety-test.ts` with `SafetyTestFormValues`, `GetSafetyTestsParams`, `SafetyTestWithRelations`, `SafetyTestAttemptWithRelations`.

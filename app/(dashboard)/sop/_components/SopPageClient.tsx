@@ -1,25 +1,29 @@
-import { useState, useMemo, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+"use client"
+
+import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Plus, Search } from "lucide-react";
-import { columns } from "./columns";
-import { SafetyTestWithRelations } from "@/types/safety-test";
-import { UserRole, SafetyTestFrequency, ManualType } from "@prisma/client";
-import { toast } from "sonner";
-import { deleteSafetyTest } from "@/lib/actions/safety-test";
 import { getEquipmentById } from "@/lib/actions/equipment"; // Import getEquipmentById
+import { deleteSafetyTest } from "@/lib/actions/safety-test";
+import { SafetyTestWithRelations } from "@/types/safety-test";
+import { ManualType, SafetyTestFrequency, UserRole } from "@prisma/client";
+import { Plus, Search } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { columns } from "./columns";
 
 interface SopPageClientProps {
   initialSafetyTests: SafetyTestWithRelations[];
   equipmentId?: string; // New optional prop
 }
 
-const isAdminOrManager = (role: UserRole) =>
-  [UserRole.ADMIN, UserRole.LAB_MANAGER, UserRole.ADMIN_TECHNICIAN].includes(role);
+const isAdminOrManager = (role: UserRole) => {
+  // Check if the role is either 'TECHNICIAN' or 'LECTURER'
+  return role === 'TECHNICIAN' || role === 'LECTURER';
+};
 
 export function SopPageClient({ initialSafetyTests, equipmentId }: SopPageClientProps) {
   const router = useRouter();
@@ -30,8 +34,8 @@ export function SopPageClient({ initialSafetyTests, equipmentId }: SopPageClient
   const [selectedManualType, setSelectedManualType] = useState<ManualType | "all">("all");
   const [equipmentTypes, setEquipmentTypes] = useState<string[]>([]); // State to store equipment types
 
-  const userRole = session?.user?.role as UserRole;
-  const canManageSOPs = isAdminOrManager(userRole);
+  const userRole = session?.user?.role;
+  const canManageSOPs = userRole ? isAdminOrManager(userRole) : false;
 
   useEffect(() => {
     if (equipmentId) {
@@ -153,7 +157,6 @@ export function SopPageClient({ initialSafetyTests, equipmentId }: SopPageClient
         data={filteredSafetyTests}
         filterColumnId="name"
         filterColumnPlaceholder="Filter by name..."
-        meta={{ onEdit: (test) => router.push(`/dashboard/sop/${test.id}`), onDelete: handleDelete }}
       />
     </>
   );
