@@ -30,30 +30,32 @@
 - **Fixed type error in `lib/actions/booking.ts`**: Imported `BookingAnalyticsData` from `types/booking.ts`.
 - **Fixed type error in `lib/actions/equipment.ts`**: Updated the `select` statement in `getProjectsForEquipment` to include all fields required by the `Project` type.
 - **Fixed type error in `lib/email.ts`**: Removed duplicate `title` property from the `PENDING` object in `statusMap`.
-- **Implemented Booking Analytics:**
-    - Created `app/(dashboard)/bookings/_components/BookingAnalytics.tsx` component.
-    - Added `getBookingAnalytics` server action to `lib/actions/booking.ts`.
-    - Integrated analytics data fetching and rendering into `app/(dashboard)/bookings/page.tsx` and `app/(dashboard)/bookings/_components/BookingsPageClient.tsx`.
-- **Implemented Consumable Allocation Management:**
-    - Defined `ConsumableAllocationFormData` in `types/consumable.ts`.
-    - Created `app/(dashboard)/consumables/allocations/_components/ConsumableAllocationForm.tsx` component.
-    - Modified `lib/actions/consumable-allocation.ts` to handle `userId` and `allocatedBy` from session, and added authorization for `updateConsumableAllocation`.
-    - Implemented `app/(dashboard)/consumables/allocations/[id]/page.tsx` to handle both creation (id='new') and editing of allocations.
-    - Updated `app/(dashboard)/consumables/allocations/_components/ConsumableAllocationsPageClient.tsx` with a "New Allocation" button.
-    - Updated `app/(dashboard)/consumables/allocations/_components/cell-action.tsx` with an "Edit" option.
-- **Enhanced Session Management for Pending Page:**
-    - Updated `UserSession` type in `hooks/useSession.ts` to include `status: RegistrationStatus;`.
-    - Modified `app/(status)/pending/_components/pending-page-client.tsx` to use the custom `useSession` hook and adjusted `handleRefreshStatus` to align with the custom hook's behavior.
-    - **Fixed `session.user.status` not being included in `getServerSession`**: Modified `lib/auth.ts` to include the `status` field in the JWT token and the session object during the `jwt` and `session` callbacks.
-- **Implemented Project Management Feature:**
-- **Fixed `PrismaClientValidationError`:** Added a check for `projectId` in `getProjectById` to ensure it's a valid string before querying the database.
-- **Adjusted Project Permissions:**
-    - `updateProject`: Only the project creator can edit project details. Privileged users (Admin/Lab Manager) can only change the project status.
-    - `deleteProject`: Only the project creator or privileged users (Admin/Lab Manager) can delete a project.
-- **Refactored ProjectForm Submission:**
-    - Created `app/(dashboard)/projects/_actions.ts` to wrap `createProject` and `updateProject` server actions.
-    - Modified `app/(dashboard)/projects/_components/ProjectForm.tsx` to call these new server actions, ensuring proper server-side redirection after form submission.
-- **Enhanced Project Invite Functionality:**
-    - Modified `app/(dashboard)/projects/[id]/members/_components/ProjectMembersClient.tsx` to display generated invite links and their corresponding QR codes in a dialog.
-    - Updated `joinProjectWithToken` in `lib/actions/project.ts` to include a check for the joining user's `RegistrationStatus`. Users with `APPROVED` or `PENDING` status can proceed; others receive an error message to contact support.
-    - Confirmed `app/(public)/invite/[projectId]/page.tsx` correctly handles project details display, login redirection, and error feedback from `joinProjectWithToken`.
+- **Implemented SOP (Safety Test) Feature:**
+    - **Schema:** Added `SafetyTestFrequency` enum, `SafetyTest` model (with `manualUrl`, `manualType`), and `SafetyTestAttempt` model to `prisma/schema.prisma`.
+    - **Types:** Created `types/safety-test.ts` with `SafetyTestFormValues`, `GetSafetyTestsParams`, `SafetyTestWithRelations`, `SafetyTestAttemptWithRelations`.
+    - **Server Actions:** Created `lib/actions/safety-test.ts` with CRUD operations for `SafetyTest` and `recordSafetyTestAttempt`.
+    - **UI Structure:**
+        - Created `app/(dashboard)/sop/page.tsx` (SOP List Page).
+        - Created `app/(dashboard)/sop/[id]/page.tsx` (SOP Create/Edit Page).
+        - Created `app/(dashboard)/sop/[id]/view/page.tsx` (SOP View Page).
+        - Created `app/(dashboard)/sop/_components/columns.tsx` for DataTable.
+        - Created `app/(dashboard)/sop/_components/cell-action.tsx` for row actions.
+        - Created `app/(dashboard)/sop/_components/SopPageClient.tsx` for client-side list logic.
+        - Created `app/(dashboard)/sop/_components/SOPForm.tsx` for create/edit form.
+    - **Routing:** Adjusted links and navigation to match the new routing structure (`/new`, `/[id]`, `/[id]/view`).
+- **Implemented AI Assessment Bot Integration:**
+    - **AI Assessment Server Action:** Created `lib/actions/ai-assessment.ts` with `generateAssessmentFromEquipment` to generate assessment content from equipment details.
+    - **AI Assessment API Route:** Created `app/api/gemini-assessment/route.ts` to serve as the endpoint for the `AssessmentBot`, dynamically generating questions from `manualUrl` or falling back to `equipmentId` and `safetyTestId`.
+    - **`AssessmentBot` Component:**
+        - Created `components/AssessmentBot.tsx`.
+        - Updated `AssessmentBotProps` to accept `safetyTestId`, `equipmentId`, `manualUrl`, `documentTitle`.
+        - Modified `startQuizInternal` to call the new `/api/gemini-assessment` endpoint with appropriate parameters.
+        - Integrated `recordSafetyTestAttempt` server action upon successful assessment completion.
+    - **Test Page:** Created `app/(dashboard)/assessment-test-page/page.tsx` for testing the `AssessmentBot` with various inputs.
+- **Updated SOP View Page and List Client:**
+    - **`app/(dashboard)/sop/[id]/view/page.tsx`**: Simplified `renderManualContent` to display a link to the manual, removed direct `AssessmentBot` import, and updated the "Take Safety Assessment" button to navigate to a dedicated assessment page (`/dashboard/assessment`).
+    - **`app/(dashboard)/sop/_components/SopPageClient.tsx`**: Added optional `equipmentId` prop and modified `filteredSafetyTests` to filter by `associatedEquipmentTypes` of the provided `equipmentId`.
+    - **`app/(dashboard)/sop/[id]/page.tsx`**: Refactored to be a Server Component, fetching data and passing it to `SopFormClient`.
+    - **`app/(dashboard)/sop/_components/SopFormClient.tsx`**: Created as a new Client Component to handle form logic.
+    - **`app/(dashboard)/sop/_components/SOPForm.tsx`**: Modified to be a purely presentational component, accepting `onSubmitAction` and callbacks as props.
+    - **`components/AssessmentBot.tsx`**: Fixed JSX parsing error in `formatClarificationResponse` function.
