@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { BookingStatus } from '@prisma/client';
 
 type SendEmailOptions = {
   to: string;
@@ -102,6 +103,7 @@ export async function sendStatusUpdateEmail(email: string, name: string, status:
     PENDING: {
       subject: 'Account Status Update',
       title: 'Account Under Review',
+      title: 'Account Under Review',
       description: 'Your account is currently under review by our team. We will notify you once a decision has been made.'
     }
   };
@@ -136,6 +138,201 @@ export async function sendStatusUpdateEmail(email: string, name: string, status:
     to: email,
     subject,
     text,
+    html,
+  });
+}
+
+// --- New Booking Email Functions ---
+
+interface BookingEmailDetails {
+  userName: string;
+  userEmail: string;
+  equipmentName: string;
+  projectName?: string | null;
+  startDate: Date;
+  endDate: Date;
+  purpose: string | null;
+  notes?: string | null;
+  bookingLink: string;
+  reason?: string; // For rejection
+}
+
+export async function sendBookingConfirmationEmail({
+  userName,
+  userEmail,
+  equipmentName,
+  projectName,
+  startDate,
+  endDate,
+  purpose,
+  bookingLink,
+}: BookingEmailDetails) {
+  const subject = 'Equipment Booking Confirmation';
+  const formattedStartDate = startDate.toLocaleString();
+  const formattedEndDate = endDate.toLocaleString();
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2>Booking Confirmation</h2>
+      <p>Hello ${userName},</p>
+      <p>Your booking for <strong>${equipmentName}</strong> has been successfully created.</p>
+      <p><strong>Details:</strong></p>
+      <ul>
+        <li><strong>Equipment:</strong> ${equipmentName}</li>
+        <li><strong>Project:</strong> ${projectName || 'N/A'}</li>
+        <li><strong>Start Time:</strong> ${formattedStartDate}</li>
+        <li><strong>End Time:</strong> ${formattedEndDate}</li>
+        <li><strong>Purpose:</strong> ${purpose || 'N/A'}</li>
+      </ul>
+      <p>You can view your booking details here:</p>
+      <p style="text-align: center; margin: 30px 0;">
+        <a href="${bookingLink}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+          View Booking
+        </a>
+      </p>
+      <p>Thank you,<br>The Team</p>
+    </div>
+  `;
+
+  return sendEmail({
+    to: userEmail,
+    subject,
+    html,
+  });
+}
+
+export async function sendBookingApprovedEmail({
+  userName,
+  userEmail,
+  equipmentName,
+  projectName,
+  startDate,
+  endDate,
+  purpose,
+  bookingLink,
+}: BookingEmailDetails) {
+  const subject = 'Your Equipment Booking Has Been Approved!';
+  const formattedStartDate = startDate.toLocaleString();
+  const formattedEndDate = endDate.toLocaleString();
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2>Booking Approved!</h2>
+      <p>Hello ${userName},</p>
+      <p>Good news! Your booking for <strong>${equipmentName}</strong> has been <strong>APPROVED</strong>.</p>
+      <p><strong>Details:</strong></p>
+      <ul>
+        <li><strong>Equipment:</strong> ${equipmentName}</li>
+        <li><strong>Project:</strong> ${projectName || 'N/A'}</li>
+        <li><strong>Start Time:</strong> ${formattedStartDate}</li>
+        <li><strong>End Time:</strong> ${formattedEndDate}</li>
+        <li><strong>Purpose:</strong> ${purpose || 'N/A'}</li>
+      </ul>
+      <p>You can view your booking details here:</p>
+      <p style="text-align: center; margin: 30px 0;">
+        <a href="${bookingLink}" style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+          View Booking
+        </a>
+      </p>
+      <p>Thank you,<br>The Team</p>
+    </div>
+  `;
+
+  return sendEmail({
+    to: userEmail,
+    subject,
+    html,
+  });
+}
+
+export async function sendBookingRejectedEmail({
+  userName,
+  userEmail,
+  equipmentName,
+  projectName,
+  startDate,
+  endDate,
+  purpose,
+  bookingLink,
+  reason,
+}: BookingEmailDetails) {
+  const subject = 'Update: Your Equipment Booking Has Been Rejected';
+  const formattedStartDate = startDate.toLocaleString();
+  const formattedEndDate = endDate.toLocaleString();
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2>Booking Rejected</h2>
+      <p>Hello ${userName},</p>
+      <p>We regret to inform you that your booking for <strong>${equipmentName}</strong> has been <strong>REJECTED</strong>.</p>
+      <p><strong>Details:</strong></p>
+      <ul>
+        <li><strong>Equipment:</strong> ${equipmentName}</li>
+        <li><strong>Project:</strong> ${projectName || 'N/A'}</li>
+        <li><strong>Start Time:</strong> ${formattedStartDate}</li>
+        <li><strong>End Time:</strong> ${formattedEndDate}</li>
+        <li><strong>Purpose:</strong> ${purpose || 'N/A'}</li>
+      </ul>
+      ${reason ? `<p><strong>Reason for rejection:</strong> ${reason}</p>` : ''}
+      <p>You can view your booking details here:</p>
+      <p style="text-align: center; margin: 30px 0;">
+        <a href="${bookingLink}" style="background-color: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+          View Booking
+        </a>
+      </p>
+      <p>If you have any questions, please contact our support team.</p>
+      <p>Thank you,<br>The Team</p>
+    </div>
+  `;
+
+  return sendEmail({
+    to: userEmail,
+    subject,
+    html,
+  });
+}
+
+export async function sendBookingCancelledEmail({
+  userName,
+  userEmail,
+  equipmentName,
+  projectName,
+  startDate,
+  endDate,
+  purpose,
+  bookingLink,
+}: BookingEmailDetails) {
+  const subject = 'Your Equipment Booking Has Been Cancelled';
+  const formattedStartDate = startDate.toLocaleString();
+  const formattedEndDate = endDate.toLocaleString();
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2>Booking Cancelled</h2>
+      <p>Hello ${userName},</p>
+      <p>Your booking for <strong>${equipmentName}</strong> from ${formattedStartDate} to ${formattedEndDate} has been <strong>CANCELLED</strong>.</p>
+      <p><strong>Details:</strong></p>
+      <ul>
+        <li><strong>Equipment:</strong> ${equipmentName}</li>
+        <li><strong>Project:</strong> ${projectName || 'N/A'}</li>
+        <li><strong>Start Time:</strong> ${formattedStartDate}</li>
+        <li><strong>End Time:</strong> ${formattedEndDate}</li>
+        <li><strong>Purpose:</strong> ${purpose || 'N/A'}</li>
+      </ul>
+      <p>You can view your booking details here:</p>
+      <p style="text-align: center; margin: 30px 0;">
+        <a href="${bookingLink}" style="background-color: #6c757d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+          View Booking
+        </a>
+      </p>
+      <p>If you have any questions, please contact our support team.</p>
+      <p>Thank you,<br>The Team</p>
+    </div>
+  `;
+
+  return sendEmail({
+    to: userEmail,
+    subject,
     html,
   });
 }
