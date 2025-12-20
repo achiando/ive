@@ -18,8 +18,7 @@ const formatRole = (role: UserRole) => {
     [UserRole.STUDENT]: 'Student',
     [UserRole.TECHNICIAN]: 'Technician',
     [UserRole.OTHER]: 'Other',
-    // Add FACULTY if it exists in your UserRole enum
-    // [UserRole.FACULTY]: 'Faculty', 
+    [UserRole.FACULTY]: 'Faculty', 
   };
   return roleLabels[role] || role;
 };

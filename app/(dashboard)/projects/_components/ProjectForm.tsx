@@ -57,7 +57,7 @@ export function ProjectForm({ initialData, projectId }: ProjectFormProps) {
       description: '',
       startDate: '',
       endDate: '',
-      status: ProjectStatus.PENDING_APPROVAL,
+      status: ProjectStatus.PENDING,
       userEmail: '',
     },
   });

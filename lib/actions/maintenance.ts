@@ -44,9 +44,9 @@ export async function createMaintenance(values: MaintenanceFormValues) {
         consumableAllocations: {
           create: consumableAllocations?.map(alloc => ({
             consumable: { connect: { id: alloc.consumableId } },
+            user: { connect: { id: data.createdById } },  // Add this line
             quantity: alloc.quantity,
-            allocatedBy: data.createdById, // The user who created the maintenance is the one allocating
-            userId: data.createdById,      // Add this line to include the required userId
+            allocatedBy: data.createdById,  // This is fine as it's just a string field
             purpose: `Maintenance for equipment ${data.equipmentId}`,
           })) || [],
         }
@@ -168,8 +168,8 @@ export async function updateMaintenance(id: string, values: MaintenanceFormValue
           allocatedBy: data.createdById,
           purpose: `Maintenance for equipment ${data.equipmentId}`,
           maintenance: { connect: { id } },
-          userId: data.createdById,
-        },
+          user: { connect: { id: data.assignedToId || data.createdById } }
+        }
       });
     }
 

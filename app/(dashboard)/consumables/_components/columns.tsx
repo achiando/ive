@@ -81,7 +81,7 @@ export const columns: ColumnDef<ConsumableWithRelations>[] = [
     },
     cell: ({ row }) => {
       const currentStock: number = row.getValue("currentStock");
-      const unit: string = row.original.unit;
+      const unit: string = row.original.unit ?? '';
       return `${currentStock} ${unit}`;
     },
   },
@@ -90,7 +90,7 @@ export const columns: ColumnDef<ConsumableWithRelations>[] = [
     header: "Min Stock",
     cell: ({ row }) => {
       const minimumStock: number = row.getValue("minimumStock");
-      const unit: string = row.original.unit;
+      const unit: string = row.original.unit ?? '';
       return `${minimumStock} ${unit}`;
     },
   },

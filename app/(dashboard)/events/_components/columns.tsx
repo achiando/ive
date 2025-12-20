@@ -3,12 +3,11 @@
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import type { Event } from "@prisma/client"
 import { ColumnDef } from "@tanstack/react-table"
 import { format } from "date-fns"
 import { ArrowUpDown } from "lucide-react"
 import { CellAction } from "./cell-action"
-import { EventWithVenue } from "./EventCard" // Import the type from EventCard
+import { EventWithVenue } from "./EventCard"; // Import the type from EventCard
 
 export const columns: ColumnDef<EventWithVenue>[] = [
   {

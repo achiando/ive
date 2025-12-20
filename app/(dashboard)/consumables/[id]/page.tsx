@@ -42,7 +42,7 @@ const initialData = consumableData ? {
   name: consumableData.name,
   description: consumableData.description ?? '',
   category: consumableData.category,
-  unit: consumableData.unit,
+  unit: consumableData.unit ?? '',
   currentStock: consumableData.currentStock,
   minimumStock: consumableData.minimumStock,
   unitCost: consumableData.unitCost ?? 0, // Provide a default value

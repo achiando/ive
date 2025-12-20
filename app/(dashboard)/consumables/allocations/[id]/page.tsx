@@ -76,7 +76,7 @@ export default async function ConsumableAllocationPage({ params }: ConsumableAll
     consumableId: initialAllocation.consumableId,
     quantity: initialAllocation.quantity,
     purpose: initialAllocation.purpose || '',
-    allocationDate: initialAllocation.allocationDate,
+    allocationDate: initialAllocation.createdAt,
     bookingId: initialAllocation.bookingId,
     maintenanceId: initialAllocation.maintenanceId,
   } : undefined;

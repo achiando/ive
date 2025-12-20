@@ -24,7 +24,7 @@ export type MaintenanceWithRelations = PrismaMaintenance & {
     consumable: {
       id: string;
       name: string;
-      unit: string;
+      unit: string | null;
     };
   }>;
 };

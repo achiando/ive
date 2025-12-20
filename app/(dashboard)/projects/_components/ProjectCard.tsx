@@ -24,15 +24,13 @@ const StatusBadge = ({ status }: { status: ProjectStatus }) => {
     switch (status) {
       case 'APPROVED':
         return 'default';
-      case 'PENDING_APPROVAL':
+      case 'PENDING':
         return 'secondary';
       case 'REJECTED':
-      case 'CANCELLED':
         return 'destructive';
-      case 'IN_PROGRESS':
       case 'COMPLETED':
-      case 'ON_HOLD':
-      case 'DRAFT':
+      case 'ARCHIVED':
+      
       default:
         return 'outline';
     }

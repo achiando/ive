@@ -1,12 +1,12 @@
 'use server';
 
-import { Project, ProjectMember, ProjectDocument, User, ProjectStatus, RegistrationStatus, UserRole } from '@prisma/client';
+import { ProjectWithDetails } from '@/types/project';
+import { ManualType, ProjectDocument, ProjectMember, ProjectStatus, RegistrationStatus, UserRole } from '@prisma/client';
 import { getServerSession } from 'next-auth';
+import { v4 as uuidv4 } from 'uuid';
+import { z } from 'zod';
 import { authOptions } from '../auth';
 import { prisma } from '../prisma';
-import { ProjectWithDetails } from '@/types/project';
-import { z } from 'zod';
-import { v4 as uuidv4 } from 'uuid';
 
 // Form schema for validation (re-using from the UI component for consistency)
 const projectFormSchema = z.object({
@@ -14,7 +14,7 @@ const projectFormSchema = z.object({
   description: z.string().min(10, 'Description must be at least 10 characters').optional().or(z.literal('')),
   startDate: z.string().optional().or(z.literal('')),
   endDate: z.string().optional().or(z.literal('')),
-  status: z.enum(['DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'IN_PROGRESS', 'COMPLETED', 'ON_HOLD', 'CANCELLED', 'REJECTED']).default('DRAFT'),
+  status: z.nativeEnum(ProjectStatus).default(ProjectStatus.PENDING),
   userEmail: z.string().email('Invalid email format').optional().or(z.literal('')),
   projectImage: z.any().optional(), // File type is handled separately
 });
@@ -153,7 +153,7 @@ export async function createProject(data: ProjectFormValues): Promise<ProjectWit
 
   const projectStatus: ProjectStatus = (userRole === UserRole.ADMIN || userRole === UserRole.LAB_MANAGER) && data.status
     ? data.status
-    : ProjectStatus.PENDING_APPROVAL;
+    : ProjectStatus.PENDING;
 
   const newProject = await prisma.project.create({
     data: {
@@ -167,11 +167,10 @@ export async function createProject(data: ProjectFormValues): Promise<ProjectWit
         create: [
           {
             userId: creatorId, // Creator is always a member
-            role: 'CREATOR',
             status: 'ACCEPTED',
           },
           ...(assignedUserId && assignedUserId !== creatorId
-            ? [{ userId: assignedUserId, role: 'MEMBER', status: 'ACCEPTED' }]
+            ? [{ userId: assignedUserId, status: 'ACCEPTED' }]
             : []),
         ],
       },
@@ -277,7 +276,7 @@ export async function deleteProject(projectId: string): Promise<void> {
   });
 }
 
-export async function addProjectDocument(projectId: string, url: string, fileType?: string): Promise<ProjectDocument> {
+export async function addProjectDocument(projectId: string, fileName: string, fileUrl: string, fileType: ManualType): Promise<ProjectDocument> {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
 
@@ -306,8 +305,10 @@ export async function addProjectDocument(projectId: string, url: string, fileTyp
   const newDocument = await prisma.projectDocument.create({
     data: {
       projectId,
-      url,
-      fileType,
+      fileName,
+      fileUrl,
+      fileType: fileType.toString(),
+      uploadedBy: userId,
     },
   });
   return newDocument;
@@ -372,34 +373,33 @@ export async function getProjectDocuments(projectId: string): Promise<ProjectDoc
 
   const documents = await prisma.projectDocument.findMany({
     where: { projectId },
-    orderBy: { createdAt: 'asc' },
+    orderBy: { uploadedAt: 'asc' },
   });
   return documents;
 }
 
 export async function generateProjectInviteToken(projectId: string): Promise<string> {
   const session = await getServerSession(authOptions);
-  const invitedById = session?.user?.id;
-
-  if (!invitedById) {
-    throw new Error("User not authenticated.");
+  if (!session?.user?.id) {
+    throw new Error('Not authenticated');
   }
 
   const project = await prisma.project.findUnique({
     where: { id: projectId },
-    select: { creatorId: true, members: { select: { userId: true } } },
+    include: { members: true }
   });
 
   if (!project) {
-    throw new Error("Project not found.");
+    throw new Error('Project not found');
   }
 
-  const isCreator = project.creatorId === invitedById;
-  const isPrivileged = session?.user?.role === UserRole.ADMIN || session?.user?.role === UserRole.LAB_MANAGER;
+  // Check if current user is a member of the project
+  const isMember = project.members.some(
+    (member) => member.userId === session.user.id && member.status === 'ACCEPTED'
+  );
 
-  // Only creator or privileged users can generate invite links
-  if (!isCreator && !isPrivileged) {
-    throw new Error("Not authorized to generate invite links for this project.");
+  if (!isMember) {
+    throw new Error('Not authorized to generate invite links for this project.');
   }
 
   const token = uuidv4();
@@ -409,7 +409,7 @@ export async function generateProjectInviteToken(projectId: string): Promise<str
   await prisma.projectMember.create({
     data: {
       projectId,
-      invitedById,
+      userId: session.user.id, 
       status: 'INVITED',
       token,
       expiresAt,

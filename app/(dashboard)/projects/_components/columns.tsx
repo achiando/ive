@@ -74,18 +74,14 @@ export const columns: ColumnDef<ProjectWithDetails>[] = [
         switch (status) {
           case 'APPROVED':
             return { variant: 'default' as const, className: '' };
-          case 'PENDING_APPROVAL':
+          case 'PENDING':
             return { variant: 'secondary' as const, className: '' };
           case 'REJECTED':
-          case 'CANCELLED':
             return { variant: 'destructive' as const, className: '' };
-          case 'IN_PROGRESS':
-            return { variant: 'outline' as const, className: '' };
           case 'COMPLETED':
-            return { variant: 'secondary' as const, className: 'bg-green-500 text-white' }; // Custom green
-          case 'ON_HOLD':
-            return { variant: 'secondary' as const, className: 'bg-yellow-500 text-white' }; // Custom yellow
-          case 'DRAFT':
+            return { variant: 'secondary' as const, className: 'bg-green-500 text-white' };
+          case 'ARCHIVED':
+            return { variant: 'outline' as const, className: '' };
           default:
             return { variant: 'outline' as const, className: '' };
         }

@@ -22,7 +22,7 @@ import {
 import { useSession } from '@/hooks/useSession';
 import { deleteProject, updateProject } from '@/lib/actions/project';
 import { ProjectWithDetails } from '@/types/project';
-import type { ProjectStatus } from '@prisma/client';
+import { ProjectStatus } from "@prisma/client";
 import { Check, Edit, Eye, FileText, MoreHorizontal, Trash2, Users, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -118,7 +118,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
             </span>
           </DropdownMenuItem>
 
-          {canChangeStatus && data.status === 'PENDING_APPROVAL' && (
+          {canChangeStatus && data.status === 'PENDING' && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem 
@@ -144,11 +144,11 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem 
-                onClick={() => handleStatusUpdate('ON_HOLD')}
+                onClick={() => handleStatusUpdate('ARCHIVED')}
                 className="text-orange-600 hover:!text-orange-600"
               >
                 <span className="flex items-center">
-                  <X className="h-4 w-4 mr-2" /> Put On Hold
+                  <X className="h-4 w-4 mr-2" /> Archive
                 </span>
               </DropdownMenuItem>
             </>

@@ -4,12 +4,14 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRef, useState } from 'react';
@@ -23,8 +25,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { EquipmentStatus } from '@/types/equipment'; // Import EquipmentStatus enum
-import { ImageIcon, Loader2, X } from 'lucide-react';
+import { EquipmentStatus } from '@/types/equipment';
+import { Loader2 } from 'lucide-react';
 
 const equipmentFormSchema = z.object({
   name: z.string().min(2, {
@@ -32,6 +34,7 @@ const equipmentFormSchema = z.object({
   }),
   description: z.string().optional(),
   category: z.string().min(1, "Category is required"),
+  manufacturer: z.string().optional(),
   model: z.string().optional(),
   serialNumber: z.string().optional(),
   location: z.string().optional(),
@@ -39,11 +42,17 @@ const equipmentFormSchema = z.object({
   dailyCapacity: z.number().int().positive({
     message: 'Daily Capacity must be a positive number',
   }),
-  imageFile: z.any().optional(),
-  imageUrl: z.string().url('Invalid image URL').optional().or(z.literal('')),
-  manualFile: z.any().optional(),
+  purchaseDate: z.date().optional().or(z.string().optional()),
+  purchasePrice: z.string().optional().or(z.number().optional()),
+  warrantyExpiry: z.date().optional().or(z.string().optional()),
+  estimatedPrice: z.string().optional().or(z.number().optional()),
+  actualPrice: z.string().optional().or(z.number().optional()),
+  notes: z.string().optional(),
+  requiresSafetyTest: z.boolean(),
+  image: z.string().url('Invalid image URL').optional().or(z.literal('')),
   manualUrl: z.string().url('Invalid manual URL').optional().or(z.literal('')),
-});
+})
+
 export type EquipmentFormValues = z.infer<typeof equipmentFormSchema>;
 
 interface EquipmentFormProps {
@@ -54,8 +63,6 @@ interface EquipmentFormProps {
 
 export function EquipmentForm({ initialData, onSubmit, onCancel }: EquipmentFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(initialData?.imageUrl || null);
-  const imageFileInputRef = useRef<HTMLInputElement>(null);
   const manualFileInputRef = useRef<HTMLInputElement>(null);
 
   // Define available categories
@@ -75,54 +82,23 @@ export function EquipmentForm({ initialData, onSubmit, onCancel }: EquipmentForm
       name: '',
       description: '',
       category: '',
+      manufacturer: '',
       model: '',
       serialNumber: '',
       location: '',
-      status: EquipmentStatus.AVAILABLE, // Use enum value
+      status: EquipmentStatus.AVAILABLE,
       dailyCapacity: 1,
-      imageFile: undefined,
-      imageUrl: '',
-      manualFile: undefined,
+      purchaseDate: undefined,
+      purchasePrice: '',
+      warrantyExpiry: undefined,
+      estimatedPrice: '',
+      actualPrice: '',
+      notes: '',
+      requiresSafetyTest: false,
+      image: '',
       manualUrl: '',
     },
   });
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-
-    form.setValue('imageFile', file);
-  };
-
-  const removeImage = () => {
-    if (imageFileInputRef.current) {
-      imageFileInputRef.current.value = '';
-    }
-    form.setValue('imageFile' as any, undefined);
-    form.setValue('imageUrl' as any, '');
-    setImagePreview(null);
-  };
-
-  const handleManualChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      form.setValue('manualFile', file);
-    }
-  };
-
-  const removeManual = () => {
-    if (manualFileInputRef.current) {
-      manualFileInputRef.current.value = '';
-    }
-    form.setValue('manualFile' as any, undefined);
-    form.setValue('manualUrl' as any, '');
-  };
 
   async function handleFormSubmit(data: EquipmentFormValues) {
     setIsSubmitting(true);
@@ -145,6 +121,45 @@ export function EquipmentForm({ initialData, onSubmit, onCancel }: EquipmentForm
                 <FormLabel>Name *</FormLabel>
                 <FormControl>
                   <Input placeholder="Enter equipment name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="category"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Category *</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="manufacturer"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Manufacturer</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter manufacturer" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -208,7 +223,7 @@ export function EquipmentForm({ initialData, onSubmit, onCancel }: EquipmentForm
                   <SelectContent>
                     {Object.values(EquipmentStatus).map((status) => (
                       <SelectItem key={status} value={status}>
-                        {status.replace(/_/g, ' ')} {/* Format for display */}
+                        {status.replace(/_/g, ' ')}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -217,6 +232,7 @@ export function EquipmentForm({ initialData, onSubmit, onCancel }: EquipmentForm
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="dailyCapacity"
@@ -224,32 +240,114 @@ export function EquipmentForm({ initialData, onSubmit, onCancel }: EquipmentForm
               <FormItem>
                 <FormLabel>Daily Capacity *</FormLabel>
                 <FormControl>
-                  <Input type="number" min={1} {...field} />
+                  <Input 
+                    type="number" 
+                    min={1} 
+                    {...field}
+                    onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
-            name="category"
+            name="purchaseDate"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Purchase Date</FormLabel>
+                <FormControl>
+                  <Input
+                    type="date"
+                    {...field}
+                    value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                    onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="warrantyExpiry"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Warranty Expiry</FormLabel>
+                <FormControl>
+                  <Input
+                    type="date"
+                    {...field}
+                    value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                    onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="purchasePrice"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Category *</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormLabel>Purchase Price</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    {...field}
+                    value={field.value || ''}
+                    onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : '')}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="estimatedPrice"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Estimated Price</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    {...field}
+                    value={field.value || ''}
+                    onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : '')}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="actualPrice"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Actual Price</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    {...field}
+                    value={field.value || ''}
+                    onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : '')}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -274,93 +372,84 @@ export function EquipmentForm({ initialData, onSubmit, onCancel }: EquipmentForm
           )}
         />
 
-        <div>
-          <FormLabel>Equipment Image</FormLabel>
-          <div className="mt-2 flex items-center gap-4">
-            {imagePreview ? (
-              <div className="relative">
-                <img
-                  src={imagePreview}
-                  alt="Equipment preview"
-                  className="h-32 w-32 rounded-md object-cover"
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Notes</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Additional notes about this equipment"
+                  className="min-h-[100px]"
+                  {...field}
                 />
-                <button
-                  type="button"
-                  onClick={removeImage}
-                  className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-white"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ) : (
-              <div className="flex h-32 w-32 items-center justify-center rounded-md border-2 border-dashed">
-                <ImageIcon className="h-8 w-8 text-muted-foreground" />
-              </div>
-            )}
-            <div>
-              <input
-                type="file"
-                ref={imageFileInputRef}
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageChange}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={imagePreview ? removeImage : () => imageFileInputRef.current?.click()}
-              >
-                {imagePreview ? 'Change image' : 'Upload image'}
-              </Button>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Recommended size: 800x400px
-              </p>
-            </div>
-          </div>
-        </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-        <div>
-          <FormLabel>Equipment Manual</FormLabel>
-          <div className="mt-2 flex items-center gap-4">
-            {form.watch('manualUrl') ? (
-              <div className="relative">
-                <a href={form.watch('manualUrl')} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
-                  View Current Manual
-                </a>
-                <button
-                  type="button"
-                  onClick={removeManual}
-                  className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-white"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+        <FormField
+          control={form.control}
+          name="requiresSafetyTest"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">Requires Safety Test</FormLabel>
+                <FormDescription>
+                  Check if this equipment requires a safety test before use
+                </FormDescription>
               </div>
-            ) : (
-              <div className="flex h-32 w-32 items-center justify-center rounded-md border-2 border-dashed">
-                <ImageIcon className="h-8 w-8 text-muted-foreground" />
-              </div>
-            )}
-            <div>
-              <input
-                type="file"
-                ref={manualFileInputRef}
-                accept="application/pdf"
-                className="hidden"
-                onChange={handleManualChange}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => manualFileInputRef.current?.click()}
-              >
-                Upload Manual
-              </Button>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Accepts PDF files.
-              </p>
-            </div>
-          </div>
-        </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="image"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Equipment Image URL</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="https://example.com/image.jpg"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+              <FormDescription>
+                Enter the URL of the equipment image
+              </FormDescription>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="manualUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Equipment Manual URL</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="https://example.com/manual.pdf"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+              <FormDescription>
+                Enter the URL of the equipment manual (PDF)
+              </FormDescription>
+            </FormItem>
+          )}
+        />
 
         <div className="flex justify-end space-x-4 pt-4">
           <Button

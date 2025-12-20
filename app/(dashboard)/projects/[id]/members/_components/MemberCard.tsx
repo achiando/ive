@@ -1,13 +1,13 @@
 "use client";
 
-import { ProjectMember, UserRole } from '@prisma/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, XCircle, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { updateProjectMemberStatus, removeProjectMember } from '@/lib/actions/project';
+import { removeProjectMember, updateProjectMemberStatus } from '@/lib/actions/project';
 import { ProjectWithDetails } from '@/types/project';
+import { ProjectMember } from '@prisma/client';
+import { CheckCircle, Trash2, XCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface MemberCardProps {
   member: ProjectMember & { user: ProjectWithDetails['members'][0]['user'] };
@@ -54,7 +54,7 @@ export function MemberCard({ member, canManageMembers, onUpdateSuccess, onRemove
         <div>
           <p className="font-medium">{member.user ? `${member.user.firstName} ${member.user.lastName}` : 'Invited User'}</p>
           <p className="text-sm text-muted-foreground">
-            {member.user?.email || member.unverifiedEmail || 'No email'}
+            {member.user?.email || 'No email'}
           </p>
         </div>
       </div>

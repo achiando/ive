@@ -54,8 +54,22 @@ enum MaintenanceStatus {
   IN_PROGRESS
   COMPLETED
   CANCELLED
+  PENDING
 }
 
+enum MaintenanceType {
+  PREVENTIVE
+  CORRECTIVE
+  EMERGENCY
+  ROUTINE
+  CALIBRATION
+}
+enum MaintenanceOrderState {
+  NONE
+  PENDING_ORDER
+  ORDERED
+  RECEIVED
+}
 enum ConsumableStatus {
   AVAILABLE
   LOW_STOCK
@@ -149,8 +163,11 @@ model User {
   equipmentBookings  EquipmentBooking[]
   projects           Project[]          @relation("ProjectCreator")
   projectMemberships ProjectMember[]
-  consumableAllocations ConsumableAllocation[]
+  invitedProjectMembers ProjectMember[]  @relation("ProjectInvitations")
+  consumableAllocations ConsumableAllocation[] 
   safetyTestAttempts SafetyTestAttempt[] // Add this relation
+  assignedMaintenances Maintenance[]        @relation("AssignedMaintenances")
+  createdMaintenances  Maintenance[]        @relation("CreatedMaintenances")
 }
 
 model VerificationToken {
@@ -177,15 +194,25 @@ model Equipment {
   description   String?          @db.Text
   location      String?
   status        EquipmentStatus  @default(AVAILABLE)
-  imageUrl      String?
+  image      String?
+  category           String
+  manufacturer       String?
   manualUrl     String?
   purchaseDate  DateTime?
   purchasePrice Decimal?         @db.Decimal(10, 2)
   specifications Json?
+  warrantyExpiry     DateTime?
+  estimatedPrice     Float?
+  actualPrice        Float?
+  notes              String?
+  requiresSafetyTest Boolean   @default(false)
+  dailyCapacity      Int?      @default(5)
   facultyId     String?
   faculty       Faculty?         @relation(fields: [facultyId], references: [id])
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
+
+
   maintenances  Maintenance[]
   bookings      EquipmentBooking[]
   consumables   Consumable[]     @relation("EquipmentConsumables")
@@ -193,19 +220,33 @@ model Equipment {
 }
 
 model Maintenance {
-  id            String            @id @default(cuid())
-  equipmentId   String
-  equipment     Equipment         @relation(fields: [equipmentId], references: [id])
-  scheduledDate DateTime
-  completionDate DateTime?
-  description   String?           @db.Text
-  status        MaintenanceStatus @default(SCHEDULED)
-  cost          Decimal?          @db.Decimal(10, 2)
-  performedBy   String? // User ID of technician
-  notes         String?           @db.Text
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  id          String                @id @default(cuid())
+  title       String
+  description String?
+  status      MaintenanceStatus     @default(SCHEDULED)
+  type        MaintenanceType       @default(PREVENTIVE)
+  startDate   DateTime
+  endDate     DateTime?
+  notes       String?
+  priority    String?
+  orderStatus MaintenanceOrderState @default(NONE) // New field
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  equipment   Equipment @relation(fields: [equipmentId], references: [id])
+  equipmentId String
+
+  createdBy   User   @relation("CreatedMaintenances", fields: [createdById], references: [id])
+  createdById String
+
+  assignedTo   User?   @relation("AssignedMaintenances", fields: [assignedToId], references: [id])
+  assignedToId String?
+
   consumableAllocations ConsumableAllocation[]
+
+  @@index([equipmentId])
+  @@index([createdById])
+  @@index([assignedToId])
 }
 
 model Consumable {
@@ -242,10 +283,15 @@ model ConsumableAllocation {
   allocatedDate DateTime    @default(now())
   maintenanceId String?
   maintenance   Maintenance? @relation(fields: [maintenanceId], references: [id])
+  booking        EquipmentBooking? @relation(fields: [bookingId], references: [id])
+  bookingId      String?
   notes         String?     @db.Text
-  allocatedBy   String? // User ID of who allocated it (e.g., technician)
+  purpose       String?
+  allocatedBy String?     // User ID of who allocated it
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+
+  
 }
 
 model Project {
@@ -265,12 +311,17 @@ model Project {
 }
 
 model ProjectMember {
-  id        String   @id @default(cuid())
-  projectId String
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  joinedAt  DateTime @default(now())
+  id          String   @id @default(cuid())
+  projectId   String
+  status      String    @default("PENDING") // PENDING, ACCEPTED, REVOKED, EXPIRED
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt    DateTime  @default(now())
+  token       String?   @unique
+  expiresAt   DateTime?
+  invitedById String?
+  invitedBy   User?     @relation("ProjectInvitations", fields: [invitedById], references: [id])
 
   @@unique([projectId, userId])
 }
@@ -309,6 +360,8 @@ model EquipmentBooking {
   bookingTime String?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+
+  consumableAllocations ConsumableAllocation[]
 }
 
 // Add this model

@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProjectWithDetails } from '@/types/project';
-import { Project as BaseProject, ProjectMember, UserRole } from '@prisma/client';
+import { Project as BaseProject, ProjectDocument, ProjectMember, UserRole } from '@prisma/client';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -33,14 +33,6 @@ interface ProjectDetailsProps {
   backPath?: string;
 }
 
-interface ProjectDocument {
-  id: string;
-  url: string;
-  fileType: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  projectId: string;
-}
 
 
 
@@ -49,7 +41,7 @@ export function ProjectView({ project, userRole, backPath = '/projects' }: Proje
   const pathname = usePathname();
   const [activeTab, setActiveTab] = useState('overview');
   const [documents, setDocuments] = useState<ProjectDocument[]>(project.documents); // Initialize with project.documents
-  const [members, setMembers] = useState(project.members); // Initialize with project.members
+  const [members, setMembers] = useState<ProjectMember[]>(project.members); // Initialize with project.members
   const isAdminOrManager = userRole === UserRole.ADMIN || userRole === UserRole.LAB_MANAGER;
   const membersCount = project.members?.length || 0;
   const [qrCodeUrl, setQrCodeUrl] = useState('');
