@@ -45,13 +45,18 @@ export async function createEquipment(data: EquipmentFormValues) {
     // For now, imageFile and manualFile are not handled by direct upload here.
     // They would typically be uploaded to a storage service (e.g., S3, Supabase Storage)
     // and their URLs stored in the database.
-    const { imageFile, manualFile, ...equipmentData } = data;
+    const {  ...equipmentData } = data;
 
+   const processedData: any = { ...equipmentData };
+    const numericFields = ['purchasePrice', 'estimatedPrice', 'actualPrice', 'dailyCapacity'];
+    
+    numericFields.forEach(field => {
+      if (field in processedData && processedData[field] !== undefined) {
+        processedData[field] = processedData[field] === '' ? null : Number(processedData[field]);
+      }
+    });
     const newEquipment = await prisma.equipment.create({
-      data: {
-        ...equipmentData,
-        // status is already a string (from EquipmentFormValues)
-      },
+      data: processedData,
     });
     revalidatePath("/equipments");
     return { success: true, data: newEquipment };
@@ -63,17 +68,22 @@ export async function createEquipment(data: EquipmentFormValues) {
 
 export async function updateEquipment(id: string, data: Partial<EquipmentFormValues>) {
   try {
-    const { imageFile, manualFile, ...equipmentData } = data;
-
+    const { ...equipmentData } = data;
+    const processedData: any = { ...equipmentData };
+    const numericFields = ['purchasePrice', 'estimatedPrice', 'actualPrice', 'dailyCapacity'];
+    
+    numericFields.forEach(field => {
+      if (field in processedData && processedData[field] !== undefined) {
+        processedData[field] = processedData[field] === '' ? null : Number(processedData[field]);
+      }
+    });
     const updatedEquipment = await prisma.equipment.update({
       where: { id },
-      data: {
-        ...equipmentData,
-        // status is already a string (from EquipmentFormValues)
-      },
+      data: processedData,
     });
+
+ 
     revalidatePath("/equipments");
-    revalidatePath(`/equipments/${id}`);
     return { success: true, data: updatedEquipment };
   } catch (error: any) {
     console.error(`Error updating equipment with ID ${id}:`, error);
@@ -94,7 +104,7 @@ export async function deleteEquipment(id: string) {
   }
 }
 
-export async function updateEquipmentStatus(id: string, status: string) { // Changed type back to string
+export async function updateEquipmentStatus(id: string, status: 'AVAILABLE' | 'IN_USE' | 'MAINTENANCE' | 'OUT_OF_SERVICE') {
   try {
     const updatedEquipment = await prisma.equipment.update({
       where: { id },

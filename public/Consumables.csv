@@ -1,0 +1,223 @@
+,,Consumables,,
+Name,Design or Manufacturer,Specs,,Quantity
+Photocopy Papers,,,,3
+Wood Screws,,,,1
+Concrete Nails,,,,9 (pcs)
+Tape Cassette,Brother,,,1
+Wiper Replacement Kit,Lulzbot,,,1
+Filaments,Esun (Blue),3mm,ABS,4
+,Esun (Light blue),3mm,ABS,1
+,Esun (Light blue),3mm,PLA,
+,Esun (Glass light blue),3mm,PLA,1
+,Esun (Orange),3mm,ABS,1
+,Esun (Green),3mm,PETG,1
+,Esun (Luminous blue),3mm,PLA,1
+,Esun (White),3mm,ABS,1
+,Smartfil (Black),1.75mm,PLA,1
+,Bioflex (Lemon),1.75mm,Bioflex,1
+,Bioflex (Fire Red),1.75mm,Bioflex,1
+,Bioflex (Light Green),1.75mm,Bioflex,1
+,Bioflex (Sky Blue),1.75mm,Bioflex,1
+,Kingroon (Clear/transparent white),1.75mm,PLA,3
+,Kingroon (Bright red),1.75mm,PLA,4
+,Kingroon (White),1.75mm,ABS,3
+,Kingroon (White),1.75mm,PETG,10
+,Kingroon (Blue),1.75mm,PLA,3
+,Kingroon (Black),1.75mm,PLA,10
+,Kingroon (Black),1.75mm,ABS,3
+,Kingroon (Silver),1.75mm,ABS,1
+,Kingroon (wooden),1.75mm,ABS,2
+Printer Ink,BT 5000 (Cyna),,,2
+,BT 5000 (Magneta),,,2
+,BT 5000 (Yellow),,,2
+Sand Paper,,,,2
+Steel Nails,, 3 inch,,2 boxes (0.6  kg)
+,,2.5 inch,,2 boxes (0.6  kg)
+,,2 inches,,1 box (1kg)
+MDF Screws,,2 inches,,2 boxes (200 pieces)
+Self Taping Screws,,3.9*25,,1 box (200 pcs)
+,,3.9*32,,1 box (250 pcs)
+,,3.9*41,,1 box (250 pcs)
+Radial Electrolytic Capasitors,,25V- 2200uF,,6
+,,16v-330uF,,10
+,,25v-1000uF,,14
+,,10v-1000uF,,15
+,,16v-1000uF,,14
+Ceramic Capasitors,,22pF,,50
+Kinesiology Tape,,,,4
+Knee Support,,M,,2pcs
+,,F,,2pcs
+DC Motor,,12v-108rpm,,3
+,,12v-250rpm,,4
+,,12v-200rpm,,4
+OLED,,128*32 (blue),,30
+ Development Board,STM32,Blackpill,,1
+,,F401CCU6,,3
+Peristaltic Pump,Grothen,Large,,2
+Mini-USB 5pin Female Connector,,,,10
+USB type B female  connector,,,,10
+Audio Amplifier Module,,LM386,,2
+USB Mini DEV Board,,ATtiny85,,4
+Pulse Oximeter Sensor,,MAX30102,,8
+Pulse  Sensor Amped,,,,19
+Power Banks,Oraimo,Toast Flash 10,,2
+,,Toast Flash 15,,2
+SMD Dual OP-Amp,,TL072CDR,,50
+Audio Amp-500 mW,,LM386N-3,,15
+Batteries,,600mAh - 7.4v LiPo,,4
+Disposable Syringes,Touren,20ml,,50 pcs
+Quick Release Connector,Stanley,1/4' Female,,7
+,,1/4' Male,,2
+Instrumentation Amplifier,,AD623AN,,16
+Speaker,,,,1
+ESP 32,,ESP-32 CAM,,1
+,,ESP-32S Development Board,,10
+Photoresistor Module,,,,1
+Tilt Switch,,,,2
+Infrared Sensor - line sensor,,,,2
+Analog Temperature Sensor,,,,2
+Digital Temperature Sensor,,,,2
+Mini-magnetic Reed Module,,,,2
+photo interrupter,,,,2
+Knock Sensor Module,,,,2
+Vibrating Disk,,,,12
+Diodes,,,,21
+human body touch sensor,,,,2
+KY-028 4-pin Temperature Sensor,,KY-028 4-pin,,2
+KY-038 Sound Sensor /  Generic Microphone,,KY-038,,2
+Reed Switch Sensor Module,,,,2
+mini Linear hall sensor,,,,4
+linear hall effect sensor,,,,2
+KY-037 Sound Detecor module,,KY-037 ,,2
+KY-026 Flame Detector Module,,KY-026,,2
+8-male to female microcontroller holder,,,,4
+6-male to female microcontroller holder,,,,2
+10-male to female microcontroller holder,,,,4
+Ultrasonic Sensor,,,,11
+LCD Screen,,,,13
+3 pin KY-002 Shock Vibration Switch Sensor Module,,3 pin KY-002,,2
+KY-008 laser transmitter module,,KY-008,,2
+KY-022 ir receiver module,,KY-022,,2
+Press Buttons,,,,16
+Raspberry Pi pico microcontroller,,,,7
+Joystick Controller,,,,2
+Buzzer,,KY-006 Passive Buzzer,,4
+,,passive buzzer,,10
+,,Active buzzer,,10
+Magic Light Cup sensor,,,,2
+Color Sensor Module,,,,1
+Mercury Switch Sensor Module,,,,2
+IR Transmitter module,,,,4
+Heartbeat Sensor,,,,2
+IR Obstacle Avoidance Module,,,,2
+Relay,,,,2
+Gas Detectors,,,,12
+Door Sensor Module,,,,2
+Breadboard PSU,,,,5
+Boards,,,,13
+DHT Sensor,,DHT11,,6
+Rotary Encoder Module,,,,2
+Servo Motor,,MG 90S,,1
+,,MG 996,,4
+Potentiometer,,,,1
+vibration switch sensor,,,,2
+Resistors,,100K,,10 packets
+,,68k,,10 packets
+,,330,,9 packets
+,,22,,10 packets
+,,1,,10 packets
+,,680k,,10 packets
+,,20k,,10 packets
+,,470k,,10 packets
+,,200,,10 packets
+,,51k,,11 packets
+,,100,,5 packets
+,,56k,,10 packets
+,,510,,9 packets
+,,2k,,11 packets
+,,220k,,10 packets
+,,10k,,17 packets
+,,47k,,10 packets
+,,440,,10 packets
+,,3.3,,10 packets
+,,2.2k,,10 packets
+,,120,,10 packets
+,,3.3k,,10 packets
+,,2.2,,10 packets
+,,220,,7 packets
+,,47,,10 packets
+,,300k,,9 packets
+,,4.7k,,10 packets
+,,1M,,11 packets
+,,10,,11 packets
+,,150,,6 packets
+,,68,,10 packets
+,,6.8k,,10 packets
+,,680,,10 packets
+,,22k,,10 packets
+,,270,,10 packets
+,,9.7k,,1 packet
+,,1k,,6 packets
+,,990,,1 packet
+,,910,,1 packet
+,,9,,1 packet
+,,510,,1 packet
+,,51,,1 packet
+,,820,,1 packet
+,,39k,,
+,,2k,,
+,,82k,,
+IR Phototransistor,,INL-3ANPT30,,19 pcs
+IR emitter,,vs lb3940,,19pcs
+LEDs,,Green - tept5700,,7 pcs
+,,yellow green ,,10 pcs
+,,RGB,,6
+,,RGB SMD Module,,2
+,,Two color Module,,4
+,,RGB Module,,2
+Soldier Wire,,1mm-60/40 - flux 1.8%,,26
+pH Electrode ,,analytical surver elecrode,,4
+Analogue pH sensor,,,,4
+Arduino ,,TDS Conductivity Kit,,5
+,,Data Logging Shield,,2
+,,UNO -R3 Board,,10
+,,UNO-R3 USB Cable,,10
+,,Nano-v3.0 USB Cables,,20
+,,Nano - v3.0 Board,,20
+Brass Sponge,,,,10
+IR Infrared Sensor Module,,HW 201,,30
+RFID Card Reader Module,,,,8
+Zener Diode,,0.5W,,600pcs
+Bluetooth Module,,HC05,,4
+Temperature Probe,,1M DS18b20,,4
+Rotary Potentiometer,,WH148 3pin 5K,,20
+,,WH148 3pin 10K,,20
+,,WH148 3pin 20K,,20
+,,WH148 3pin 1K,,20
+,,WH148 3pin 500,,20
+MicroSD Card W/R module,,,,4
+Acceelerometer + Gyro,,MPU-6050,,4
+Voltage Regulator,,L7805CV,,20
+Slide Switch,,SPDT 3pin,,50
+Lithium Battery Charging Board,,,,10
+Heat sink ,,Black Anodized,,50
+Jumper Wire,,F-F,,400
+,,M-F,,400
+,,M-M,,400
+GPRS GSM Breakout,,SIM800L,,4
+Wif Module,,ESP8266-01,,4
+Stepper Motor,,42 step T8 Screwlead 120mm,,8
+BLuetooth Audio Receeiver,,DC 5V,,10
+9v Battery Holder Clip,,,,10
+,,,,
+Perspex ,Clear,2mm,,4
+,Dark-blue,3mm,,2
+,Safari Green,,,2
+,Red,,,1
+,,,,
+6 ply,,,,15
+BLock board,,"3/4""",,10
+Premium Brush ,,"2""",,5
+,,"4""",,5
+Grinder Batteries,Total,,,2
+Hacksaw Blades,,,,41

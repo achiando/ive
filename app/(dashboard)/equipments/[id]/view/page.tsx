@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { getEquipmentById, updateEquipmentStatus } from "@/lib/actions/equipment";
 import { fetchUserProjects } from "@/lib/actions/project"; // Import the new action
 import { EquipmentWithRelations } from "@/types/equipment";
+import { EquipmentStatus } from "@prisma/client";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { EquipmentView } from "./_components/EquipmentView";
@@ -57,7 +58,7 @@ export default async function EquipmentViewPage({
     );
   }
 
-  const handleUpdateStatus = async (equipmentId: string, status: string) => {
+  const handleUpdateStatus = async (equipmentId: string, status: EquipmentStatus) => {
     "use server";
     const result = await updateEquipmentStatus(equipmentId, status);
     if (!result.success) {

@@ -17,8 +17,6 @@ const statusLabels: Record<RegistrationStatus, string> = {
   [RegistrationStatus.PENDING]: 'Pending',
   [RegistrationStatus.APPROVED]: 'Approved',
   [RegistrationStatus.REJECTED]: 'Rejected',
-  [RegistrationStatus.INVITED]: 'Invited',
-  [RegistrationStatus.EXPIRED]: 'Expired',
   [RegistrationStatus.SUSPENDED]: 'Suspended',
 };
 
@@ -26,8 +24,6 @@ const statusIcons = {
   [RegistrationStatus.APPROVED]: <UserCheck className="h-4 w-4 text-green-500" />,
   [RegistrationStatus.PENDING]: <UserPlus className="h-4 w-4 text-yellow-500" />,
   [RegistrationStatus.REJECTED]: <UserX className="h-4 w-4 text-red-500" />,
-  [RegistrationStatus.INVITED]: <UserPlus className="h-4 w-4 text-blue-500" />,
-  [RegistrationStatus.EXPIRED]: <UserX className="h-4 w-4 text-orange-500" />,
   [RegistrationStatus.SUSPENDED]: <UserX className="h-4 w-4 text-red-500" />,
 };
 

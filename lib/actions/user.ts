@@ -1,12 +1,12 @@
 
 "use server";
 
+import { authOptions } from "@/lib/auth";
 import { sendStatusUpdateEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import { Faculty, RegistrationStatus, User } from "@prisma/client";
-import { unstable_cache as cache, revalidatePath } from 'next/cache';
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { unstable_cache as cache, revalidatePath } from 'next/cache';
 
 /**
  * Fetches all users from the database.
@@ -18,14 +18,6 @@ export const getUsers = cache(
       where: status ? { status } : {},
       orderBy: {
         createdAt: "desc",
-      },
-      include: {
-        _count: {
-          select: {
-            projectMemberships: true,
-            equipmentBookings: true,
-          },
-        },
       },
     });
     return users;
@@ -79,7 +71,7 @@ export async function getCurrentUser() {
         faculty: true,
         _count: {
           select: {
-            createdProjects: true,
+            projects: true,
             equipmentBookings: true,
             projectMemberships: true,
             eventParticipations: true,
@@ -362,8 +354,6 @@ export const getUserStatusCounts = cache(
       PENDING: 0,
       APPROVED: 0,
       REJECTED: 0,
-      INVITED: 0,
-      EXPIRED: 0,
       SUSPENDED: 0,
     };
 

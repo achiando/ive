@@ -181,7 +181,7 @@ export async function getAllConsumableAllocations() {
         },
       },
       orderBy: {
-        allocationDate: 'desc',
+        createdAt: 'desc',
       },
     });
     return allocations;

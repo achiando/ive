@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { SOPForm } from "./SOPForm";
-import { SafetyTestWithRelations } from "@/types/safety-test";
+import { SafetyTestFormValues, SafetyTestWithRelations } from "@/types/safety-test";
 import { toast } from "sonner";
 import { createSafetyTest, updateSafetyTest } from "@/lib/actions/safety-test";
 
@@ -27,12 +27,21 @@ export function SopFormClient({ initialData, isCreating }: SopFormClientProps) {
     }
   };
 
+  const handleSubmit = async (data: SafetyTestFormValues | (SafetyTestFormValues & { id: string })) => {
+    if ('id' in data) {
+      const { id, ...rest } = data;
+      return updateSafetyTest(id, rest);
+    } else {
+      return createSafetyTest(data);
+    }
+  };
+
   return (
     <SOPForm
       initialData={initialData}
-      onSuccess={handleSuccess}
-      onCancel={handleCancel}
-      onSubmitAction={isCreating ? createSafetyTest : updateSafetyTest}
+      onFormSuccess={handleSuccess}
+      onFormCancel={handleCancel}
+      onSubmitAction={handleSubmit}
     />
   );
 }

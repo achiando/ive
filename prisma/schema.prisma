@@ -168,6 +168,11 @@ model User {
   safetyTestAttempts SafetyTestAttempt[] // Add this relation
   assignedMaintenances Maintenance[]        @relation("AssignedMaintenances")
   createdMaintenances  Maintenance[]        @relation("CreatedMaintenances")
+  events               Event[]              @relation("UserEvents")
+  equipment            Equipment[]          @relation("UserEquipment")
+  createdEvents        Event[]              @relation("EventCreator")
+  eventParticipations  EventParticipation[] @relation("UserEventParticipations")
+  faculty              Faculty?             @relation("FacultyLecturers", fields: [facultyId], references: [id])
 }
 
 model VerificationToken {
@@ -178,12 +183,46 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model Event {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  startDate       DateTime
+  endDate         DateTime
+  location        String? // General location (deprecated, use venue instead)
+  venue           String? // Specific venue name or identifier
+  maxParticipants Int?
+  createdById     String
+  createdBy       User     @relation("EventCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  participants EventParticipation[] @relation("EventParticipations")
+  users        User[]               @relation("UserEvents")
+
+  // Media (kept for backward compatibility)
+  imageUrl String? @db.Text
+}
+
+model EventParticipation {
+  id       String   @id @default(cuid())
+  user     User     @relation("UserEventParticipations", fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+  event    Event    @relation("EventParticipations", fields: [eventId], references: [id], onDelete: Cascade)
+  eventId  String
+  joinedAt DateTime @default(now())
+
+  @@unique([userId, eventId])
+}
+
 model Faculty {
   id        String   @id @default(cuid())
   name      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   equipments Equipment[]
+  lecturers User[]   @relation("FacultyLecturers")
 }
 
 model Equipment {
@@ -217,6 +256,7 @@ model Equipment {
   bookings      EquipmentBooking[]
   consumables   Consumable[]     @relation("EquipmentConsumables")
   safetyTestAttempts SafetyTestAttempt[] // Add this relation
+  users        User[]        @relation("UserEquipment")
 }
 
 model Maintenance {

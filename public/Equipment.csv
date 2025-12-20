@@ -1,0 +1,170 @@
+FIELD,Equipment,Specs,SN,Quantitty
+3D Printing,3D Printers,Prusa,CZPX3719X004XK47077,1
+,,Prusa,CZPX2220X004XK91170,1
+,,Prusa,CZPX2220X004XK91210,1
+Computer Aided Design,Desktop Computers,All in one HP Desktop,8CC3182W7Z,1
+,,HP Monitor,3CQ2010G5V,1
+,,HP CPU,CND18D7968,1
+Laser Engraving,Laser Engraver,Ortur,LU2-10A,1
+Electricals and Electronics,Soldering Units,Lucky Sky,SSCDIE01,1
+,Soldering Units,Lucky Sky,SSCDIE02,1
+,Soldering Units,Lucky Sky,SSCDIE03,1
+,Soldering Units,Lucky Sky,SSCDIE04,1
+,Digital Storage Oscilloscope,UNI-T,6935750590416,1
+,Clamp Meters,UNI - T,C210541553,1
+,,UNI - T,C221127596,1
+,,UNI - T,C221127590,1
+,Cordless Screwdrivers,Emtop,23009620473,1
+,,Emtop,23009620727,1
+,,Emtop,23009620714,1
+,,Emtop,23009620703,1
+,Insulation/Continuity Tester,UNI - T,C212058886,1
+,,UNI - T,C212058899,1
+,,UNI - T,C212058903,1
+,Multimeters,INGCO,H12B-I039803,1
+,,INGCO,H12B-I039901,1
+,,Fluke,45270920WS,1
+,,Fluke,45270924WS,1
+,,Uni-T,C214641349,1
+,,Uni-T,C214641357,1
+,,A830L,MMCDIE01,1
+,,A830L,MMCDIE02,1
+,,A830L,MMCDIE03,1
+,,A830L,MMCDIE04,1
+,,A830L,MMCDIE05,1
+,,A830L,MMCDIE06,1
+,Power Supply Module,Atten,11701214000042,1
+,Automatic AC voltage Regulator,SWANE POWER,00017,1
+,Stripping Pliers,TNI-U,SPCDIE01,1
+,Stripping Pliers,TNI-U,SPCDIE02,1
+,Solder Iron,BLUE,SICDIE01,1
+,Solder Iron,BLUE,SICDIE02,1
+,Solder Iron Stands,BLACK,SISCDIE01,1
+,Solder Iron Stands,BLACK,SISCDIE02,1
+,Solder Iron Stands,BLACK,SISCDIE03,1
+,Solder Iron Stands,BLACK,SISCDIE04,1
+,Solder Iron Stands,BLACK,SISCDIE05,1
+,Solder Iron Stands,BLACK,SISCDIE06,1
+,Solder Iron Stands,BLACK,SISCDIE07,1
+Wood Work,Rotary Sander,Total,23317800886,1
+,Rotary Sander,Total,23317800983,1
+,Rotary Sander,Total,24300560002,1
+,Jig Saw,Total,21059722357,1
+,Jig Saw,Total,21059722692,1
+,Wood Chisel Set,Total,WCSCDIE01,1
+,Wood Chisel Set,Total,WCSCDIE02,1
+,Wood Chisel Set,Total,WCSCDIE03,1
+,Wood Chisel Set,Total,WCSCDIE04,1
+,Mitre Saw,Total,24394470046,1
+,Circular Saw,Total,24231370426,1
+,Hand Planer,Total,HPCDIE01,1
+,Hand Planer,Total,HPCDIE02,1
+,Hand Planer,Total,HPCDIE03,1
+,Hand Planer,Total,HPCDIE04,1
+,Hand Planer,Total,HPCDIE05,1
+,Hand Planer,Anant,HPCDIE06,1
+,Hand Planer,Anant,HPCDIE07,1
+,HandSaw,Total,HSCDIE01,1
+,HandSaw,Total,HSCDIE02,1
+,HandSaw,Total,HSCDIE03,1
+,HandSaw,Total,HSCDIE04,1
+,HandSaw,Total,HSCDIE05,1
+,HandSaw,Total,HSCDIE06,1
+,HandSaw,INGCO,HSCDIE07,1
+,HandSaw,INGCO,HSCDIE08,1
+,HandSaw,INGCO,HSCDIE09,1
+,HandSaw,INGCO,HSCDIE10,1
+,HandSaw,INGCO,HSCDIE11,1
+,Bench Grinder,Total,25054680104,1
+Metal Work,Angle Grinder-Battery powered,Total,21061210705,1
+,Angle Grinder-Battery powered,Total,21061210747,1
+,Angle Grinder-Battery powered,Total,21061210971,1
+,Angle Grinder-Battery powered,Total,21061211055,1
+,Angle Grinder-Electric,Total,24435480275,1
+,Angle Grinder-Electric,Total,Eubrea,1
+,Grinder Chargers,Total,23135133563,1
+,Grinder Chargers,Total,23135133561,1
+,Grinder Chargers,Total,23135133549,1
+,Grinder Chargers,Total,23135133559,1
+,Mig Welding Machine,Proweld,MGMCDIE01,1
+,Inverter MMA Welding Machines,INGCO,20073920042,1
+,Inverter MMA Welding Machines,INGCO,Eubrea,1
+,Inverter MMA Welding Machines,INGCO,20257350228,1
+,Impact Drill,INGCO,21013470048,1
+,Drill Press,Total,20266140015,1
+,Drill Press,Total,21225320609,1
+,Air Hose,INGCO,AHCDIE01,1
+,HVLP Spray Gun,Total,23135140162,1
+,HVLP Spray Gun,Total,21193521868,1
+,HVLP Spray Gun,Total,23135140163,1
+,Air Compresser,INGCO,TEDDY,1
+,Metal Lathe,Metal Lathe,MLCDIE01,1
+General Toolset,Electronic Digital Calipers,S-H,EDCCDIE01,1
+,Electronic Digital Calipers,S-H,EDCCDIE02,1
+,Electronic Digital Calipers,S-H,EDCCDIE03,1
+,Electronic Digital Calipers,S-H,EDCCDIE04,1
+,Glue Gun,CAMEL PB-8,GGCDIE01,1
+,Glue Gun,CAMEL PB-8,GGCDIE02,1
+,Glue Gun,CAMEL PB-8,GGCDIE03,1
+,Glue Gun,CAMEL PB-8,GGCDIE04,1
+,Glue Gun,CAMEL PB-8,GGCDIE05,1
+,Glue Gun,CAMEL PB-8,GGCDIE06,1
+,General Toolkit,INGCO,GTCDIE01,1
+,General Toolkit,INGCO,GTCDIE02,1
+,General Toolkit,INGCO,GTCDIE03,1
+,General Toolkit,INGCO,GTCDIE04,1
+,General Toolkit,INGCO,GTCDIE05,1
+,Tape Measure ,Total,TMCDIE01,1
+,Tape Measure ,Total,TMCDIE02,1
+,Tape Measure ,Total,TMCDIE03,1
+,Tape Measure ,Total,TMCDIE04,1
+,Tape Measure ,Total,TMCDIE05,1
+,Screw Driver Sets,Total,SDSCDIE01,1
+,Screw Driver Sets,Total,SDSCDIE02,1
+,Screw Driver Sets,Total,SDSCDIE03,1
+,Screw Driver Sets,Total,SDSCDIE04,1
+,Spirit Level,Total,SLCDIE01,1
+,Spirit Level,Total,SLCDIE02,1
+,Spirit Level,Total,SLCDIE03,1
+,Spirit Level,Total,SLCDIE04,1
+,Spirit Level,Total,SLCDIE05,1
+,Spirit Level,Juster,SLCDIE06,1
+,Spirit Level,Juster,SLCDIE07,1
+,Spirit Level,Juster,SLCDIE08,1
+,Spirit Level,Juster,SLCDIE09,1
+,Spirit Level,Juster,SLCDIE10,1
+,Claw Hammer,Epica Star,CHCDIE01,1
+,Claw Hammer,Epica Star,CHCDIE02,1
+,Claw Hammer,Epica Star,CHCDIE03,1
+,Claw Hammer,Epica Star,CHCDIE04,1
+,Angle Square,Dingoi,ASCDIE01,1
+,Angle Square,Dingoi,ASCDIE02,1
+,Angle Square,Dingoi,ASCDIE03,1
+,Angle Square,Dingoi,ASCDIE04,1
+,Angle Square,Dingoi,ASCDIE05,1
+,Angle Square,Dingoi,ASCDIE06,1
+,Engineers Square,Combination square,ESCDIE01,1
+,Engineers Square,Combination square,ESCDIE02,1
+,Engineers Square,Combination square,ESCDIE03,1
+,Engineers Square,Combination square,ESCDIE04,1
+,Engineers Square,Combination square,ESCDIE05,1
+,Drill sets,INGCO,DSCDIE01,1
+,Drill sets,INGCO,DSCDIE02,1
+,Drill sets,INGCO,DSCDIE03,1
+,Drill sets,INGCO,DSCDIE04,1
+,Aspiration Blower,INGCO,23061580588,1
+,,INGCO,21139370443,1
+,,Total,23072540100,1
+,,Total,KEN,1
+,Bench Vice,Total,BVCDIE01,1
+,Bench Vice,Total,BVCDIE02,1
+,Bench Vice,Total,BVCDIE03,1
+,Bench Vice,Total,BVCDIE04,1
+,Inflator and Gauge Kit,Finder,194225,1
+,Tool Chest Tray,Total,THPTCS71621,1
+,7pc Telecom Tools Set,INGCO,TTSCDIE01,1
+,7pc Telecom Tools Set,INGCO,TTSCDIE02,1
+,7pc Telecom Tools Set,INGCO,TTSCDIE03,1
+,9pc Insulated Hand Tools Set,INGCO,IHTSCDIE01,1
+,9pc Insulated Hand Tools Set,INGCO,IHTSCDIE02,1
+,9pc Insulated Hand Tools Set,INGCO,IHTSCDIE03,1

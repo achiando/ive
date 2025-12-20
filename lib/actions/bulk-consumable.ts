@@ -13,6 +13,7 @@ const bulkConsumableSchema = z.object({
   description: z.string().optional(),
   category: z.nativeEnum(ConsumableCategory),
   unit: z.string().min(1, "Unit of measurement is required."),
+  quantity: z.number().min(0, "Quantity cannot be negative.").default(0),
   currentStock: z.number().min(0, "Current stock cannot be negative."),
   minimumStock: z.number().min(0, "Minimum stock cannot be negative."),
   unitCost: z.number().min(0, "Unit cost cannot be negative.").optional(),
@@ -77,6 +78,7 @@ export async function bulkCreateConsumable(consumableData: BulkConsumableInput[]
       await prisma.consumable.create({
         data: {
           ...validatedData,
+          quantity: Number(validatedData.quantity) || 0,
           currentStock: Number(validatedData.currentStock),
           minimumStock: Number(validatedData.minimumStock),
           unitCost: validatedData.unitCost ? Number(validatedData.unitCost) : null,

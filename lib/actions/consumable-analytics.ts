@@ -80,8 +80,8 @@ export async function getConsumableAnalyticsData(): Promise<ConsumableAnalyticsD
       category: consumable.category,
       currentStock: consumable.currentStock,
       minimumStock: consumable.minimumStock,
-      unit: consumable.unit,
-      unitCost: consumable.unitCost,
+      unit: consumable.unit || '',
+      unitCost: consumable.unitCost || null,
       totalAllocated: totalAllocated,
     });
 
@@ -90,18 +90,18 @@ export async function getConsumableAnalyticsData(): Promise<ConsumableAnalyticsD
     const relevantAllocations = await prisma.consumableAllocation.findMany({
       where: {
         consumableId: consumable.id,
-        allocationDate: {
+        createdAt: {
           gte: sixMonthsAgo,
         },
       },
       select: {
-        allocationDate: true,
+        createdAt: true,
         quantity: true,
       },
     });
 
     relevantAllocations.forEach(alloc => {
-      const monthKey = format(alloc.allocationDate, 'yyyy-MM');
+      const monthKey = format(alloc.createdAt, 'yyyy-MM');
       monthlyConsumption[monthKey] = (monthlyConsumption[monthKey] || 0) + alloc.quantity;
     });
   }

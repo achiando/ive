@@ -79,7 +79,7 @@ export default async function ProfilePage() {
     }>;
     // Count relations
     _count?: {
-      createdProjects?: number;
+      projects?: number;
       equipmentBookings?: number;
       projectMemberships?: number;
       eventParticipations?: number;
@@ -207,7 +207,7 @@ export default async function ProfilePage() {
             </CardHeader>
             <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-muted/30 rounded-lg">
-                <p className="text-2xl font-bold">{typedUser._count.createdProjects || 0}</p>
+                <p className="text-2xl font-bold">{typedUser._count.projects || 0}</p>
                 <p className="text-sm text-muted-foreground">Projects</p>
               </div>
               <div className="text-center p-4 bg-muted/30 rounded-lg">

@@ -42,13 +42,14 @@ export async function createConsumable(values: ConsumableFormValues) {
 
     const { equipmentIds, ...data } = values;
 
+    // In your createConsumable function, modify the data object to include quantity:
     const newConsumable = await prisma.consumable.create({
       data: {
         ...data,
+        quantity: Number(data.currentStock), // Add this line
         currentStock: Number(data.currentStock),
         minimumStock: Number(data.minimumStock),
         unitCost: data.unitCost ? Number(data.unitCost) : null,
-        // image: imageUrl, // Assign uploaded image URL
         equipment: {
           connect: equipmentIds?.map(id => ({ id })) || [],
         },

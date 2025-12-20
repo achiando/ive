@@ -1,4 +1,4 @@
-import { UserRole, SafetyTestFrequency, ManualType } from '@prisma/client';
+import { ManualType, SafetyTestFrequency, UserRole } from '@prisma/client';
 
 // Form values for creating/updating a SafetyTest
 export interface SafetyTestFormValues {
@@ -7,7 +7,7 @@ export interface SafetyTestFormValues {
   manualUrl?: string;
   manualType?: ManualType;
   requiredForRoles: UserRole[];
-  associatedEquipmentTypes?: string[]; // Changed to array for multiple types
+  associatedEquipmentType?: string[]; // Changed to array for multiple types
   frequency: SafetyTestFrequency;
 }
 

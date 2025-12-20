@@ -55,7 +55,7 @@ const form = useForm<SafetyTestFormValues>({
         manualUrl: initialData.manualUrl || undefined,      // Convert null to undefined
         manualType: initialData.manualType || undefined,    // Convert null to undefined
         requiredForRoles: initialData.requiredForRoles,
-        associatedEquipmentTypes: initialData.associatedEquipmentTypes || [],
+        associatedEquipmentType: initialData.associatedEquipmentTypes || [],
       }
     : {
         name: "",
@@ -63,7 +63,7 @@ const form = useForm<SafetyTestFormValues>({
         manualUrl: "",
         manualType: undefined,
         requiredForRoles: [],
-        associatedEquipmentTypes: [],
+        associatedEquipmentType: [],
         frequency: SafetyTestFrequency.ONE_TIME,
       },
 });
@@ -76,7 +76,7 @@ useEffect(() => {
       manualUrl: initialData.manualUrl || '',            // Convert null to empty string
       manualType: initialData.manualType || undefined,   // Convert null to undefined
       requiredForRoles: initialData.requiredForRoles,
-      associatedEquipmentTypes: initialData.associatedEquipmentTypes || [],
+      associatedEquipmentType: initialData.associatedEquipmentTypes || [],
     });
   } else {
     form.reset({
@@ -85,7 +85,7 @@ useEffect(() => {
       manualUrl: "",
       manualType: undefined,
       requiredForRoles: [],
-      associatedEquipmentTypes: [],
+      associatedEquipmentType: [],
       frequency: SafetyTestFrequency.ONE_TIME,
     });
   }
@@ -236,7 +236,7 @@ useEffect(() => {
 />
         <FormField
           control={form.control}
-          name="associatedEquipmentTypes"
+          name="associatedEquipmentType"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Associated Equipment Types</FormLabel>

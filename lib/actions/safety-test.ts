@@ -1,19 +1,19 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { revalidatePath } from "next/cache";
-import { UserRole } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import {
-  SafetyTestFormValues,
   GetSafetyTestsParams,
-  SafetyTestWithRelations,
   SafetyTestAttemptWithRelations,
+  SafetyTestFormValues,
+  SafetyTestWithRelations,
 } from "@/types/safety-test";
+import { UserRole } from "@prisma/client";
+import { getServerSession } from "next-auth";
+import { revalidatePath } from "next/cache";
 
-const isAdminOrManager = (role: UserRole) =>
-  [UserRole.ADMIN, UserRole.LAB_MANAGER, UserRole.ADMIN_TECHNICIAN].includes(role);
+const isAdminOrManager = (role: UserRole): role is 'ADMIN' | 'LAB_MANAGER' | 'ADMIN_TECHNICIAN' =>
+  [UserRole.ADMIN, UserRole.LAB_MANAGER, UserRole.ADMIN_TECHNICIAN].includes(role as any);
 
 export async function createSafetyTest(
   data: SafetyTestFormValues
@@ -23,25 +23,34 @@ export async function createSafetyTest(
     throw new Error("Unauthorized: Only admins and lab managers can create safety tests.");
   }
 
-  const { associatedEquipmentTypes, ...rest } = data;
+  const { associatedEquipmentType, ...rest } = data;
 
   try {
     const newSafetyTest = await prisma.safetyTest.create({
       data: {
         ...rest,
-        associatedEquipmentTypes: associatedEquipmentTypes || [], // Ensure it's an array
+        associatedEquipmentType: Array.isArray(associatedEquipmentType)
+          ? associatedEquipmentType.join(',')
+          : associatedEquipmentType
       },
       include: {
         attempts: {
           include: {
             user: { select: { id: true, firstName: true, lastName: true, email: true } },
             equipment: { select: { id: true, name: true, serialNumber: true } },
+            safetyTest: { select: { id: true, name: true } },
           },
         },
       },
     });
+    const transformedSafetyTest = {
+      ...newSafetyTest,
+      associatedEquipmentTypes: newSafetyTest.associatedEquipmentType
+        ? newSafetyTest.associatedEquipmentType.split(',')
+        : []
+    };
     revalidatePath("/dashboard/sop");
-    return newSafetyTest;
+    return transformedSafetyTest;
   } catch (error: any) {
     console.error("Error creating safety test:", error);
     throw new Error(`Failed to create safety test: ${error.message}`);
@@ -92,6 +101,7 @@ export async function getSafetyTests(
           include: {
             user: { select: { id: true, firstName: true, lastName: true, email: true } },
             equipment: { select: { id: true, name: true, serialNumber: true } },
+            safetyTest: { select: { id: true, name: true } },
           },
         },
       },
@@ -101,7 +111,14 @@ export async function getSafetyTests(
       skip,
       take: pageSize,
     });
-    return safetyTests;
+
+    // Map the results to match the SafetyTestWithRelations type
+    const safetyTestsWithRelations = safetyTests.map(test => ({
+      ...test,
+      associatedEquipmentTypes: test.associatedEquipmentType ? [test.associatedEquipmentType] : []
+    }));
+
+    return safetyTestsWithRelations;
   } catch (error: any) {
     console.error("Error fetching safety tests:", error);
     throw new Error(`Failed to fetch safety tests: ${error.message}`);
@@ -126,7 +143,29 @@ export async function getSafetyTestById(id: string): Promise<SafetyTestWithRelat
         },
       },
     });
-    return safetyTest;
+
+    if (!safetyTest) return null;
+
+    // Map the result to match the SafetyTestWithRelations type
+    return {
+      ...safetyTest,
+      associatedEquipmentTypes: safetyTest.associatedEquipmentType ? [safetyTest.associatedEquipmentType] : [],
+      attempts: safetyTest.attempts.map(attempt => ({
+        ...attempt,
+        safetyTest: {
+          id: safetyTest.id,
+          name: safetyTest.name,
+          description: safetyTest.description,
+          manualUrl: safetyTest.manualUrl,
+          manualType: safetyTest.manualType,
+          requiredForRoles: safetyTest.requiredForRoles,
+          frequency: safetyTest.frequency,
+          createdAt: safetyTest.createdAt,
+          updatedAt: safetyTest.updatedAt,
+          associatedEquipmentTypes: safetyTest.associatedEquipmentType ? [safetyTest.associatedEquipmentType] : []
+        }
+      }))
+    };
   } catch (error: any) {
     console.error(`Error fetching safety test with ID ${id}:`, error);
     throw new Error(`Failed to fetch safety test: ${error.message}`);
@@ -142,27 +181,50 @@ export async function updateSafetyTest(
     throw new Error("Unauthorized: Only admins and lab managers can update safety tests.");
   }
 
-  const { associatedEquipmentTypes, ...rest } = data;
+  const { associatedEquipmentType, ...rest } = data;
 
   try {
     const updatedSafetyTest = await prisma.safetyTest.update({
       where: { id },
       data: {
         ...rest,
-        associatedEquipmentTypes: associatedEquipmentTypes || [],
+        associatedEquipmentType: Array.isArray(associatedEquipmentType)
+          ? associatedEquipmentType.join(',')
+          : associatedEquipmentType
       },
       include: {
         attempts: {
           include: {
-            user: { select: { id: true, firstName: true, lastName: true, email: true } },
-            equipment: { select: { id: true, name: true, serialNumber: true } },
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+              },
+            },
+            equipment: {
+              select: {
+                id: true,
+                name: true,
+                serialNumber: true,
+              },
+            },
+            safetyTest: true, // Add this line to include the safetyTest relation
           },
         },
       },
     });
+
+    const result = {
+      ...updatedSafetyTest,
+      associatedEquipmentTypes: updatedSafetyTest.associatedEquipmentType
+        ? updatedSafetyTest.associatedEquipmentType.split(',')
+        : []
+    };
     revalidatePath("/dashboard/sop");
     revalidatePath(`/dashboard/sop/${id}`);
-    return updatedSafetyTest;
+    return result;
   } catch (error: any) {
     console.error(`Error updating safety test with ID ${id}:`, error);
     throw new Error(`Failed to update safety test: ${error.message}`);

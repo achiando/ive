@@ -3,14 +3,13 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { BulkConsumableInput, bulkCreateConsumable } from "@/lib/actions/bulk-consumable"; // Import the server action
+import { ConsumableCategory } from "@prisma/client";
 import { Download, UploadCloud } from "lucide-react";
-import { useState, useCallback, ChangeEvent } from "react";
+import Papa from "papaparse";
+import { ChangeEvent, useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import * as XLSX from "xlsx";
-import Papa from "papaparse";
-import { bulkCreateConsumable, BulkConsumableInput } from "@/lib/actions/bulk-consumable"; // Import the server action
-import { ConsumableCategory } from "@prisma/client";
 
 interface UploadResult {
   fileName: string;
@@ -83,6 +82,7 @@ export function BulkUploadClient() {
         description: item.description,
         category: item.category as ConsumableCategory, // Ensure category is valid enum
         unit: item.unit,
+        quantity: parseFloat(item.quantity),
         currentStock: parseFloat(item.currentStock),
         minimumStock: parseFloat(item.minimumStock),
         unitCost: item.unitCost ? parseFloat(item.unitCost) : undefined,

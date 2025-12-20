@@ -9,14 +9,7 @@ import { format } from "date-fns"
 import { ArrowUpDown } from "lucide-react"
 import { CellAction } from "./cell-action"
 
-export type UserWithCounts = User & {
-  _count: {
-    projectMemberships: number;
-    equipmentBookings: number;
-  };
-};
-
-export const columns: ColumnDef<UserWithCounts>[] = [
+export const columns: ColumnDef<User>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -85,16 +78,6 @@ export const columns: ColumnDef<UserWithCounts>[] = [
         </Button>
       )
     },
-  },
-  {
-    id: 'projects',
-    header: "Projects",
-    cell: ({ row }) => row.original._count.projectMemberships,
-  },
-  {
-    id: 'bookings',
-    header: "Bookings",
-    cell: ({ row }) => row.original._count.equipmentBookings,
   },
   {
     accessorKey: "createdAt",
