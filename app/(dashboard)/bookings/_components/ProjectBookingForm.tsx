@@ -7,11 +7,11 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -22,7 +22,7 @@ interface ProjectBookingFormProps {
   projectId?: string; // Passed from parent, if booking is project-specific
   bookingId?: string; // For editing existing booking
   initialData?: BookingDetails; // For pre-filling form in edit mode
-  onSuccess?: () => void;
+  onSuccess?: () => Promise<{ navigateBack?: boolean }>;
   className?: string;
   equipmentList: Equipment[]; // Equipment list passed as prop
   userId: string; // userId passed as prop
@@ -156,14 +156,18 @@ export default function ProjectBookingForm({
     setError(null);
 
     try {
-      await onSubmit(formData); // Call the onSubmit prop
+      const result = await onSubmit(formData); // Call the onSubmit prop
       
       toast("Success!", {
         description: `Booking ${bookingId ? 'updated' : 'created'} successfully.`,
       });
       
       if (onSuccess) {
-        onSuccess();
+        const response = await onSuccess();
+        if (response?.navigateBack) {
+          router.back(); // Navigate back for updates
+          return;
+        }
       } else {
         // Default redirection if no onSuccess is provided
         router.push(`/dashboard/bookings`);

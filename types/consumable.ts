@@ -1,5 +1,5 @@
 // types/consumable.ts
-import { Consumable as PrismaConsumable, ConsumableAllocation as PrismaConsumableAllocation, Equipment as PrismaEquipment, User as PrismaUser } from '@prisma/client';
+import { Consumable as PrismaConsumable, ConsumableAllocation as PrismaConsumableAllocation, User as PrismaUser } from '@prisma/client';
 
 export type ConsumableWithRelations = PrismaConsumable & {
   allocations?: PrismaConsumableAllocation[];
@@ -16,7 +16,7 @@ export interface ConsumableAllocationFormData {
   consumableId: string;
   quantity: number;
   purpose: string;
-  allocationDate: Date;
+  allocatedDate: Date;
   bookingId?: string | null;
   maintenanceId?: string | null;
 }

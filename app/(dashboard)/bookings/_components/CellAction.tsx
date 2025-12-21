@@ -131,7 +131,7 @@ export const CellAction: React.FC<CellActionProps> = ({
             </DropdownMenuItem>
             
           )}
-           <DropdownMenuItem onClick={() => router.push(`/consummables/allocation/?bookingId=${data.id}`)}>
+           <DropdownMenuItem onClick={() => router.push(`/consumables/allocations/new?bookingId=${data.id}`)}>
               <span className="flex items-center">
                 <PackageSearch className="h-4 w-4 mr-2" /> Allocate Consumables
               </span>

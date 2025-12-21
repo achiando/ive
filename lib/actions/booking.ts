@@ -9,9 +9,9 @@ import {
 } from '@/lib/email';
 import { prisma } from '@/lib/prisma';
 import {
+  BookingAnalyticsData,
   BookingDetails,
-  BookingStatus,
-  BookingAnalyticsData
+  BookingStatus
 } from '@/types/booking';
 import { Prisma, UserRole } from '@prisma/client';
 import { getServerSession } from 'next-auth';
@@ -31,11 +31,30 @@ const formatBookingDetails = (booking: any): BookingDetails => {
   const isPast = booking.endDate < now;
   const isUpcoming = booking.startDate > now;
 
+  // Create a new object without the prototype to ensure no methods are included
+  const formattedBooking = { ...booking };
+  
+  // Convert Decimal values to numbers
+  if (formattedBooking.equipment) {
+    if (formattedBooking.equipment.purchasePrice) {
+      formattedBooking.equipment.purchasePrice = Number(formattedBooking.equipment.purchasePrice);
+    }
+    if (formattedBooking.equipment.estimatedPrice) {
+      formattedBooking.equipment.estimatedPrice = Number(formattedBooking.equipment.estimatedPrice);
+    }
+    if (formattedBooking.equipment.actualPrice) {
+      formattedBooking.equipment.actualPrice = Number(formattedBooking.equipment.actualPrice);
+    }
+  }
+
   return {
-    ...booking,
+    ...formattedBooking,
     isPast,
     isUpcoming,
-    user: booking.user ? { ...booking.user, name: `${booking.user.firstName} ${booking.user.lastName}` } : null,
+    user: formattedBooking.user ? { 
+      ...formattedBooking.user, 
+      name: `${formattedBooking.user.firstName} ${formattedBooking.user.lastName}` 
+    } : null,
   };
 };
 
@@ -265,6 +284,16 @@ export async function createBooking(data: CreateBookingData): Promise<BookingDet
   const session = await getServerSession(authOptions);
   if (!session) {
     throw new Error('Unauthorized');
+  }
+
+  const user = session.user as { id: string; role: UserRole };
+  const isAdminRole = (role: UserRole): boolean => {
+    return role === UserRole.ADMIN || role === UserRole.LAB_MANAGER || role === UserRole.ADMIN_TECHNICIAN || role === UserRole.TECHNICIAN;
+  };
+
+  // If the user is not an admin role, they can only create bookings for themselves
+  if (!isAdminRole(user.role) && data.userId !== user.id) {
+    throw new Error('Forbidden: You can only create bookings for your own user ID.');
   }
 
   const { equipmentId, startDate, endDate, bookingHours, bookingTime, purpose, notes, projectId, userId } = data;

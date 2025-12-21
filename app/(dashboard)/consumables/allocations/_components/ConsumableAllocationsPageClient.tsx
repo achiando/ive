@@ -1,13 +1,13 @@
 "use client";
 
+import { Button } from "@/components/ui/button"; // Import Button
 import { DataTable } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
+import { PlusCircle } from "lucide-react"; // Import PlusCircle
+import Link from "next/link"; // Import Link
 import { useRouter } from "next/navigation";
 import { Fragment, useMemo, useState } from "react";
 import { columns } from "./columns"; // This will be created next
-import { Button } from "@/components/ui/button"; // Import Button
-import Link from "next/link"; // Import Link
-import { PlusCircle } from "lucide-react"; // Import PlusCircle
 
 interface ConsumableAllocationsPageClientProps {
   allocations: any[]; // TODO: Define a proper type for ConsumableAllocationWithRelations
@@ -57,7 +57,7 @@ export function ConsumableAllocationsPageClient({ allocations }: ConsumableAlloc
           </p>
         </div>
         <Button asChild>
-          <Link href="/dashboard/consumables/allocations/new">
+          <Link href="/consumables/allocations/new">
             <PlusCircle className="mr-2 h-4 w-4" />
             New Allocation
           </Link>
@@ -68,7 +68,7 @@ export function ConsumableAllocationsPageClient({ allocations }: ConsumableAlloc
       <DataTable 
         columns={columns} 
         data={filteredAllocations}
-        filterColumnId="consumable.name" // Assuming consumable.name is a filterable column
+        filterColumnId="consumable.name"
         filterColumnPlaceholder="Filter by consumable name..." 
       >
         {renderFilters(true)}

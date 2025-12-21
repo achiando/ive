@@ -8,7 +8,6 @@ import { ArrowUpDown } from "lucide-react"
 
 import { ConsumableAllocationWithRelations } from "@/types/consumable"
 import { CellAction } from "./cell-action"; // This will be created next
-import { Badge } from "@/components/ui/badge"
 
 export const columns: ColumnDef<ConsumableAllocationWithRelations>[] = [
   {
@@ -34,6 +33,7 @@ export const columns: ColumnDef<ConsumableAllocationWithRelations>[] = [
     enableHiding: false,
   },
   {
+    id: "consumable.name", // Explicitly set id to match filterColumnId
     accessorKey: "consumable.name",
     header: ({ column }) => {
       return (
@@ -82,7 +82,7 @@ export const columns: ColumnDef<ConsumableAllocationWithRelations>[] = [
     cell: ({ row }) => row.original.maintenanceId || 'N/A',
   },
   {
-    accessorKey: "allocationDate",
+    accessorKey: "allocatedDate",
     header: ({ column }) => {
       return (
         <Button
@@ -94,7 +94,19 @@ export const columns: ColumnDef<ConsumableAllocationWithRelations>[] = [
         </Button>
       )
     },
-    cell: ({ row }) => format(new Date(row.getValue("allocationDate")), "PPP"),
+    cell: ({ row }) => {
+      const dateValue = row.getValue("allocatedDate");
+      if (dateValue instanceof Date && !isNaN(dateValue.getTime())) {
+        return format(dateValue, "PPP");
+      }
+      if (typeof dateValue === 'string') {
+        const parsedDate = new Date(dateValue);
+        if (!isNaN(parsedDate.getTime())) {
+          return format(parsedDate, "PPP");
+        }
+      }
+      return "N/A"; // Or some other placeholder
+    },
   },
   {
     id: "actions",

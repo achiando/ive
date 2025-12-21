@@ -1,0 +1,3 @@
+name,description,category,manufacturer,model,serialNumber,location,status,dailyCapacity,purchaseDate,purchasePrice,warrantyExpiry,estimatedPrice,actualPrice,notes,requiresSafetyTest,imageUrl,manualUrl
+Microscope X100,High-resolution optical microscope,Lab Equipment,OptiTech,MX100,SN-MX100-001,Lab 101,AVAILABLE,1,2023-01-15,1500,2025-01-15,1600,1550,Used for advanced material analysis.,TRUE,https://example.com/microscope.jpg,https://example.com/microscope_manual.pdf
+3D Printer Pro,Industrial grade 3D printer,Tools,PrintWorks,3DP-PRO,SN-3DP-PRO-002,Workshop,IN_USE,1,2022-06-01,5000,2024-06-01,5200,5100,Requires regular maintenance.,FALSE,,

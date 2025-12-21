@@ -117,6 +117,22 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
               <FileText className="h-4 w-4 mr-2" /> Manage Documents
             </span>
           </DropdownMenuItem>
+           {(data.status === 'APPROVED' || data.status === 'COMPLETED') && (
+            <>
+              <DropdownMenuItem onClick={() => router.push(`/bookings?projectId=${data.id}`)}>
+                <span className="flex items-center">
+                  <FileText className="h-4 w-4 mr-2" /> Manage Bookings
+                </span>
+              </DropdownMenuItem>
+              {data.status === 'APPROVED' && (
+                <DropdownMenuItem onClick={() => router.push(`/bookings/new?projectId=${data.id}`)}>
+                  <span className="flex items-center">
+                    <FileText className="h-4 w-4 mr-2" /> Make Booking
+                  </span>
+                </DropdownMenuItem>
+              )}
+            </>
+          )}
 
           {canChangeStatus && data.status === 'PENDING' && (
             <>

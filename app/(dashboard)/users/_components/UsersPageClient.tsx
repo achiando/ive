@@ -2,16 +2,15 @@
 
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
-import Link from "next/link";
-import { columns } from "./columns";
-import { NewUsersAnalytics } from "./NewUsersAnalytics";
-import { UserRoleStats } from "./UserRoleStats";
-import { Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { User, UserRole, RegistrationStatus } from "@prisma/client";
-import { useState, useMemo } from "react";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RegistrationStatus, User, UserRole } from "@prisma/client";
+import { Plus } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { columns } from "../../users/_components/columns";
+import { NewUsersAnalytics } from "../../users/_components/NewUsersAnalytics";
+import { UserRoleStats } from "../../users/_components/UserRoleStats";
 
 interface UsersPageClientProps {
   users: User[];
@@ -24,6 +23,15 @@ export function UsersPageClient({ users }: UsersPageClientProps) {
   const [selectedStatus, setSelectedStatus] = useState<RegistrationStatus | "all">("all");
 
   const isLoading = !users; // Determine loading state
+
+useEffect(() => {
+  const shouldReload = new URLSearchParams(window.location.search).get('reload') === 'true';
+  if (shouldReload) {
+    const newUrl = window.location.pathname;
+    window.history.replaceState({}, '', newUrl); // Remove the query param
+    window.location.reload();
+  }
+}, []);
 
   const filteredUsers = useMemo(() => {
     let currentUsers = users;
@@ -72,46 +80,6 @@ export function UsersPageClient({ users }: UsersPageClientProps) {
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-4 py-4">
-        <Input
-          placeholder="Search by email, name..."
-          value={searchTerm}
-          onChange={(event) => setSearchTerm(event.target.value)}
-          className="max-w-sm"
-        />
-        <div className="flex space-x-2">
-          {/* Role Filter */}
-          <Select value={selectedRole} onValueChange={(value: UserRole | "all") => setSelectedRole(value)}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by Role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Roles</SelectItem>
-              {Object.values(UserRole).map((role) => (
-                <SelectItem key={role} value={role}>
-                  {role.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {/* Status Filter */}
-          <Select value={selectedStatus} onValueChange={(value: RegistrationStatus | "all") => setSelectedStatus(value)}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              {Object.values(RegistrationStatus).map((status) => (
-                <SelectItem key={status} value={status}>
-                  {status.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <UserRoleStats 

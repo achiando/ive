@@ -131,30 +131,34 @@ export function EquipmentsPageClient({ equipments }: EquipmentsPageClientProps) 
         <div className="flex items-center gap-2">
           {canAddEquipment && (
             <>
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Add Equipment
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Add New Equipment</DialogTitle>
-                </DialogHeader>
-                <div className="py-4">
-                  <EquipmentForm 
-                    onSubmit={handleCreateEquipment}
-                    onCancel={() => setIsCreateDialogOpen(false)}
-                  />
-                </div>
-              </DialogContent>
-            </Dialog>
-            
-                <Button variant="outline" onClick={() => router.push('/equipments/bulk-upload')}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Bulk Upload
-                </Button>
+              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Equipment
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Add New Equipment</DialogTitle>
+                  </DialogHeader>
+                  <div className="py-4">
+                    <EquipmentForm
+                      onSubmit={handleCreateEquipment}
+                      onCancel={() => setIsCreateDialogOpen(false)}
+                    />
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              <Button variant="outline" onClick={() => router.push('/equipments/bulk-upload')}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Bulk Upload
+              </Button>
+              <Button variant="outline" onClick={() => router.push('/equipments/report')}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Report
+              </Button>
             </>
           )}
           <div className="flex items-center space-x-2">
@@ -179,18 +183,18 @@ export function EquipmentsPageClient({ equipments }: EquipmentsPageClientProps) 
       </div>
 
       {/* Analytics Cards */}
-      <EquipmentStats 
-        equipments={filteredEquipments} 
-        isLoading={isLoading} 
+      <EquipmentStats
+        equipments={filteredEquipments}
+        isLoading={isLoading}
       />
 
       {/* Main Content Area */}
       {view === 'table' ? (
-        <DataTable 
-          columns={columns} 
+        <DataTable
+          columns={columns}
           data={filteredEquipments}
-          filterColumnId="name" 
-          filterColumnPlaceholder="Filter by name..." 
+          filterColumnId="name"
+          filterColumnPlaceholder="Filter by name..."
         >
           {renderFilters(true)} {/* Pass filters as children to DataTable */}
         </DataTable>

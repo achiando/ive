@@ -2,29 +2,50 @@
 "use server";
 
 import { authOptions } from "@/lib/auth";
-import { sendStatusUpdateEmail } from "@/lib/email";
+import { sendEmail, sendStatusUpdateEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
-import { Faculty, RegistrationStatus, User } from "@prisma/client";
+import { Faculty, Prisma, RegistrationStatus, User, UserRole } from "@prisma/client";
+import bcrypt from 'bcryptjs';
 import { getServerSession } from "next-auth";
-import { unstable_cache as cache, revalidatePath } from 'next/cache';
+import { unstable_cache as cache, revalidateTag } from 'next/cache';
+
+// Helper function to generate a random password
+function generateRandomPassword(length = 10) {
+  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=";
+  let password = "";
+  for (let i = 0; i < length; i++) {
+    password += charset.charAt(Math.floor(Math.random() * charset.length));
+  }
+  return password;
+}
 
 /**
  * Fetches all users from the database.
  * Caches the result for 1 hour.
  */
 export const getUsers = cache(
-  async (status?: RegistrationStatus) => {
-    const users = await prisma.user.findMany({
-      where: status ? { status } : {},
-      orderBy: {
-        createdAt: "desc",
-      },
+  async (status?: RegistrationStatus, roles?: UserRole[]) => {
+    const whereClause: Prisma.UserWhereInput = {};
+
+    if (status) {
+      whereClause.status = status;
+    }
+    if (roles && roles.length > 0) {
+      whereClause.role = { in: roles };
+    }
+
+    return prisma.user.findMany({
+      where: whereClause,
+      orderBy: { createdAt: "desc" },
     });
-    return users;
   },
-  ["users_with_counts"],
-  { revalidate: 3600 } // Revalidate every hour
+  ["users"], // cache key
+  {
+    tags: ["users"], // ✅ THIS enables revalidateTag
+    revalidate: 3600,
+  }
 );
+
 
 /**
  * Fetches a user by their ID.
@@ -51,7 +72,10 @@ export const getUserById = cache(
     }
   },
   ["user_by_id"],
-  { revalidate: 3600 }
+  {
+    tags: ["users", "user"], // ✅ depends on users
+    revalidate: 3600,
+  }
 ) as (id: string | undefined | null) => Promise<(User & { faculty: Faculty | null }) | null>;
 
 /**
@@ -162,17 +186,47 @@ export const getMonthlyUserCounts = cache(
 
     return Object.values(monthlyCounts);
   },
-  ["monthly_user_counts"],
-  { revalidate: 3600 }
+  ["user_status_counts"],
+  {
+    tags: ["users"], // ✅ same tag
+    revalidate: 3600,
+  }
 );
 
 /**
  * Creates a new user.
  */
-export async function createUser(data: Omit<User, "id" | "createdAt" | "updatedAt">) {
+export async function createUser(data: Omit<User, "id" | "createdAt" | "updatedAt" | "password"> & { password?: string }) {
+  const rawPassword = data.password || generateRandomPassword();
+  const hashedPassword = await bcrypt.hash(rawPassword, 10);
+
   const user = await prisma.user.create({
-    data,
+    data: {
+      ...data,
+      password: hashedPassword,
+    },
   });
+
+  // Send email to the new user with their password
+  try {
+    const emailSubject = "Your Account Details for IVE Platform";
+    const emailHtml = `
+      <p>Dear ${user.firstName},</p>
+      <p>Your account has been created on the IVE Platform.</p>
+      <p>Your login details are:</p>
+      <p><strong>Email:</strong> ${user.email}</p>
+      <p><strong>Password:</strong> ${rawPassword}</p>
+      <p>Please log in and change your password as soon as possible.</p>
+      <p>Thank you,</p>
+      <p>IVE Team</p>
+    `;
+    await sendEmail({ to: user.email, subject: emailSubject, html: emailHtml });
+  } catch (emailError) {
+    console.error('Failed to send welcome email to new user:', emailError);
+    // Don't fail the whole operation if email sending fails
+  }
+
+  revalidateTag("users", "default"); // Revalidate the users list cache
   return user;
 }
 
@@ -184,6 +238,7 @@ export async function updateUser(id: string, data: Partial<User>) {
     where: { id },
     data,
   });
+  revalidateTag("users", "default"); // Revalidate the users list cache
   return user;
 }
 
@@ -223,7 +278,7 @@ export async function updateMyProfile(
         updatedAt: new Date(), // Manually update updatedAt
       },
     });
-    revalidatePath('/me'); // Revalidate the profile page
+    revalidateTag("users", "default"); // Revalidate the users list cache with max revalidation profile
     return { success: true, user: updatedUser };
   } catch (error) {
     console.error('Error updating user profile:', error);
@@ -239,6 +294,7 @@ export async function deleteUser(id: string) {
     await prisma.user.delete({
       where: { id },
     });
+    revalidateTag("users", "default");
     return { success: true };
   } catch (error) {
     console.error('Error deleting user:', error);
@@ -302,6 +358,7 @@ export async function updateUserStatus(
           status,
           message
         );
+        revalidateTag("users", "default");
       } catch (emailError) {
         console.error('Failed to send status update email:', emailError);
         // Don't fail the whole operation if email sending fails
@@ -363,12 +420,15 @@ export const getUserStatusCounts = cache(
         statusCounts[item.status] = item._count.status;
       }
     });
+    revalidateTag("users", "default");
 
     return statusCounts;
   },
   ['user_status_counts'],
   { revalidate: 3600 }
 );
+
+
 
 export async function getUserSelections(userId: string) {
   const user = await prisma.user.findUnique({
@@ -411,48 +471,62 @@ export async function getUserSelections(userId: string) {
   };
 }
 
-export async function updateUserSelections(
-  userId: string,
-  eventIds: string[],
-  equipmentIds: string[]
-) {
-  try {
-    await prisma.$transaction(async (tx) => {
-      // Clear existing selections
-      await tx.eventParticipation.deleteMany({ where: { userId } });
-      await tx.equipmentBooking.deleteMany({ where: { userId } });
+export const getTechnicianStatistics = cache(
+  async () => {
+    const technicianRoles = [UserRole.TECHNICIAN, UserRole.ADMIN_TECHNICIAN, UserRole.LAB_MANAGER];
 
-      // Add new event selections
-      if (eventIds.length > 0) {
-        await tx.eventParticipation.createMany({
-          data: eventIds.map((eventId) => ({
-            userId,
-            eventId,
-            status: "REGISTERED",
-          })),
-        });
-      }
+    const baseWhere: Prisma.UserWhereInput = {
+      role: { in: technicianRoles },
+    };
 
-      // Add new equipment selections
-      if (equipmentIds.length > 0) {
-        await tx.equipmentBooking.createMany({
-          data: equipmentIds.map((equipmentId) => ({
-            userId,
-            equipmentId,
-            // You might need to define start and end dates for bookings
-            // For now, this is a simplified version.
-            startDate: new Date(),
-            endDate: new Date(),
-            status: "PENDING",
-          })),
-        });
+    // Total count of technician-related users
+    const totalTechnicians = await prisma.user.count({
+      where: baseWhere,
+    });
+
+    // Counts by specific technician role
+    const techniciansByRole = await prisma.user.groupBy({
+      by: ['role'],
+      _count: {
+        role: true,
+      },
+      where: baseWhere,
+    });
+
+    // Counts by registration status for technician-related users
+    const techniciansByStatus = await prisma.user.groupBy({
+      by: ['status'],
+      _count: {
+        status: true,
+      },
+      where: baseWhere,
+    });
+
+    // Format results
+    const roleCounts: { [key in UserRole]?: number } = {};
+    techniciansByRole.forEach(item => {
+      if (item.role) {
+        roleCounts[item.role] = item._count.role;
       }
     });
 
-    revalidatePath(`/pending`);
-    return { success: true, message: "Selections updated successfully." };
-  } catch (error) {
-    console.error("Error updating user selections:", error);
-    return { success: false, message: "Failed to update selections." };
+    const statusCounts: { [key in RegistrationStatus]?: number } = {};
+    techniciansByStatus.forEach(item => {
+      if (item.status) {
+        statusCounts[item.status] = item._count.status;
+      }
+    });
+
+    return {
+      totalTechnicians,
+      techniciansByRole: roleCounts,
+      techniciansByStatus: statusCounts,
+    };
+  },
+  ["technician_statistics"],
+  {
+    tags: ["users"], // Revalidate when user data changes
+    revalidate: 3600,
   }
-}
+);
+

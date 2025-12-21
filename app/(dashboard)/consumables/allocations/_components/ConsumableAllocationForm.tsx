@@ -36,12 +36,12 @@ export function ConsumableAllocationForm({
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+console.log(consumables)
   const [formData, setFormData] = useState<ConsumableAllocationFormData>({
     consumableId: initialData?.consumableId || '',
     quantity: initialData?.quantity || 1,
     purpose: initialData?.purpose || '',
-    allocationDate: initialData?.allocationDate ? new Date(initialData.allocationDate) : new Date(),
+    allocatedDate: initialData?.allocatedDate ? new Date(initialData.allocatedDate) : new Date(),
     bookingId: initialData?.bookingId || null,
     maintenanceId: initialData?.maintenanceId || null,
   });
@@ -52,7 +52,7 @@ export function ConsumableAllocationForm({
         consumableId: initialData.consumableId || '',
         quantity: initialData.quantity || 1,
         purpose: initialData.purpose || '',
-        allocationDate: initialData.allocationDate ? new Date(initialData.allocationDate) : new Date(),
+        allocatedDate: initialData.allocatedDate ? new Date(initialData.allocatedDate) : new Date(),
         bookingId: initialData.bookingId || null,
         maintenanceId: initialData.maintenanceId || null,
       });
@@ -83,7 +83,7 @@ export function ConsumableAllocationForm({
       setError('Please provide a purpose for the allocation.');
       return;
     }
-    if (!formData.allocationDate) {
+    if (!formData.allocatedDate) {
       setError('Please select an allocation date.');
       return;
     }
@@ -101,7 +101,7 @@ export function ConsumableAllocationForm({
       if (onSuccess) {
         onSuccess();
       } else {
-        router.push('/dashboard/consumables/allocations');
+        router.push('/consumables/allocations');
       }
     } catch (err: any) {
       setError(err.message || 'Failed to process consumable allocation.');
@@ -186,14 +186,14 @@ export function ConsumableAllocationForm({
           </div>
 
           <div>
-            <Label htmlFor="allocationDate">Allocation Date</Label>
+            <Label htmlFor="allocatedDate">Allocation Date</Label>
             <Input
-              id="allocationDate"
+              id="allocatedDate"
               type="date"
-              value={formData.allocationDate ? format(formData.allocationDate, "yyyy-MM-dd") : ""}
+              value={formData.allocatedDate ? format(formData.allocatedDate, "yyyy-MM-dd") : ""}
               onChange={(e) => {
                 const date = e.target.value ? new Date(e.target.value) : null;
-                if (date) handleChange('allocationDate', date);
+                if (date) handleChange('allocatedDate', date);
               }}
               disabled={isSubmitting}
               required

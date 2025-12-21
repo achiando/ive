@@ -21,8 +21,19 @@ const formSchema = z.object({
   firstName: z.string().min(1, "First name is required."),
   lastName: z.string().min(1, "Last name is required."),
   email: z.string().email("Invalid email address."),
-  password: z.string().min(6, "Password must be at least 6 characters.").optional(),
+  password: z.string().min(6, "Password must be at least 6 characters.").optional().or(z.literal("")),
   role: z.nativeEnum(UserRole),
+  phoneNumber: z.string().optional().or(z.literal("")),
+  department: z.string().optional().or(z.literal("")),
+  position: z.string().optional().or(z.literal("")),
+  profileImage: z.string().url("Invalid URL").optional().or(z.literal("")),
+  employeeId: z.string().optional().or(z.literal("")),
+  studentId: z.string().optional().or(z.literal("")),
+  yearOfStudy: z.preprocess(
+    (val) => (val === "" ? undefined : Number(val)),
+    z.number().int().positive("Year of study must be a positive number.").optional()
+  ),
+  program: z.string().optional().or(z.literal("")),
 });
 
 export type UserFormValues = z.infer<typeof formSchema>;
@@ -35,12 +46,33 @@ interface UserFormProps {
 export function UserForm({ initialData, onSubmit }: UserFormProps) {
   const form = useForm<UserFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData || {
+    defaultValues: initialData ? {
+      firstName: initialData.firstName,
+      lastName: initialData.lastName,
+      email: initialData.email,
+      role: initialData.role,
+      phoneNumber: initialData.phoneNumber || "",
+      department: initialData.department || "",
+      position: initialData.position || "",
+      profileImage: initialData.profileImage || "",
+      employeeId: initialData.employeeId || "",
+      studentId: initialData.studentId || "",
+      yearOfStudy: initialData.yearOfStudy || undefined,
+      program: initialData.program || "",
+    } : {
       firstName: "",
       lastName: "",
       email: "",
       password: "",
       role: UserRole.STUDENT,
+      phoneNumber: "",
+      department: "",
+      position: "",
+      profileImage: "",
+      employeeId: "",
+      studentId: "",
+      yearOfStudy: undefined,
+      program: "",
     },
   });
 
@@ -78,12 +110,116 @@ export function UserForm({ initialData, onSubmit }: UserFormProps) {
           />
           <FormField
             control={form.control}
+            name="phoneNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone Number</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., +1234567890" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="department"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Department</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., Computer Science" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="position"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Position</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., Research Assistant" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="profileImage"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Profile Image URL</FormLabel>
+                <FormControl>
+                  <Input placeholder="https://example.com/profile.jpg" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="employeeId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Employee ID</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., EMP001" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="studentId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Student ID</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., STU001" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="yearOfStudy"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Year of Study</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="e.g., 3" {...field} onChange={event => field.onChange(event.target.value === "" ? undefined : Number(event.target.value))} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="program"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Program</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., Electrical Engineering" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
             name="email"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="john.doe@example.com" {...field} />
+                  <Input placeholder="john.doe@example.com" {...field} disabled={!!initialData} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -1,6 +1,5 @@
 import { createEquipment, getEquipmentById, updateEquipment } from "@/lib/actions/equipment";
 import { redirect } from "next/navigation";
-import { toast } from "sonner";
 import { EquipmentForm, EquipmentFormValues } from "../_components/EquipmentForm";
 
 // Helper function to transform equipment data to form values
@@ -36,20 +35,14 @@ export default async function EquipmentPage({ params }: EquipmentPageProps) {
     if (isNewEquipment) {
       const result = await createEquipment(dataToSave);
       if (result.success) {
-        toast.success("Equipment created successfully!"); // Client-side toast
         redirect("/equipments");
-      } else {
-        toast.error(result.message); // Client-side toast
       }
     } else {
       if (equipmentData) {
         const result = await updateEquipment(equipmentData.id, dataToSave);
         if (result.success) {
-          toast.success("Equipment updated successfully!"); // Client-side toast
           redirect("/equipments");
-        } else {
-          toast.error(result.message); // Client-side toast
-        }
+        } 
       }
     }
   };

@@ -14,7 +14,7 @@ const consumableAllocationSchema = z.object({
   notes: z.string().optional(),
   bookingId: z.string().optional().nullable(), // Added nullable
   maintenanceId: z.string().optional().nullable(), // Added nullable
-  allocationDate: z.date(), // Added allocationDate
+  allocatedDate: z.date(), // Added allocationDate
 });
 
 export type ConsumableAllocationFormValues = z.infer<typeof consumableAllocationSchema>;
@@ -26,7 +26,7 @@ interface UpdateConsumableAllocationData {
   notes?: string;
   bookingId?: string | null;
   maintenanceId?: string | null;
-  allocationDate?: Date;
+  allocatedDate?: Date;
 }
 
 // CREATE Consumable Allocation
@@ -69,6 +69,14 @@ export async function createConsumableAllocation(values: ConsumableAllocationFor
 
 // GET Consumable Allocation by ID
 export async function getConsumableAllocationById(id: string) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    throw new Error('Unauthorized');
+  }
+  const user = session.user as { id: string; role: UserRole };
+  const allowedRoles: UserRole[] = [UserRole.ADMIN, UserRole.LAB_MANAGER, UserRole.ADMIN_TECHNICIAN, UserRole.TECHNICIAN];
+  const isAdminRole = allowedRoles.includes(user.role);
+
   try {
     const allocation = await prisma.consumableAllocation.findUnique({
       where: { id },
@@ -78,10 +86,20 @@ export async function getConsumableAllocationById(id: string) {
         },
       },
     });
+
+    if (!allocation) {
+      return null;
+    }
+
+    // Authorization check
+    if (!isAdminRole && allocation.userId !== user.id) {
+      throw new Error('Forbidden: You do not have access to this allocation.');
+    }
+
     return allocation;
   } catch (error: any) {
     console.error("Error fetching consumable allocation by ID:", error);
-    return null;
+    throw new Error(error.message || "Failed to fetch consumable allocation.");
   }
 }
 
@@ -147,7 +165,29 @@ export async function updateConsumableAllocation(id: string, values: UpdateConsu
 
 // DELETE Consumable Allocation
 export async function deleteConsumableAllocation(id: string) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return { success: false, message: 'Unauthorized' };
+  }
+  const user = session.user as { id: string; role: UserRole };
+  const allowedRoles: UserRole[] = [UserRole.ADMIN, UserRole.LAB_MANAGER, UserRole.ADMIN_TECHNICIAN, UserRole.TECHNICIAN];
+  const isAdminRole = allowedRoles.includes(user.role);
+
   try {
+    const allocationToDelete = await prisma.consumableAllocation.findUnique({
+      where: { id },
+      select: { userId: true, consumableId: true, quantity: true },
+    });
+
+    if (!allocationToDelete) {
+      return { success: false, message: "Consumable allocation not found." };
+    }
+
+    // Authorization check
+    if (!isAdminRole && allocationToDelete.userId !== user.id) {
+      return { success: false, message: 'Forbidden: You do not have permission to delete this allocation.' };
+    }
+
     const deletedAllocation = await prisma.consumableAllocation.delete({
       where: { id },
     });
@@ -173,8 +213,23 @@ export async function deleteConsumableAllocation(id: string) {
 
 // GET All Consumable Allocations
 export async function getAllConsumableAllocations() {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    throw new Error('Unauthorized');
+  }
+  const user = session.user as { id: string; role: UserRole };
+  const allowedRoles: UserRole[] = [UserRole.ADMIN, UserRole.LAB_MANAGER, UserRole.ADMIN_TECHNICIAN, UserRole.TECHNICIAN];
+  const isAdminRole = allowedRoles.includes(user.role);
+
   try {
+    const whereClause: Prisma.ConsumableAllocationWhereInput = {};
+
+    if (!isAdminRole) {
+      whereClause.userId = user.id;
+    }
+
     const allocations = await prisma.consumableAllocation.findMany({
+      where: whereClause,
       include: {
         consumable: {
           select: { id: true, name: true, unit: true },
@@ -187,6 +242,6 @@ export async function getAllConsumableAllocations() {
     return allocations;
   } catch (error: any) {
     console.error("Error fetching all consumable allocations:", error);
-    return [];
+    throw new Error(error.message || "Failed to fetch all consumable allocations.");
   }
 }

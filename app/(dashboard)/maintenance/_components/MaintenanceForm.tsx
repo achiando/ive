@@ -77,7 +77,7 @@ export function MaintenanceForm({
   session
 }: MaintenanceFormProps) {
   const router = useRouter();
-
+console.log(consumableList)
   const createdById = session?.user?.id;
 
   const [selectedConsumableId, setSelectedConsumableId] = React.useState('');

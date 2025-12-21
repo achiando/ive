@@ -2,28 +2,42 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Download, UploadCloud } from "lucide-react";
-import { useState, useCallback, ChangeEvent } from "react";
-import { useDropzone } from "react-dropzone";
-import * as XLSX from "xlsx";
-import Papa from "papaparse";
-import { EquipmentFormValues } from "../../_components/EquipmentForm"; // Assuming this path is correct
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { bulkCreateEquipment, BulkEquipmentInput } from "@/lib/actions/bulk-equipment"; // Import the server action
 import { EquipmentStatus } from "@/types/equipment"; // Import EquipmentStatus enum
+import { Download, UploadCloud } from "lucide-react";
+import Papa from "papaparse";
+import { ChangeEvent, useCallback, useState } from "react";
+import { useDropzone } from "react-dropzone";
+import { toast } from "sonner";
+import * as XLSX from "xlsx";
+import { FailedEquipmentItemRow } from "./FailedEquipmentItemRow"; // Import the new component
+
+interface FailedItem {
+  row: number;
+  data: BulkEquipmentInput;
+  errors: string[];
+  isEditing: boolean; // Ensure this is always present
+  editedData: BulkEquipmentInput; // Ensure this is always present
+  selectedForReupload: boolean; // New field to track selection
+}
 
 interface UploadResult {
   fileName: string;
-  status: 'success' | 'failure';
+  status: 'success' | 'partial' | 'failure';
   message: string;
-  failedItems?: { data: any; errors: string[] }[];
+  successCount: number;
+  failureCount: number;
+  failedItems?: FailedItem[];
 }
 
 export function BulkUploadClient() {
   const [file, setFile] = useState<File | null>(null);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isReuploading, setIsReuploading] = useState(false);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
@@ -49,9 +63,79 @@ export function BulkUploadClient() {
     }
   };
 
-  const handleUpload = async () => {
+  const processAndUpload = async (dataToUpload: BulkEquipmentInput[], isReupload = false) => {
+    const currentLoadingState = isReupload ? setIsReuploading : setIsLoading;
+    currentLoadingState(true);
+
+    try {
+      const result = await bulkCreateEquipment(dataToUpload);
+
+      const newFailedItems: FailedItem[] = [];
+      result.failedItems?.forEach(item => {
+        const originalFailedItem = uploadResult?.failedItems?.find(fi => fi.data.serialNumber === item.data.serialNumber);
+        newFailedItems.push({
+          row: originalFailedItem?.row || 0, // Preserve original row number if re-uploading
+          data: item.data,
+          errors: item.errors,
+          isEditing: false,
+          editedData: { ...item.data },
+          selectedForReupload: false,
+        });
+      });
+
+      const status = result.successCount > 0 ? (newFailedItems.length > 0 ? 'partial' : 'success') : 'failure';
+      const message = newFailedItems.length > 0
+        ? `Uploaded ${result.successCount} items, ${newFailedItems.length} failed.`
+        : `Successfully uploaded ${result.successCount} equipment items.`;
+
+      setUploadResult(prev => {
+        const existingFailed = prev?.failedItems || [];
+        const remainingFailed = existingFailed.filter(
+          fi => !dataToUpload.some(d => d.serialNumber === fi.data.serialNumber) || newFailedItems.some(nfi => nfi.data.serialNumber === fi.data.serialNumber)
+        );
+
+        return {
+          fileName: prev?.fileName || file?.name || "N/A",
+          status,
+          message,
+          successCount: (prev?.successCount || 0) + result.successCount,
+          failureCount: newFailedItems.length,
+          failedItems: newFailedItems.length > 0 ? newFailedItems : undefined,
+        };
+      });
+
+      if (result.successCount > 0) {
+        toast.success(`${result.successCount} items uploaded successfully.`);
+      }
+      if (newFailedItems.length > 0) {
+        toast.error(`${newFailedItems.length} items failed to upload.`);
+      }
+
+    } catch (error: any) {
+      console.error("Upload/Re-upload error:", error);
+      toast.error(`Error during ${isReupload ? 're-upload' : 'upload'}: ${error.message}`);
+      setUploadResult(prev => ({
+        fileName: prev?.fileName || file?.name || "N/A",
+        status: "failure",
+        message: `Error during ${isReupload ? 're-upload' : 'upload'}: ${error.message}`,
+        successCount: prev?.successCount || 0,
+        failureCount: prev?.failureCount || 0,
+        failedItems: prev?.failedItems,
+      }));
+    } finally {
+      currentLoadingState(false);
+    }
+  };
+
+  const handleUploadInitialFile = async () => {
     if (!file) {
-      setUploadResult({ fileName: "N/A", status: "failure", message: "No file selected." });
+      setUploadResult({
+        fileName: "N/A",
+        status: "failure",
+        message: "No file selected.",
+        successCount: 0,
+        failureCount: 0
+      });
       return;
     }
 
@@ -73,45 +157,49 @@ export function BulkUploadClient() {
         const worksheet = workbook.Sheets[sheetName];
         parsedData = XLSX.utils.sheet_to_json(worksheet);
       } else {
-        setUploadResult({ fileName: file.name, status: "failure", message: "Unsupported file type." });
+        setUploadResult({
+          fileName: file.name,
+          status: "failure",
+          message: "Unsupported file type.",
+          successCount: 0,
+          failureCount: 0
+        });
         setIsLoading(false);
         return;
       }
 
-      // Convert parsed data to BulkEquipmentInput[]
-      const equipmentToUpload: BulkEquipmentInput[] = parsedData.map((item: any) => ({
+      const equipmentToUpload: BulkEquipmentInput[] = parsedData.map((item: any, index: number) => ({
         name: item.name,
         description: item.description,
         category: item.category,
+        manufacturer: item.manufacturer,
         model: item.model,
         serialNumber: item.serialNumber,
         location: item.location,
-        status: item.status, // Ensure this matches EquipmentStatus enum values
-        dailyCapacity: parseInt(item.dailyCapacity),
+        status: item.status,
+        dailyCapacity: parseInt(item.dailyCapacity) || 1,
+        purchaseDate: item.purchaseDate ? new Date(item.purchaseDate) : undefined,
+        purchasePrice: item.purchasePrice ? parseFloat(item.purchasePrice) : undefined,
+        warrantyExpiry: item.warrantyExpiry ? new Date(item.warrantyExpiry) : undefined,
+        estimatedPrice: item.estimatedPrice ? parseFloat(item.estimatedPrice) : undefined,
+        actualPrice: item.actualPrice ? parseFloat(item.actualPrice) : undefined,
+        notes: item.notes,
+        requiresSafetyTest: item.requiresSafetyTest === "TRUE",
         imageUrl: item.imageUrl,
         manualUrl: item.manualUrl,
       }));
 
-      const result = await bulkCreateEquipment(equipmentToUpload);
-
-      if (result.failureCount > 0) {
-        setUploadResult({
-          fileName: file.name,
-          status: "failure",
-          message: `Uploaded ${result.successCount} items, ${result.failureCount} failed.`,
-          failedItems: result.failedItems,
-        });
-      } else {
-        setUploadResult({
-          fileName: file.name,
-          status: "success",
-          message: `Successfully uploaded ${result.successCount} equipment items.`,
-        });
-      }
+      await processAndUpload(equipmentToUpload);
 
     } catch (error: any) {
       console.error("File processing error:", error);
-      setUploadResult({ fileName: file.name, status: "failure", message: `Error processing file: ${error.message}` });
+      setUploadResult({
+        fileName: file.name,
+        status: "failure",
+        message: `Error processing file: ${error.message}`,
+        successCount: 0,
+        failureCount: 0
+      });
     } finally {
       setIsLoading(false);
     }
@@ -119,8 +207,10 @@ export function BulkUploadClient() {
 
   const handleDownloadSample = () => {
     const headers = [
-      "name", "description", "category", "model", "serialNumber",
-      "location", "status", "dailyCapacity", "imageUrl", "manualUrl"
+      "name", "description", "category", "manufacturer", "model", "serialNumber",
+      "location", "status", "dailyCapacity", "purchaseDate", "purchasePrice",
+      "warrantyExpiry", "estimatedPrice", "actualPrice", "notes",
+      "requiresSafetyTest", "imageUrl", "manualUrl"
     ];
     const validStatuses = Object.values(EquipmentStatus).join(', ');
     const sampleData = [
@@ -128,11 +218,19 @@ export function BulkUploadClient() {
         name: "Microscope X100",
         description: "High-resolution optical microscope",
         category: "Lab Equipment",
+        manufacturer: "OptiTech",
         model: "MX100",
         serialNumber: "SN-MX100-001",
         location: "Lab 101",
         status: `AVAILABLE (Options: ${validStatuses})`,
         dailyCapacity: 1,
+        purchaseDate: "2023-01-15",
+        purchasePrice: 1500.00,
+        warrantyExpiry: "2025-01-15",
+        estimatedPrice: 1600.00,
+        actualPrice: 1550.00,
+        notes: "Used for advanced material analysis.",
+        requiresSafetyTest: "TRUE",
         imageUrl: "https://example.com/microscope.jpg",
         manualUrl: "https://example.com/microscope_manual.pdf"
       },
@@ -140,11 +238,19 @@ export function BulkUploadClient() {
         name: "3D Printer Pro",
         description: "Industrial grade 3D printer",
         category: "Tools",
+        manufacturer: "PrintWorks",
         model: "3DP-PRO",
         serialNumber: "SN-3DP-PRO-002",
         location: "Workshop",
         status: `IN_USE (Options: ${validStatuses})`,
         dailyCapacity: 1,
+        purchaseDate: "2022-06-01",
+        purchasePrice: 5000.00,
+        warrantyExpiry: "2024-06-01",
+        estimatedPrice: 5200.00,
+        actualPrice: 5100.00,
+        notes: "Requires regular maintenance.",
+        requiresSafetyTest: "FALSE",
         imageUrl: "",
         manualUrl: ""
       }
@@ -159,6 +265,78 @@ export function BulkUploadClient() {
     link.click();
     document.body.removeChild(link);
   };
+
+  const handleEditChange = useCallback((row: number, field: keyof BulkEquipmentInput, value: any) => {
+    setUploadResult(prev => {
+      if (!prev || !prev.failedItems) return prev;
+      const updatedFailedItems = prev.failedItems.map(item => {
+        if (item.row === row) {
+          return {
+            ...item,
+            editedData: {
+              ...item.editedData,
+              [field]: value,
+            },
+          };
+        }
+        return item;
+      });
+      return { ...prev, failedItems: updatedFailedItems };
+    });
+  }, []);
+
+  const handleToggleEdit = useCallback((row: number) => {
+    setUploadResult(prev => {
+      if (!prev || !prev.failedItems) return prev;
+      const updatedFailedItems = prev.failedItems.map(item => {
+        if (item.row === row) {
+          return { ...item, isEditing: !item.isEditing };
+        }
+        return item;
+      });
+      return { ...prev, failedItems: updatedFailedItems };
+    });
+  }, []);
+
+  const handleToggleSelect = useCallback((row: number, isSelected: boolean) => {
+    setUploadResult(prev => {
+      if (!prev || !prev.failedItems) return prev;
+      const updatedFailedItems = prev.failedItems.map(item => {
+        if (item.row === row) {
+          return { ...item, selectedForReupload: isSelected };
+        }
+        return item;
+      });
+      return { ...prev, failedItems: updatedFailedItems };
+    });
+  }, []);
+
+  const handleSelectAll = useCallback((isSelected: boolean) => {
+    setUploadResult(prev => {
+      if (!prev || !prev.failedItems) return prev;
+      const updatedFailedItems = prev.failedItems.map(item => ({
+        ...item,
+        selectedForReupload: isSelected,
+      }));
+      return { ...prev, failedItems: updatedFailedItems };
+    });
+  }, []);
+
+  const handleReuploadSelected = async () => {
+    if (!uploadResult?.failedItems) return;
+
+    const selectedItems = uploadResult.failedItems.filter(item => item.selectedForReupload);
+    if (selectedItems.length === 0) {
+      toast.info("No items selected for re-upload.");
+      return;
+    }
+
+    const dataToReupload = selectedItems.map(item => item.editedData);
+    await processAndUpload(dataToReupload, true);
+  };
+
+  const allFailedItemsSelected = uploadResult?.failedItems?.every(item => item.selectedForReupload) ?? false;
+  const someFailedItemsSelected = uploadResult?.failedItems?.some(item => item.selectedForReupload) ?? false;
 
   return (
     <Card>
@@ -186,25 +364,71 @@ export function BulkUploadClient() {
             <Download className="mr-2 h-4 w-4" />
             Download Sample CSV
           </Button>
-          <Button onClick={handleUpload} disabled={!file || isLoading}>
+          <Button onClick={handleUploadInitialFile} disabled={!file || isLoading}>
             {isLoading ? "Uploading..." : "Upload File"}
           </Button>
         </div>
 
         {uploadResult && (
-          <div className={`p-4 rounded-lg ${uploadResult.status === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-            <h3 className="font-semibold">{uploadResult.status === 'success' ? 'Upload Successful' : 'Upload Failed'}</h3>
+          <div className={`p-4 rounded-lg ${uploadResult.status === 'success' ? 'bg-green-100 text-green-800' : uploadResult.status === 'partial' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
+            <h3 className="font-semibold">{uploadResult.status === 'success' ? 'Upload Successful' : uploadResult.status === 'partial' ? 'Partial Upload Success' : 'Upload Failed'}</h3>
             <p>{uploadResult.message}</p>
+
             {uploadResult.failedItems && uploadResult.failedItems.length > 0 && (
-              <div className="mt-4">
-                <p className="font-medium">Failed Items:</p>
-                <ul className="list-disc pl-5">
-                  {uploadResult.failedItems.map((item, index) => (
-                    <li key={index}>
-                      Row {index + 1}: {JSON.stringify(item.data)} - Errors: {item.errors.join(', ')}
-                    </li>
-                  ))}
-                </ul>
+              <div className="mt-4 space-y-4">
+                <div className="flex justify-between items-center">
+                  <p className="font-medium">Failed Items:</p>
+                  <Button
+                    onClick={handleReuploadSelected}
+                    disabled={isReuploading || !uploadResult.failedItems.some(item => item.selectedForReupload)}
+                    size="sm"
+                  >
+                    {isReuploading ? "Re-uploading..." : "Re-upload Selected"}
+                  </Button>
+                </div>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[50px]">
+                          <Checkbox
+                            checked={
+                              allFailedItemsSelected
+                                ? true
+                                : someFailedItemsSelected && !allFailedItemsSelected
+                                ? 'indeterminate'
+                                : false
+                            }
+                            onCheckedChange={(checked) => handleSelectAll(!!checked)}
+                          />
+                        </TableHead>
+                        <TableHead className="w-[50px]">Row</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead>Serial Number</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Daily Capacity</TableHead>
+                        <TableHead>Purchase Date</TableHead>
+                        <TableHead>Purchase Price</TableHead>
+                        <TableHead>Requires Safety Test</TableHead>
+                        <TableHead className="w-[200px]">Errors</TableHead>
+                        <TableHead className="w-[100px]">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {uploadResult.failedItems.map((item) => (
+                        <FailedEquipmentItemRow
+                          key={item.row}
+                          item={item}
+                          onEditChange={handleEditChange}
+                          onToggleEdit={handleToggleEdit}
+                          onToggleSelect={handleToggleSelect}
+                          isSelected={item.selectedForReupload}
+                        />
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             )}
           </div>

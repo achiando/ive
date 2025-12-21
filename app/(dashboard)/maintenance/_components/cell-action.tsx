@@ -19,15 +19,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Eye, MoreHorizontal, Pencil, Trash2, Check, UserPlus } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { deleteMaintenance } from "@/lib/actions/maintenance";
+import { MaintenanceWithRelations } from "@/types/maintenance";
+import { MaintenanceStatus } from "@prisma/client";
+import { Check, MoreHorizontal, PackageSearch, Pencil, Trash2, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { MaintenanceWithRelations } from "@/types/maintenance";
-import { deleteMaintenance } from "@/lib/actions/maintenance";
-import { MaintenanceStatus } from "@prisma/client";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 
 interface CellActionProps {
   data: MaintenanceWithRelations;
@@ -146,6 +146,11 @@ export const CellAction: React.FC<CellActionProps> = ({
               <Check className="h-4 w-4 mr-2" /> Update Status
             </span>
           </DropdownMenuItem>
+             <DropdownMenuItem onClick={() => router.push(`/consumables/allocations/new?maintenanceId=${data.id}`)}>
+              <span className="flex items-center">
+                <PackageSearch className="h-4 w-4 mr-2" /> Allocate Consumables
+              </span>
+            </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setShowAssignTechnicianDialog(true)}>
             <span className="flex items-center">
               <UserPlus className="h-4 w-4 mr-2" /> Assign Technician

@@ -11,7 +11,7 @@ interface BookingPageProps {
     id: string;
   };
   searchParams: {
-    projectId?: string; // Allow projectId to be passed via search params
+    projectId?: string; 
   };
 }
 
@@ -50,11 +50,14 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
     console.log("handleFormSubmit called with:", { formData, isNewBooking, initialData, userId, searchProjectId });
     try {
       if (isNewBooking) {
-        await createBooking({
+        const newBooking = await createBooking({
           ...formData,
           userId,
           projectId: formData.projectId || searchProjectId, // Use projectId from formData or search params
         });
+        // Pass the new booking ID to the success handler
+        await handleSubmitSuccess(newBooking.id);
+        return;
       } else {
         if (!initialData?.id) {
           throw new Error("Booking ID is missing for update.");
@@ -69,9 +72,14 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
     }
   };
 
-  const handleSubmitSuccess = async () => {
+  const handleSubmitSuccess = async (bookingId?: string) => {
     "use server";
-    redirect("/dashboard/bookings");
+    if (isNewBooking && bookingId) {
+      redirect(`/consumables/allocations/new?bookingId=${bookingId}`);
+    } else {
+      // Return a special flag to indicate the form should navigate back
+      return { navigateBack: true };
+    }
   };
 
   return (

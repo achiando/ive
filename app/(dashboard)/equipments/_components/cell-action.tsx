@@ -131,10 +131,8 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
           
           <DropdownMenuSeparator />
           <DropdownMenuItem 
-            onClick={() => {
-              window.location.href = `/maintenance/new?equipmentId=${data.id}`;
-            }}
-            className="text-purple-600 hover:!text-purple-600"
+            onClick={() => setShowDeleteDialog(true)}
+            className="text-destructive hover:!text-destructive"
           >
             <span className="flex items-center">
               <Trash2 className="h-4 w-4 mr-2" /> Delete

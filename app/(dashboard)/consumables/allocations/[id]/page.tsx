@@ -14,10 +14,15 @@ interface ConsumableAllocationPageProps {
   params: {
     id: string; // Can be 'new' or an actual ID
   };
+  searchParams: {
+    bookingId?: string;
+    maintenanceId?: string;
+  };
 }
 
-export default async function ConsumableAllocationPage({ params }: ConsumableAllocationPageProps) {
-  const { id } = params;
+export default async function ConsumableAllocationPage({ params, searchParams }: ConsumableAllocationPageProps) {
+  const { id } = await params;
+  const { bookingId, maintenanceId } = await searchParams;
   const isNewAllocation = id === 'new';
 
   const session = await getServerSession(authOptions);
@@ -68,7 +73,7 @@ export default async function ConsumableAllocationPage({ params }: ConsumableAll
       console.error(`Error ${isNewAllocation ? 'creating' : 'updating'} consumable allocation in page.tsx:`, error);
       throw error;
     }
-    redirect("/dashboard/consumables/allocations");
+    redirect("/consumables/allocations");
   };
 
   // Transform initialAllocation to ConsumableAllocationFormData
@@ -76,9 +81,16 @@ export default async function ConsumableAllocationPage({ params }: ConsumableAll
     consumableId: initialAllocation.consumableId,
     quantity: initialAllocation.quantity,
     purpose: initialAllocation.purpose || '',
-    allocationDate: initialAllocation.createdAt,
+    allocatedDate: initialAllocation.createdAt,
     bookingId: initialAllocation.bookingId,
     maintenanceId: initialAllocation.maintenanceId,
+  } : (isNewAllocation && (bookingId || maintenanceId)) ? {
+    consumableId: '',
+    quantity: 1,
+    purpose: '',
+    allocatedDate: new Date(),
+    bookingId: bookingId || null,
+    maintenanceId: maintenanceId || null,
   } : undefined;
 
   return (

@@ -36,11 +36,11 @@ export default async function UserPage({ params }: UserPageProps) {
     } else {
       if (userData) {
         const updateData: Partial<UserFormValues> = { ...dataToSave };
-        delete updateData.password; // Do not update password from this form for existing users
+        delete updateData.password; 
         await updateUser(userData.id, updateData);
       }
     }
-    redirect("/users");
+    redirect(`/users?reload=true`);
   };
 
   return (

@@ -14,6 +14,7 @@
 - Implemented consumable bulk upload (server action, bulk upload page).
 - Implemented consumable analytics (server action, analytics dashboard component, analytics page).
 - Updated equipment bulk upload sample CSV to include valid `EquipmentStatus` options.
+- Updated equipment bulk upload to include all fields from `EquipmentForm.tsx` and generated a comprehensive sample CSV.
 - Implemented maintenance management (CRUD server actions, form, add/edit page, listing page with table, columns, cell actions, and report page).
 - Fixed type incompatibility in `ConsumableWithRelations` by adjusting the `equipment` property type in `types/consumable.ts` to match the data fetched by `getAllConsumables`.
 - Fixed type error in `ConsumableAllocationForm.tsx` by importing `MaintenanceWithRelations` instead of `MaintenanceDetails` from `types/maintenance.ts`.
@@ -65,3 +66,8 @@
     - **`app/(dashboard)/sop/_components/SopFormClient.tsx`**: Created as a new Client Component to handle form logic.
     - **`app/(dashboard)/sop/_components/SOPForm.tsx`**: Modified to be a purely presentational component, accepting `onSubmitAction` and callbacks as props.
     - **`components/AssessmentBot.tsx`**: Fixed JSX parsing error in `formatClarificationResponse` function.
+- Enhanced `app/(dashboard)/consumables/allocations/[id]/page.tsx` to allow pre-selection of `bookingId` or `maintenanceId` from URL parameters for new consumable allocations.
+- Implemented robust authorization checks in `lib/actions/booking.ts` and `lib/actions/consumable-allocation.ts` to ensure non-admin users can only access/manage their own bookings and consumable allocations, including analytics.
+- Fixed column definition and date formatting in `app/(dashboard)/consumables/allocations/_components/columns.tsx` to resolve 'Column with id' error and 'Invalid time value' error.
+- Enhanced `lib/actions/user.ts` to allow `getUsers` to filter by `UserRole`s, and updated `app/(dashboard)/technicians/page.tsx` to fetch only technician-related roles.
+- Implemented interactive failed items table with editing and re-upload functionality in `app/(dashboard)/equipments/bulk-upload/_components/BulkUploadClient.tsx`, and fixed related type errors.

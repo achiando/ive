@@ -42,6 +42,7 @@ export default async function MaintenancePage({ params, searchParams }: Maintena
     getTechnicians(),
   ]);
 
+
   const handleSubmitSuccess = async () => {
     "use server"; // This is already a server component, so this is redundant but harmless
     redirect("/maintenance");

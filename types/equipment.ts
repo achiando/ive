@@ -1,11 +1,11 @@
 import {
-  Equipment as PrismaEquipment,
-  EquipmentBooking as PrismaEquipmentBooking,
-  Maintenance as PrismaMaintenance,
-  Project as PrismaProject,
-  ProjectMember as PrismaProjectMember,
-  User as PrismaUser,
-  UserRole, // Ensure this is imported
+    Equipment as PrismaEquipment,
+    EquipmentBooking as PrismaEquipmentBooking,
+    Maintenance as PrismaMaintenance,
+    Project as PrismaProject,
+    ProjectMember as PrismaProjectMember,
+    User as PrismaUser,
+    UserRole, // Ensure this is imported
 } from '@prisma/client';
 
 // Export UserRole directly from Prisma client
@@ -19,7 +19,10 @@ export enum EquipmentStatus {
 }
 
 // Redefine EquipmentWithRelations to correctly extend Prisma's Equipment and its relations
-export type EquipmentWithRelations = PrismaEquipment & {
+export type EquipmentWithRelations = Omit<PrismaEquipment, 'purchasePrice' | 'estimatedPrice' | 'actualPrice'> & {
+  purchasePrice: string | null;
+  estimatedPrice: string | null;
+  actualPrice: string | null;
   bookings: PrismaEquipmentBooking[];
   maintenances: PrismaMaintenance[];
   // Add other relations as needed, e.g., users?: PrismaUser[]; safetyTests?: SafetyTest[];
