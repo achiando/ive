@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 
-import { ConsumableCategory } from '@prisma/client';
+import { ConsumableCategory, ConsumableStatus } from '@prisma/client'; // Import ConsumableStatus
 import { revalidatePath } from 'next/cache';
 import { prisma } from '../prisma';
 
@@ -13,7 +13,7 @@ const bulkConsumableSchema = z.object({
   description: z.string().optional(),
   category: z.nativeEnum(ConsumableCategory),
   unit: z.string().min(1, "Unit of measurement is required."),
-  quantity: z.number().min(0, "Quantity cannot be negative.").default(0),
+  quantity: z.number().int().min(0, "Quantity cannot be negative.").default(0), // Changed to int
   currentStock: z.number().min(0, "Current stock cannot be negative."),
   minimumStock: z.number().min(0, "Minimum stock cannot be negative."),
   unitCost: z.number().min(0, "Unit cost cannot be negative.").optional(),
@@ -21,6 +21,8 @@ const bulkConsumableSchema = z.object({
   supplier: z.string().optional(),
   notes: z.string().optional(),
   image: z.string().optional(), // URL of the image
+  status: z.nativeEnum(ConsumableStatus).default(ConsumableStatus.AVAILABLE), // Added status
+  expiryDate: z.date().optional(), // Added expiryDate
   // equipmentIds: z.array(z.string()).optional(), // Equipment association will be handled separately if needed
 });
 
