@@ -66,8 +66,15 @@
     - **`app/(dashboard)/sop/_components/SopFormClient.tsx`**: Created as a new Client Component to handle form logic.
     - **`app/(dashboard)/sop/_components/SOPForm.tsx`**: Modified to be a purely presentational component, accepting `onSubmitAction` and callbacks as props.
     - **`components/AssessmentBot.tsx`**: Fixed JSX parsing error in `formatClarificationResponse` function.
+- **Implemented Cloudinary Multi-File Upload Component:**
+    -   Created API route `app/api/cloudinary-upload/route.ts` for secure multi-file uploads to Cloudinary.
+    -   Developed reusable `components/ui/multi-file-upload.tsx` component for file selection, preview, upload progress, and returning Cloudinary URLs.
+- Integrated `MultiFileUpload` into `AddDocumentDialog.tsx`: Replaced the URL input with the `MultiFileUpload` component, updated form schema and submission logic to handle multiple file uploads.
 - Enhanced `app/(dashboard)/consumables/allocations/[id]/page.tsx` to allow pre-selection of `bookingId` or `maintenanceId` from URL parameters for new consumable allocations.
 - Implemented robust authorization checks in `lib/actions/booking.ts` and `lib/actions/consumable-allocation.ts` to ensure non-admin users can only access/manage their own bookings and consumable allocations, including analytics.
 - Fixed column definition and date formatting in `app/(dashboard)/consumables/allocations/_components/columns.tsx` to resolve 'Column with id' error and 'Invalid time value' error.
 - Enhanced `lib/actions/user.ts` to allow `getUsers` to filter by `UserRole`s, and updated `app/(dashboard)/technicians/page.tsx` to fetch only technician-related roles.
 - Implemented interactive failed items table with editing and re-upload functionality in `app/(dashboard)/equipments/bulk-upload/_components/BulkUploadClient.tsx`, and fixed related type errors.
+- **Modified `app/(dashboard)/projects/[id]/view/_components/ProjectView.tsx`**:
+    - Removed the tab/select functionality, making all project details scrollable.
+    - Added a "Create New Booking" button to the Project Bookings section, which navigates to `/booking/new?projectId=<project.id>`.

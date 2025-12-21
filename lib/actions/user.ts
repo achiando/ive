@@ -530,3 +530,49 @@ export const getTechnicianStatistics = cache(
   }
 );
 
+export async function updateUserSelections(
+  userId: string,
+  eventIds: string[],
+  equipmentIds: string[]
+): Promise<{ success: boolean; message?: string }> {
+  try {
+    await prisma.$transaction([
+      // Remove all existing event participations
+      prisma.eventParticipation.deleteMany({
+        where: { userId }
+      }),
+      // Remove all equipment associations
+      prisma.user.update({
+        where: { id: userId },
+        data: { equipment: { set: [] } }
+      }),
+      // Add new event participations
+      ...eventIds.map(eventId => 
+        prisma.eventParticipation.create({
+          data: {
+            userId,
+            eventId,
+            joinedAt: new Date()
+          }
+        })
+      ),
+      // Add new equipment associations
+      prisma.user.update({
+        where: { id: userId },
+        data: {
+          equipment: {
+            connect: equipmentIds.map(id => ({ id }))
+          }
+        }
+      })
+    ]);
+
+    return { success: true, message: 'Selections updated successfully' };
+  } catch (error) {
+    console.error('Error updating user selections:', error);
+    return { 
+      success: false, 
+      message: error instanceof Error ? error.message : 'Failed to update selections' 
+    };
+  }
+}

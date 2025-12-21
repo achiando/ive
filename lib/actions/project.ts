@@ -384,6 +384,24 @@ export async function generateProjectInviteToken(projectId: string): Promise<str
     throw new Error('Not authenticated');
   }
 
+  // Check if user is already a member with an active token
+  const existingMember = await prisma.projectMember.findFirst({
+    where: {
+      projectId,
+      userId: session.user.id,
+      status: 'INVITED',
+      expiresAt: {
+        gt: new Date() // Only consider non-expired tokens
+      }
+    }
+  });
+
+  // If an active invitation exists, return the existing token
+  if (existingMember?.token) {
+    return existingMember.token;
+  }
+
+  // Rest of your existing auth checks...
   const project = await prisma.project.findUnique({
     where: { id: projectId },
     include: { members: true }
@@ -393,27 +411,54 @@ export async function generateProjectInviteToken(projectId: string): Promise<str
     throw new Error('Project not found');
   }
 
-  // Check if current user is a member of the project
-  const isMember = project.members.some(
-    (member) => member.userId === session.user.id && member.status === 'ACCEPTED'
-  );
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { role: true }
+  });
 
-  if (!isMember) {
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  const adminRoles = [
+    UserRole.TECHNICIAN,
+    UserRole.ADMIN_TECHNICIAN,
+    UserRole.LAB_MANAGER,
+    UserRole.ADMIN
+  ] as const;
+
+  const isAdmin = adminRoles.includes(user.role as typeof adminRoles[number]);
+
+  if (!isAdmin) {
     throw new Error('Not authorized to generate invite links for this project.');
   }
 
+  // Generate new token for new invitation
   const token = uuidv4();
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 7); // Token valid for 7 days
 
-  await prisma.projectMember.create({
-    data: {
+  // Create or update the member record
+  await prisma.projectMember.upsert({
+    where: {
+      projectId_userId: {
+        projectId,
+        userId: session.user.id
+      }
+    },
+    update: {
+      token,
+      expiresAt,
+      status: 'INVITED'
+    },
+    create: {
       projectId,
-      userId: session.user.id, 
+      userId: session.user.id,
+      invitedById: session.user.id,
       status: 'INVITED',
       token,
       expiresAt,
-    },
+    }
   });
 
   return token;

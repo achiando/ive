@@ -19,11 +19,13 @@ export async function getEquipments() {
     });
 
     // Convert Decimal values to strings
-    return equipments.map(equipment => ({
+   return equipments.map(equipment => ({
       ...equipment,
       purchasePrice: equipment.purchasePrice?.toString() ?? null,
-      estimatedPrice: equipment.estimatedPrice?.toString(),
-      actualPrice: equipment.actualPrice?.toString()
+      estimatedPrice: equipment.estimatedPrice?.toString() ?? null,  // Changed from undefined to null
+      actualPrice: equipment.actualPrice?.toString() ?? null,        // Changed from undefined to null
+      maintenances: equipment.maintenances || [],
+      bookings: equipment.bookings || []
     }));
   } catch (error) {
     console.error("Error getting equipments:", error);

@@ -101,6 +101,7 @@ enum ManualType {
   VIDEO
   LINK // For general web links that are neither PDF nor video
   OTHER
+  IMAGE
 }
 
 model Account {

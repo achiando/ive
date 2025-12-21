@@ -8,7 +8,6 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format, parseISO } from 'date-fns';
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -39,7 +38,6 @@ interface ProjectDetailsProps {
 export function ProjectView({ project, userRole, backPath = '/projects' }: ProjectDetailsProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [activeTab, setActiveTab] = useState('overview');
   const [documents, setDocuments] = useState<ProjectDocument[]>(project.documents); // Initialize with project.documents
   const [members, setMembers] = useState<ProjectMember[]>(project.members); // Initialize with project.members
   const isAdminOrManager = userRole === UserRole.ADMIN || userRole === UserRole.LAB_MANAGER;
@@ -79,19 +77,6 @@ export function ProjectView({ project, userRole, backPath = '/projects' }: Proje
 
   const handleRemoveMemberSuccess = (memberId: string) => {
     setMembers(members.filter(m => m.id !== memberId));
-  };
-
-  const tabs = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'bookings', label: 'Bookings' },
-    { id: 'documents', label: 'Documents' },
-    { id: 'members', label: 'Members' },
-    ...(isAdminOrManager ? [{ id: 'settings', label: 'Settings' }] : [])
-  ];
-
-  const handleTabClick = (tabId: string) => {
-    setActiveTab(tabId);
-    // router.push(`/projects/${project.id}/view?tab=${tabId}`); // Optional: update URL for direct linking
   };
 
   const renderOverviewContent = () => (
@@ -271,8 +256,9 @@ export function ProjectView({ project, userRole, backPath = '/projects' }: Proje
         <CardTitle>Project Bookings</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-muted-foreground">Project bookings management coming soon.</p>
-        {/* <ProjectBookingComponent project={project} userRole={userRole} /> */}
+        <Button onClick={() => router.push(`/booking/new?projectId=${project.id}`)}>
+          Create New Booking
+        </Button>
       </CardContent>
     </Card>
   );
@@ -308,30 +294,11 @@ export function ProjectView({ project, userRole, backPath = '/projects' }: Proje
       </div>
 
       <div className="space-y-4">
-        <div className="flex justify-end">
-          <Select value={activeTab} onValueChange={handleTabClick}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue>
-                {tabs.find(tab => tab.id === activeTab)?.label || 'Select a tab'}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {tabs.map((tab) => (
-                <SelectItem key={tab.id} value={tab.id}>
-                  {tab.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-          
-        <div className="mt-4">
-          {activeTab === 'overview' && renderOverviewContent()}
-          {activeTab === 'bookings' && renderBookingsContent()}
-          {activeTab === 'documents' && renderDocumentsContent()}
-          {activeTab === 'members' && renderMembersContent()}
-          {isAdminOrManager && activeTab === 'settings' && renderSettingsContent()}
-        </div>
+        {renderOverviewContent()}
+        {renderBookingsContent()}
+        {renderDocumentsContent()}
+        {renderMembersContent()}
+        {/* {isAdminOrManager && renderSettingsContent()} */}
       </div>
     </div>
   );

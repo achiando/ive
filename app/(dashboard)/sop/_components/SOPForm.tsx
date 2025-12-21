@@ -10,6 +10,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { MultiFileUpload } from "@/components/ui/multi-file-upload";
 import {
   Select,
   SelectContent,
@@ -45,6 +46,7 @@ interface SOPFormProps {
 
 export function SOPForm({ initialData, onSubmitAction, onFormSuccess, onFormCancel }: SOPFormProps) {
   const [loading, setLoading] = useState(false);
+  const [uploadedFileUrl, setUploadedFileUrl] = useState<string | undefined>(initialData?.manualUrl || undefined);
 
 const form = useForm<SafetyTestFormValues>({
   resolver: zodResolver(formSchema),
@@ -78,6 +80,7 @@ useEffect(() => {
       requiredForRoles: initialData.requiredForRoles,
       associatedEquipmentType: initialData.associatedEquipmentTypes || [],
     });
+    setUploadedFileUrl(initialData.manualUrl || undefined);
   } else {
     form.reset({
       name: "",
@@ -88,17 +91,32 @@ useEffect(() => {
       associatedEquipmentType: [],
       frequency: SafetyTestFrequency.ONE_TIME,
     });
+    setUploadedFileUrl(undefined);
   }
 }, [initialData, form]);
+
+  const handleUploadComplete = (urls: string[]) => {
+    if (urls.length > 0) {
+      setUploadedFileUrl(urls[0]);
+      form.setValue("manualUrl", urls[0]);
+      form.trigger("manualUrl"); // Trigger validation for manualUrl
+    } else {
+      setUploadedFileUrl(undefined);
+      form.setValue("manualUrl", "");
+      form.trigger("manualUrl");
+    }
+  };
 
   const onSubmit = async (values: SafetyTestFormValues) => {
     setLoading(true);
     try {
       let response;
+      const dataToSubmit = { ...values, manualUrl: uploadedFileUrl || '' };
+
       if (initialData) {
-        response = await onSubmitAction({ id: initialData.id, ...values });
+        response = await onSubmitAction({ id: initialData.id, ...dataToSubmit });
       } else {
-        response = await onSubmitAction(values);
+        response = await onSubmitAction(dataToSubmit);
       }
       onFormSuccess(response);
     } catch (error: any) {
@@ -144,19 +162,16 @@ useEffect(() => {
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="manualUrl"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Manual/Video URL</FormLabel>
-              <FormControl>
-                <Input disabled={loading} placeholder="e.g., https://example.com/manual.pdf" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+        <FormItem>
+          <FormLabel>Manual/Video Upload</FormLabel>
+          <MultiFileUpload onUploadComplete={handleUploadComplete} maxFiles={1} />
+          {uploadedFileUrl && (
+            <p className="text-sm text-muted-foreground">
+              Current Manual: <a href={uploadedFileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{uploadedFileUrl}</a>
+            </p>
           )}
-        />
+          <FormMessage>{form.formState.errors.manualUrl?.message}</FormMessage>
+        </FormItem>
         <FormField
           control={form.control}
           name="manualType"

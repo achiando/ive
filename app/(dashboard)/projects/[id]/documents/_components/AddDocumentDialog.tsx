@@ -1,5 +1,6 @@
 "use client";
 
+import { MultiFileUpload } from "@/components/ui/multi-file-upload";
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -15,7 +16,7 @@ import { useState } from 'react';
 
 const addDocumentSchema = z.object({
   fileName: z.string().min(1, "File name is required."),
-  fileUrl: z.string().url("Please enter a valid URL."),
+  fileUrls: z.array(z.string().url("Please enter a valid URL.")).optional(),
   fileType: z.nativeEnum(ManualType),
 });
 
@@ -29,26 +30,41 @@ interface AddDocumentDialogProps {
 
 export function AddDocumentDialog({ projectId, onDocumentAdded, addProjectDocumentAction }: AddDocumentDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [uploadedFileUrls, setUploadedFileUrls] = useState<string[]>([]);
+
   const form = useForm<AddDocumentFormValues>({
     resolver: zodResolver(addDocumentSchema),
     defaultValues: {
       fileName: '',
-      fileUrl: '',
       fileType: ManualType.LINK,
     },
   });
 
   const { formState: { isSubmitting } } = form;
 
+  const handleUploadComplete = (urls: string[]) => {
+    setUploadedFileUrls(urls);
+    // Optionally, set the first URL to the form's fileUrl if you want to keep a single file concept for the form
+    // form.setValue("fileUrl", urls[0]);
+  };
+
   const onSubmit = async (values: AddDocumentFormValues) => {
+    if (uploadedFileUrls.length === 0) {
+      toast.error('Please upload at least one file.');
+      return;
+    }
+
     try {
-      const newDocument = await addProjectDocumentAction(projectId, values.fileName, values.fileUrl, values.fileType);
-      toast.success('Document added successfully.');
-      onDocumentAdded(newDocument);
+      for (const url of uploadedFileUrls) {
+        const newDocument = await addProjectDocumentAction(projectId, values.fileName, url, values.fileType);
+        onDocumentAdded(newDocument);
+      }
+      toast.success('Document(s) added successfully.');
       form.reset();
+      setUploadedFileUrls([]);
       setIsOpen(false);
     } catch (error: any) {
-      toast.error('Failed to add document.', {
+      toast.error('Failed to add document(s).', {
         description: error.message,
       });
     }
@@ -65,7 +81,7 @@ export function AddDocumentDialog({ projectId, onDocumentAdded, addProjectDocume
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add New Document</DialogTitle>
-          <DialogDescription>Enter the details of the document you want to add to this project.</DialogDescription>
+          <DialogDescription>Upload the document(s) you want to add to this project.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -82,19 +98,7 @@ export function AddDocumentDialog({ projectId, onDocumentAdded, addProjectDocume
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="fileUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Document URL</FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://example.com/document.pdf" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <MultiFileUpload onUploadComplete={handleUploadComplete} />
             <FormField
               control={form.control}
               name="fileType"
@@ -121,13 +125,13 @@ export function AddDocumentDialog({ projectId, onDocumentAdded, addProjectDocume
             />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting || uploadedFileUrls.length === 0}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Uploading...
+                    Adding Document(s)...
                   </>
-                ) : 'Upload Document'}
+                ) : 'Add Document(s)'}
               </Button>
             </DialogFooter>
           </form>

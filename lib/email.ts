@@ -1,5 +1,4 @@
 import nodemailer from 'nodemailer';
-import { BookingStatus } from '@prisma/client';
 
 type SendEmailOptions = {
   to: string;
@@ -9,22 +8,24 @@ type SendEmailOptions = {
 };
 
 const transporter = nodemailer.createTransport({
-  service: process.env.EMAIL_SERVICE || 'gmail',
+  host: process.env.EMAIL_SERVER_HOST,
+  port: parseInt(process.env.EMAIL_SERVER_PORT || '587'),
+  secure: false, // true for 465, false for other ports
   auth: {
-    user: process.env.EMAIL_USERNAME,
-    pass: process.env.EMAIL_PASSWORD,
+    user: process.env.EMAIL_SERVER_USER,
+    pass: process.env.EMAIL_SERVER_PASSWORD,
   },
 });
 
 export async function sendEmail({ to, subject, text, html }: SendEmailOptions) {
-  if (!process.env.EMAIL_USERNAME || !process.env.EMAIL_PASSWORD) {
-    console.warn('Email credentials not configured. Email not sent.');
-    return false;
-  }
+if (!process.env.EMAIL_SERVER_USER || !process.env.EMAIL_SERVER_PASSWORD) {
+  console.warn('Email credentials not configured. Email not sent.');
+  return false;
+}
 
   try {
     await transporter.sendMail({
-      from: `"${process.env.EMAIL_FROM_NAME || 'Your App'}" <${process.env.EMAIL_USERNAME}>`,
+      from: `"${process.env.EMAIL_FROM_NAME || 'CDIE Equipment Booking'}" <${process.env.EMAIL_SERVER_USER}>`,
       to,
       subject,
       text,

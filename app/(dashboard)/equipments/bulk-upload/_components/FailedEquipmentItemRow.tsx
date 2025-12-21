@@ -1,14 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { Textarea } from "@/components/ui/textarea";
 import { BulkEquipmentInput } from "@/lib/actions/bulk-equipment";
 import { EquipmentStatus } from "@/types/equipment";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 
 interface FailedItem {
@@ -128,8 +127,8 @@ export function FailedEquipmentItemRow({
         {item.isEditing ? (
           <Input
             type="date"
-            value={currentEditedData.purchaseDate ? new Date(currentEditedData.purchaseDate).toISOString().split('T')[0] : ''}
-            onChange={(e) => handleFieldChange('purchaseDate', e.target.value ? new Date(e.target.value) : undefined)}
+            value={currentEditedData.purchaseDate || ''}
+            onChange={(e) => handleFieldChange('purchaseDate', e.target.value || undefined)}
           />
         ) : (
           item.data.purchaseDate ? new Date(item.data.purchaseDate).toLocaleDateString() : 'N/A'
