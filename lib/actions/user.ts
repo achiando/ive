@@ -439,7 +439,12 @@ export async function getUserSelections(userId: string) {
           event: true 
         } 
       },
-      equipment: true, // Direct relation to equipment
+      equipment: {
+        include: {
+          bookings: true,
+          maintenances: true,
+        },
+      },
     },
   });
 
@@ -467,7 +472,12 @@ export async function getUserSelections(userId: string) {
 
   return {
     events: (user as any).eventParticipations?.map((p: Participation) => p.event) || [],
-    equipment: user.equipment || [],
+    equipment: user.equipment.map(eq => ({
+      ...eq,
+      purchasePrice: eq.purchasePrice?.toString() ?? null,
+      estimatedPrice: eq.estimatedPrice?.toString() ?? null,
+      actualPrice: eq.actualPrice?.toString() ?? null,
+    })) || [],
   };
 }
 

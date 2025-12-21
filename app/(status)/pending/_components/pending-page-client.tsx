@@ -5,6 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { updateUserSelections } from "@/lib/actions/user";
 import { cn } from "@/lib/utils";
+import { EquipmentWithRelations } from "@/types/equipment";
 import { Equipment, Event } from "@prisma/client";
 import { Calendar, CheckCircle2, ChevronDown, Clock, Cpu, Loader2, Lock, Plus, RefreshCw } from "lucide-react";
 import { Session } from "next-auth";
@@ -23,10 +24,10 @@ interface EventWithCount extends Event {
 
 interface PendingPageClientProps {
   initialEvents: EventWithCount[];
-  initialEquipment: Equipment[];
+  initialEquipment: EquipmentWithRelations[];
   initialUserSelections: {
     events: Event[];
-    equipment: Equipment[];
+    equipment: EquipmentWithRelations[];
   };
   session: Session | null;
 }
@@ -42,10 +43,10 @@ export function PendingPageClient({
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [availableEvents, setAvailableEvents] = useState<EventWithCount[]>(initialEvents);
-  const [availableEquipment, setAvailableEquipment] = useState<Equipment[]>(initialEquipment);
+  const [availableEquipment, setAvailableEquipment] = useState<EquipmentWithRelations[]>(initialEquipment);
 
   const [selectedEvents, setSelectedEvents] = useState<Event[]>(initialUserSelections.events);
-  const [selectedEquipment, setSelectedEquipment] = useState<Equipment[]>(initialUserSelections.equipment);
+  const [selectedEquipment, setSelectedEquipment] = useState<EquipmentWithRelations[]>(initialUserSelections.equipment);
 
   const [viewMode, setViewMode] = useState<ViewMode>('summary');
   const [mounted, setMounted] = useState(false);
@@ -73,7 +74,7 @@ export function PendingPageClient({
     }
   };
 
-  const toggleEquipmentSelection = (equipment: Equipment) => {
+  const toggleEquipmentSelection = (equipment: EquipmentWithRelations) => {
     const isSelected = selectedEquipment.some(e => e.id === equipment.id);
     if (isSelected) {
       setSelectedEquipment(prev => prev.filter(e => e.id !== equipment.id));

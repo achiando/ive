@@ -1,6 +1,6 @@
 "use server"
 import { authOptions } from '@/lib/auth';
-import { UserRole } from '@prisma/client'; // Import UserRole
+import { Prisma, UserRole } from '@prisma/client'; // Import UserRole
 import { getServerSession } from 'next-auth';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
