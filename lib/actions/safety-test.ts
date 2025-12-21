@@ -4,9 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
   GetSafetyTestsParams,
-  SafetyTestAttemptWithRelations,
   SafetyTestFormValues,
-  SafetyTestWithRelations,
+  SafetyTestWithRelations
 } from "@/types/safety-test";
 import { UserRole } from "@prisma/client";
 import { getServerSession } from "next-auth";
@@ -104,6 +103,7 @@ export async function getSafetyTests(
             safetyTest: { select: { id: true, name: true } },
           },
         },
+        
       },
       orderBy: {
         createdAt: "desc",
@@ -115,7 +115,7 @@ export async function getSafetyTests(
     // Map the results to match the SafetyTestWithRelations type
     const safetyTestsWithRelations = safetyTests.map(test => ({
       ...test,
-      associatedEquipmentTypes: test.associatedEquipmentType ? [test.associatedEquipmentType] : []
+      associatedEquipmentTypes: test.associatedEquipmentType ? test.associatedEquipmentType.split(',') : []
     }));
 
     return safetyTestsWithRelations;
@@ -149,7 +149,7 @@ export async function getSafetyTestById(id: string): Promise<SafetyTestWithRelat
     // Map the result to match the SafetyTestWithRelations type
     return {
       ...safetyTest,
-      associatedEquipmentTypes: safetyTest.associatedEquipmentType ? [safetyTest.associatedEquipmentType] : [],
+      associatedEquipmentTypes: safetyTest.associatedEquipmentType ? safetyTest.associatedEquipmentType.split(',') : [],
       attempts: safetyTest.attempts.map(attempt => ({
         ...attempt,
         safetyTest: {
@@ -162,7 +162,7 @@ export async function getSafetyTestById(id: string): Promise<SafetyTestWithRelat
           frequency: safetyTest.frequency,
           createdAt: safetyTest.createdAt,
           updatedAt: safetyTest.updatedAt,
-          associatedEquipmentTypes: safetyTest.associatedEquipmentType ? [safetyTest.associatedEquipmentType] : []
+          associatedEquipmentTypes: safetyTest.associatedEquipmentType ? safetyTest.associatedEquipmentType.split(',') : []
         }
       }))
     };
@@ -251,34 +251,31 @@ export async function deleteSafetyTest(id: string): Promise<{ success: boolean; 
 
 export async function recordSafetyTestAttempt(
   safetyTestId: string,
-  equipmentId: string
-): Promise<SafetyTestAttemptWithRelations> {
+  equipmentId: string,
+  score: number, // score is handled locally, not persisted
+  totalQuestions: number // totalQuestions is handled locally, not persisted
+): Promise<{ success: boolean; message: string }> {
   const session = await getServerSession(authOptions);
   if (!session) {
-    throw new Error("Unauthorized: You must be logged in to record a safety test attempt.");
+    return { success: false, message: "Unauthorized: You must be logged in to record a safety test attempt." };
   }
 
   const userId = session.user.id;
 
   try {
-    const newAttempt = await prisma.safetyTestAttempt.create({
+    await prisma.safetyTestAttempt.create({
       data: {
         safetyTestId,
         userId,
         equipmentId,
         completedAt: new Date(),
       },
-      include: {
-        user: { select: { id: true, firstName: true, lastName: true, email: true } },
-        equipment: { select: { id: true, name: true, serialNumber: true } },
-        safetyTest: { select: { id: true, name: true } },
-      },
     });
     revalidatePath(`/dashboard/sop/${safetyTestId}`);
     revalidatePath(`/dashboard/equipments/${equipmentId}`); // Revalidate equipment page to show updated attempts
-    return newAttempt;
+    return { success: true, message: "Safety test attempt recorded successfully." };
   } catch (error: any) {
     console.error("Error recording safety test attempt:", error);
-    throw new Error(`Failed to record safety test attempt: ${error.message}`);
+    return { success: false, message: `Failed to record safety test attempt: ${error.message}` };
   }
 }

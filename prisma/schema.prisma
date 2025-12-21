@@ -423,8 +423,8 @@ model SafetyTest {
 // Add this model
 model SafetyTestAttempt {
   id           String     @id @default(cuid())
-  safetyTestId String
-  safetyTest   SafetyTest @relation(fields: [safetyTestId], references: [id])
+  safetyTestId String?
+  safetyTest   SafetyTest? @relation(fields: [safetyTestId], references: [id])
   userId       String
   user         User       @relation(fields: [userId], references: [id])
   equipmentId  String

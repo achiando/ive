@@ -100,7 +100,11 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
               </DropdownMenuItem>
             )
           }
-
+          <DropdownMenuItem onClick={() => router.push(`/assessment?equipmentId=${data.id}`)}>
+            <span className="flex items-center">
+              <Eye className="h-4 w-4 mr-2" /> Take Assessment
+            </span>
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => router.push(`/equipments/${data.id}/view`)}>
             <span className="flex items-center">
               <Eye className="h-4 w-4 mr-2" /> View

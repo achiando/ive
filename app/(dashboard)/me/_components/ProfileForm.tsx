@@ -96,7 +96,6 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
                     onChange={(urls) => field.onChange(urls[0] || null)}
                     onRemove={() => field.onChange(null)}
                     maxFiles={1}
-                    maxSize={5 * 1024 * 1024} // 5MB
                     fileTypes={["image/*"]}
                   />
                 </FormControl>

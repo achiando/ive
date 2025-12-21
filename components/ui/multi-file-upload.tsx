@@ -8,24 +8,52 @@ import React, { useCallback, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 
 interface MultiFileUploadProps {
-  onUploadComplete: (urls: string[]) => void;
+  /** Array of file URLs to display as already uploaded */
+  value?: string[];
+  /** Callback when files are selected/removed */
+  onChange?: (urls: string[]) => void;
+  /** Callback when files are successfully uploaded */
+  onUploadComplete?: (urls: string[]) => void;
+  /** Callback when the last file is removed */
+  onRemove?: () => void;
   maxFiles?: number;
-  maxFileSize?: number; // in bytes
+  /** Maximum file size in bytes */
+  maxFileSize?: number;
+  /** Accepted file types in MIME type format */
   acceptedFileTypes?: Record<string, string[]>;
+  /** Alternative way to specify file types (for backward compatibility) */
+  fileTypes?: string[];
   className?: string;
 }
 
 const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
+  value = [],
+  onChange,
   onUploadComplete,
+  onRemove,
   maxFiles = 10,
   maxFileSize = 10485760, // 10MB
-  acceptedFileTypes = {
-    "image/*": [".jpeg", ".png", ".gif", ".webp"],
-    "application/pdf": [".pdf"],
-  },
+  acceptedFileTypes: propAcceptedFileTypes,
+  fileTypes,
   className,
 }) => {
+  // Handle both acceptedFileTypes and fileTypes props for backward compatibility
+  const acceptedFileTypes = React.useMemo(() => {
+    if (propAcceptedFileTypes) return propAcceptedFileTypes;
+    if (fileTypes?.length) {
+      return fileTypes.reduce((acc, type) => {
+        acc[type] = [];
+        return acc;
+      }, {} as Record<string, string[]>);
+    }
+    // Default if neither is provided
+    return {
+      "image/*": [".jpeg", ".png", ".gif", ".webp"],
+      "application/pdf": [".pdf"],
+    };
+  }, [propAcceptedFileTypes, fileTypes]);
   const [files, setFiles] = useState<File[]>([]);
+  const [currentUrls, setCurrentUrls] = useState<string[]>(value || []);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -61,8 +89,25 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
     accept: acceptedFileTypes,
   });
 
-  const removeFile = (fileToRemove: File) => {
-    setFiles((prevFiles) => prevFiles.filter((file) => file !== fileToRemove));
+  const removeFile = (fileToRemove: File | string, index?: number) => {
+    if (typeof fileToRemove === 'string') {
+      const newUrls = currentUrls.filter((_, i) => i !== index);
+      setCurrentUrls(newUrls);
+      onChange?.(newUrls);
+      // If this was the last URL and there are no files, call onRemove
+      if (newUrls.length === 0 && files.length === 0) {
+        onRemove?.();
+      }
+    } else {
+      setFiles((prevFiles) => {
+        const newFiles = prevFiles.filter((file) => file !== fileToRemove);
+        // If this was the last file and there are no URLs, call onRemove
+        if (newFiles.length === 0 && currentUrls.length === 0) {
+          onRemove?.();
+        }
+        return newFiles;
+      });
+    }
   };
 
   const handleUpload = async (filesToUpload: File[]) => {
@@ -92,7 +137,10 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
       }
 
       const data = await response.json();
-      onUploadComplete(data.urls);
+      const newUrls = [...currentUrls, ...data.urls];
+      setCurrentUrls(newUrls);
+      onChange?.(newUrls);
+      onUploadComplete?.(data.urls);
       setFiles([]); // Clear files after successful upload
     } catch (error: any) {
       console.error("Upload error:", error);
@@ -135,13 +183,15 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
         </div>
       )}
 
-      {files.length > 0 && !isUploading && (
+      {(files.length > 0 || currentUrls.length > 0) && !isUploading && (
         <div className="space-y-2">
-          <h3 className="text-md font-medium">Selected Files:</h3>
+          <h3 className="text-md font-medium">
+            {files.length > 0 ? 'Selected Files' : 'Uploaded Files'}:
+          </h3>
           <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
             {files.map((file, index) => (
               <li
-                key={file.name + index}
+                key={`file-${index}`}
                 className="flex items-center justify-between rounded-md border p-2"
               >
                 <div className="flex items-center gap-2">
@@ -158,6 +208,36 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
                 </Button>
               </li>
             ))}
+            {currentUrls.map((url, index) => {
+              const fileName = url.split('/').pop() || `file-${index}`;
+              return (
+                <li
+                  key={`url-${index}`}
+                  className="flex items-center justify-between rounded-md border p-2"
+                >
+                  <div className="flex items-center gap-2">
+                    <FileIcon className="size-4 text-gray-500" />
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {fileName}
+                    </a>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => removeFile(url, index)}
+                    className="text-gray-500 hover:text-destructive"
+                  >
+                    <XIcon className="size-4" />
+                  </Button>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}

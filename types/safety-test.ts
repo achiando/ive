@@ -39,7 +39,7 @@ export interface SafetyTestWithRelations {
 // Extended SafetyTestAttempt type for UI display, including relations
 export interface SafetyTestAttemptWithRelations {
   id: string;
-  safetyTestId: string;
+  safetyTestId: string | null;
   userId: string;
   equipmentId: string;
   completedAt: Date;
@@ -59,5 +59,5 @@ export interface SafetyTestAttemptWithRelations {
   safetyTest: {
     id: string;
     name: string;
-  };
+  } | null;
 }

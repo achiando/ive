@@ -1,16 +1,25 @@
 "use client";
 
-import { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { AlertCircle, Bot, Loader2, Send } from "lucide-react";
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 interface AssessmentBotProps {
-  safetyTestId: string;
-  equipmentId?: string;
+  safetyTestId?: string;
+  equipmentId?: string; // equipmentId can still be optional for the bot's general use
   manualUrl?: string | null;
   documentTitle: string;
   onComplete?: (equipmentId?: string) => void;
+  // onRecordAttempt now expects equipmentId to be a string, matching the server action
+  onRecordAttempt: (safetyTestId: string, equipmentId: string, score: number, totalQuestions: number) => Promise<{ success: boolean; message: string }>;
+  open: boolean; // Added open prop
 }
 
 type QuizState = 'idle' | 'loading' | 'quiz' | 'finished' | 'error';
+
+type QuizQA = { question: string; options: string[]; answer: string; explanation: string };
 
 export function AssessmentBot({
   safetyTestId,
@@ -18,9 +27,9 @@ export function AssessmentBot({
   manualUrl,
   documentTitle,
   onComplete,
+  onRecordAttempt,
 }: AssessmentBotProps) {
   const [state, setState] = useState<QuizState>('idle');
-  type QuizQA = { question: string; options: string[]; answer: string; explanation: string };
   const [questions, setQuestions] = useState<QuizQA[]>([]);
   const [answers, setAnswers] = useState<{ user: string; correct: boolean }[]>([]);
   const [current, setCurrent] = useState(0);
@@ -32,83 +41,238 @@ export function AssessmentBot({
   const [clarifyResponse, setClarifyResponse] = useState('');
   const [loadingClarify, setLoadingClarify] = useState(false);
   const [error, setError] = useState('');
+  const [open, setOpen] = useState(true);
 
-  // // Internal quiz starter with retry logic
-  // const startQuizInternal = async (retryCount = 0) => {
-  //   setState('loading');
-  //   setQuestions([]);
-  //   setCurrent(0);
-  //   setError('');
+  useEffect(() => {
+    if (open && state === 'idle') {
+      startQuizInternal();
+    } else if (!open && state !== 'idle') {
+      // Reset state when bot is closed
+      setState('idle');
+      setQuestions([]);
+      setAnswers([]);
+      setCurrent(0);
+      setUserAnswer('');
+      setShowExplanation(false);
+      setScore(null);
+      setFeedback('');
+      setClarification('');
+      setClarifyResponse('');
+      setLoadingClarify(false);
+      setError('');
+    }
+  }, [open]);
 
-  //   try {
-  //     const res = await fetch('/api/gemini-assessment', {
-  //       method: 'POST',
-  //       headers: { 'Content-Type': 'application/json' },
-  //       body: JSON.stringify({
-  //         safetyTestId,
-  //         equipmentId,
-  //         manualUrl,
-  //         documentTitle,
-  //       }),
-  //     });
+  // Helper function to parse questions from Gemini's response
+  const parseQuestions = (text: string): QuizQA[] => {
+    const questions: QuizQA[] = [];
+    const questionBlocks = text.split(/\*\*Q\d+\.\s+/).filter(Boolean);
 
-  //     if (!res.ok) {
-  //       const errorData = await res.json().catch(() => ({}));
-  //       setError(errorData.error || `Server error: ${res.status}`);
-  //       setState('error');
-  //       return;
-  //     }
+    questionBlocks.forEach(block => {
+      const lines = block.split('\n').filter(line => line.trim() !== '');
+      if (lines.length < 6) return; // Expect at least question, 4 options, answer, explanation
 
-  //     const data = await res.json();
+      const question = lines[0].trim();
+      const options: string[] = [];
+      let answer = '';
+      let explanation = '';
 
-  //     if (!data.result?.candidates?.[0]?.content?.parts?.[0]?.text) {
-  //       setError('Unable to generate assessment. The document may be empty or inaccessible.');
-  //       setState('error');
-  //       return;
-  //     }
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line.startsWith('A.') || line.startsWith('B.') || line.startsWith('C.') || line.startsWith('D.')) {
+          options.push(line.substring(2).trim());
+        } else if (line.startsWith('**Answer:')) {
+          answer = line.replace('**Answer:', '').trim().charAt(0);
+        } else if (line.startsWith('Explanation:')) { // Handle alternative explanation format
+          explanation = line.replace('Explanation:', '').trim();
+        }
+      }
 
-  //     const content = data.result.candidates[0].content.parts[0].text;
-  //     const parsed = parseQuestions(content);
-  //     if (!parsed || !Array.isArray(parsed) || parsed.length < 1) {
-  //       setError('No valid questions could be generated from this SOP manual.');
-  //       setState('error');
-  //       return;
-  //     }
+      if (question && options.length === 4 && answer && explanation) {
+        questions.push({ question, options, answer, explanation });
+      }
+    });
+    return questions;
+  };
 
-  //     setQuestions(parsed);
-  //     setState('quiz');
-  //     setError('');
-  //     setCurrent(0);
-  //     setAnswers([]);
-  //     setScore(null);
-  //     setFeedback('');
-  //     setShowExplanation(false);
-  //     setBotMessages([]);
-  //     setUserAnswer('');
-  //     setClarification('');
-  //     setClarifyResponse('');
-  //     setLoadingClarify(false);
+  // Helper function to format clarification response
+  const formatClarificationResponse = (text: string): string => {
+    // Basic markdown to HTML conversion for display
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+      .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
+      .replace(/^- (.*)$/gm, '<li>$1</li>') // List items
+      .replace(/(\n|^)(#+)\s*(.*)/g, (match, newline, hashes, content) => {
+        const level = hashes.length;
+        return `${newline}<h${level}>${content}</h${level}>`;
+      }) // Headers
+      .replace(/\n/g, '<br />'); // Newlines
+  };
 
-  //     if (parsed.length < 3 && retryCount < 2) {
-  //       console.log(`Only ${parsed.length} questions parsed, retrying...`);
-  //       await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
-  //       return startQuizInternal(retryCount + 1);
-  //     }
+  // Internal quiz starter with retry logic
+  const startQuizInternal = async (retryCount = 0) => {
+    setState('loading');
+    setQuestions([]);
+    setCurrent(0);
+    setError('');
 
-  //     if (parsed.length < 3) {
-  //       throw new Error('Unable to generate sufficient questions. The document may be too short.');
-  //     }
+    try {
+      const res = await fetch('/api/gemini-assessment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          safetyTestId,
+          equipmentId,
+          manualUrl,
+          documentTitle,
+        }),
+      });
 
-  //   } catch (e: any) {
-  //     console.error('Quiz generation error:', e);
-  //     setError(e.message || 'An error occurred while generating the quiz.');
-  //     setState('error');
-  //   }
-  // };
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        setError(errorData.error || `Server error: ${res.status}`);
+        setState('error');
+        return;
+      }
+
+      const data = await res.json();
+
+      if (!data.result?.candidates?.[0]?.content?.parts?.[0]?.text) {
+        setError('Unable to generate assessment. The document may be empty or inaccessible.');
+        setState('error');
+        return;
+      }
+
+      const content = data.result.candidates[0].content.parts[0].text;
+      const parsed = parseQuestions(content);
+      if (!parsed || !Array.isArray(parsed) || parsed.length < 1) {
+        setError('No valid questions could be generated from this SOP manual.');
+        setState('error');
+        return;
+      }
+
+      setQuestions(parsed);
+      setState('quiz');
+      setError('');
+      setCurrent(0);
+      setAnswers([]);
+      setScore(null);
+      setFeedback('');
+      setShowExplanation(false);
+      setUserAnswer('');
+      setClarification('');
+      setClarifyResponse('');
+      setLoadingClarify(false);
+
+      if (parsed.length < 3 && retryCount < 2) {
+        console.log(`Only ${parsed.length} questions parsed, retrying...`);
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+        return startQuizInternal(retryCount + 1);
+      }
+
+      if (parsed.length < 3) {
+        throw new Error('Unable to generate sufficient questions. The document may be too short.');
+      }
+
+    } catch (e: any) {
+      console.error('Quiz generation error:', e);
+      setError(e.message || 'An error occurred while generating the quiz.');
+      setState('error');
+    }
+  };
+
+  const submitAnswer = () => {
+    if (!userAnswer) return;
+
+    const currentQuestion = questions[current];
+    const isCorrect = userAnswer === currentQuestion.answer;
+
+    setAnswers(prev => [...prev, { user: userAnswer, correct: isCorrect }]);
+    setShowExplanation(true);
+  };
+
+  const nextQuestion = async () => {
+    setShowExplanation(false);
+    setUserAnswer('');
+    setClarifyResponse(''); // Clear clarification response for next question
+
+    if (current < questions.length - 1) {
+      setCurrent(prev => prev + 1);
+    } else {
+      // Quiz finished
+      const finalScore = answers.filter(a => a.correct).length;
+      setScore(finalScore);
+      setState('finished');
+
+      // Record safety test attempt via prop
+      if (safetyTestId && equipmentId) { // Only record if both safetyTestId and equipmentId are available
+        try {
+          const result = await onRecordAttempt(safetyTestId, equipmentId, finalScore, questions.length);
+          if (result.success) {
+            toast.success(result.message);
+          } else {
+            toast.error(result.message);
+          }
+        } catch (error) {
+          console.error("Failed to record safety test attempt:", error);
+          toast.error("Failed to record safety test attempt.");
+        }
+      } else {
+        console.warn("Skipping recording safety test attempt: safetyTestId or equipmentId is missing.");
+        toast.info("Assessment completed, but attempt not recorded as safety test ID or equipment ID was missing.");
+      }
+    }
+  };
+
+  const askClarification = async () => {
+    if (!clarification.trim()) return;
+
+    setLoadingClarify(true);
+    setClarifyResponse('');
+    setError('');
+
+    try {
+      const res = await fetch('/api/gemini-assessment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          safetyTestId,
+          equipmentId,
+          manualUrl,
+          documentTitle,
+          userMessage: clarification,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        setError(errorData.error || `Server error: ${res.status}`);
+        setLoadingClarify(false);
+        return;
+      }
+
+      const data = await res.json();
+      const responseText = data.result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!responseText) {
+        setError('Unable to get clarification. Please try again.');
+        setLoadingClarify(false);
+        return;
+      }
+
+      setClarifyResponse(responseText);
+      setClarification('');
+    } catch (e: any) {
+      console.error('Clarification error:', e);
+      setError(e.message || 'An error occurred while getting clarification.');
+    } finally {
+      setLoadingClarify(false);
+    }
+  };
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-sm border">
-      {/* {state === 'idle' && (
+      {state === 'idle' && (
         <div className="flex flex-col items-center gap-6">
           <div className="text-center">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -116,7 +280,7 @@ export function AssessmentBot({
             </div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Safety Knowledge Assessment</h2>
             <p className="text-gray-600 mb-4">Test your understanding of this SOP manual with an AI-generated quiz.</p>
-            <Button onClick={startQuizInternal} size="lg" className="mt-4">
+            <Button onClick={() => startQuizInternal()} size="lg" className="mt-4">
               Start Assessment
             </Button>
           </div>
@@ -134,7 +298,7 @@ export function AssessmentBot({
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
           <AlertCircle className="h-6 w-6 text-red-500 mx-auto mb-2" />
           <p className="text-red-700 mb-4">{error || 'Failed to generate assessment.'}</p>
-          <Button onClick={startQuizInternal} variant="outline">
+          <Button onClick={() => startQuizInternal()} variant="outline">
             Try Again
           </Button>
         </div>
@@ -246,7 +410,7 @@ export function AssessmentBot({
               <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-green-500 transition-all duration-500" 
-                  style={{ 
+                  style={{
                     width: `${(answers.filter(a => a.correct).length / questions.length) * 100}%` 
                   }}
                 />
@@ -326,9 +490,7 @@ export function AssessmentBot({
 
             {clarifyResponse && (
               <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                <div className="prose prose-sm max-w-none text-gray-800">
-                  {formatClarificationResponse(clarifyResponse)}
-                </div>
+                <div className="prose prose-sm max-w-none text-gray-800" dangerouslySetInnerHTML={{ __html: formatClarificationResponse(clarifyResponse) }} />
               </div>
             )}
           </div>
@@ -337,6 +499,7 @@ export function AssessmentBot({
             <Button 
               onClick={() => {
                 if (onComplete) onComplete(equipmentId);
+                setOpen(false);
               }}
               className="w-full"
             >
@@ -344,7 +507,7 @@ export function AssessmentBot({
             </Button>
           </div>
         </div>
-      )} */}
+      )}
     </div>
   );
 }

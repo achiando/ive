@@ -13,9 +13,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { User, UserRole } from "@prisma/client";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { User, UserRole } from "@prisma/client";
 
 const formSchema = z.object({
   firstName: z.string().min(1, "First name is required."),
@@ -29,10 +29,7 @@ const formSchema = z.object({
   profileImage: z.string().url("Invalid URL").optional().or(z.literal("")),
   employeeId: z.string().optional().or(z.literal("")),
   studentId: z.string().optional().or(z.literal("")),
-  yearOfStudy: z.preprocess(
-    (val) => (val === "" ? undefined : Number(val)),
-    z.number().int().positive("Year of study must be a positive number.").optional()
-  ),
+  yearOfStudy: z.number().int().positive("Year of study must be a positive number.").optional().nullable(),
   program: z.string().optional().or(z.literal("")),
 });
 
@@ -76,7 +73,7 @@ export function UserForm({ initialData, onSubmit }: UserFormProps) {
     },
   });
 
-  
+
 
   return (
     <Form {...form}>
@@ -193,7 +190,13 @@ export function UserForm({ initialData, onSubmit }: UserFormProps) {
               <FormItem>
                 <FormLabel>Year of Study</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="e.g., 3" {...field} onChange={event => field.onChange(event.target.value === "" ? undefined : Number(event.target.value))} />
+                  <Input
+                    type="number"
+                    placeholder="e.g., 3"
+                    {...field}
+                    value={field.value ?? ""}
+                    onChange={event => field.onChange(event.target.value === "" ? undefined : Number(event.target.value))}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
