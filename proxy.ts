@@ -24,7 +24,7 @@ const rejectedRoutes = ['/rejected'];
 const suspendedRoutes = ['/suspended'];
 
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
   // Allow all requests to public routes
