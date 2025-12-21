@@ -3,15 +3,16 @@
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { deleteEvent } from "@/lib/actions/event"; // Import the server action
 import { Grid2X2, List } from "lucide-react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
+import { toast } from "sonner";
 import { columns } from "./columns";
 import { EventAnalytics } from "./EventAnalytics";
 import { EventCard, EventWithVenue } from "./EventCard";
-import { deleteEvent } from "@/lib/actions/event"; // Import the server action
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 
 
 interface EventsPageClientComponentProps {
@@ -33,6 +34,13 @@ export function EventsPageClientComponent({ initialEvents }: EventsPageClientCom
       toast.error(result.message || "Failed to delete event.");
     }
   };
+     const { data: session } = useSession();
+      const canAddEvent = [
+        'TECHNICIAN',
+        'ADMIN_TECHNICIAN',
+        'LAB_MANAGER',
+        'ADMIN'
+      ].includes(session?.user?.role || '');
 
   return (
     <div className="space-y-8">
@@ -57,9 +65,13 @@ export function EventsPageClientComponent({ initialEvents }: EventsPageClientCom
           >
             <Grid2X2 className="h-4 w-4 mr-2" /> Grid View
           </Button>
-          <Button asChild>
-            <Link href="/events/new">New Event</Link>
-          </Button>
+          {
+            canAddEvent && (
+              <Button asChild>
+                <Link href="/events/new">New Event</Link>
+              </Button>
+            )
+          }
         </div>
       </div>
 

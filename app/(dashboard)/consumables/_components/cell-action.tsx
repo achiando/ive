@@ -19,12 +19,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { deleteConsumable } from "@/lib/actions/consumable";
+import { ConsumableWithRelations } from "@/types/consumable";
 import { Eye, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ConsumableWithRelations } from "@/types/consumable";
-import { deleteConsumable } from "@/lib/actions/consumable";
 
 interface CellActionProps {
   data: ConsumableWithRelations;
@@ -39,7 +40,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
     setIsLoading(true);
     const result = await deleteConsumable(data.id);
     setIsLoading(false);
-    
+
     if (result.success) {
       toast.success("Consumable deleted successfully.");
       router.refresh();
@@ -47,7 +48,16 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
       toast.error(result.message);
     }
     setShowDeleteDialog(false);
+
   };
+
+  const { data: session } = useSession();
+  const canManageConsummables = [
+    'TECHNICIAN',
+    'ADMIN_TECHNICIAN',
+    'LAB_MANAGER',
+    'ADMIN'
+  ].includes(session?.user?.role || '');
 
   return (
     <>
@@ -60,32 +70,41 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => navigator.clipboard.writeText(data.id)}>
+          {/* <DropdownMenuItem onClick={() => navigator.clipboard.writeText(data.id)}>
             <span className="flex items-center">
               <span className="mr-2">📋</span> Copy ID
             </span>
-          </DropdownMenuItem>
+          </DropdownMenuItem> */}
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => router.push(`/consumables/${data.id}`)}>
-            <span className="flex items-center">
-              <Pencil className="h-4 w-4 mr-2" /> Edit
-            </span>
-          </DropdownMenuItem>
+          {
+            canManageConsummables && (
+              <DropdownMenuItem onClick={() => router.push(`/consumables/${data.id}`)}>
+                <span className="flex items-center">
+                  <Pencil className="h-4 w-4 mr-2" /> Edit
+                </span>
+              </DropdownMenuItem>
+            )
+          }
           <DropdownMenuItem onClick={() => router.push(`/consumables/${data.id}/view`)}>
             <span className="flex items-center">
               <Eye className="h-4 w-4 mr-2" /> View
             </span>
           </DropdownMenuItem>
-          
+
           <DropdownMenuSeparator />
-          <DropdownMenuItem 
-            onClick={() => setShowDeleteDialog(true)}
-            className="text-red-600 hover:!text-red-600"
-          >
-            <span className="flex items-center">
-              <Trash2 className="h-4 w-4 mr-2" /> Delete
-            </span>
-          </DropdownMenuItem>
+          {
+            canManageConsummables && (
+              <DropdownMenuItem
+                onClick={() => setShowDeleteDialog(true)}
+                className="text-red-600 hover:!text-red-600"
+              >
+                <span className="flex items-center">
+                  <Trash2 className="h-4 w-4 mr-2" /> Delete
+                </span>
+              </DropdownMenuItem>
+            )
+          }
+
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -100,7 +119,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={handleDelete}
               className="bg-red-600 hover:bg-red-700"
               disabled={isLoading}

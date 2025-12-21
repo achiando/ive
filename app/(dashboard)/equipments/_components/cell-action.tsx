@@ -22,6 +22,7 @@ import {
 import { deleteEquipment, updateEquipmentStatus } from "@/lib/actions/equipment";
 import { EquipmentStatus, EquipmentWithRelations } from "@/types/equipment";
 import { Check, Eye, MoreHorizontal, Pencil, Trash2, Wrench } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -39,7 +40,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
     setIsLoading(true);
     const result = await deleteEquipment(data.id);
     setIsLoading(false);
-    
+
     if (result.success) {
       toast.success("Equipment deleted successfully.");
       router.refresh();
@@ -53,7 +54,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
     setIsLoading(true);
     const result = await updateEquipmentStatus(data.id, status);
     setIsLoading(false);
-    
+
     if (result.success) {
       toast.success(`Equipment status updated to ${status}.`);
       router.refresh();
@@ -65,6 +66,13 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const isAvailable = data.status === EquipmentStatus.AVAILABLE;
   const isInUse = data.status === EquipmentStatus.IN_USE;
   const isMaintenance = data.status === EquipmentStatus.MAINTENANCE;
+  const { data: session } = useSession();
+  const canAddEquipment = [
+    'TECHNICIAN',
+    'ADMIN_TECHNICIAN',
+    'LAB_MANAGER',
+    'ADMIN'
+  ].includes(session?.user?.role || '');
 
   return (
     <>
@@ -83,61 +91,72 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
             </span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => router.push(`/equipments/${data.id}`)}>
-            <span className="flex items-center">
-              <Pencil className="h-4 w-4 mr-2" /> Edit
-            </span>
-          </DropdownMenuItem>
+          {
+            canAddEquipment && (
+              <DropdownMenuItem onClick={() => router.push(`/equipments/${data.id}`)}>
+                <span className="flex items-center">
+                  <Pencil className="h-4 w-4 mr-2" /> Edit
+                </span>
+              </DropdownMenuItem>
+            )
+          }
+
           <DropdownMenuItem onClick={() => router.push(`/equipments/${data.id}/view`)}>
             <span className="flex items-center">
               <Eye className="h-4 w-4 mr-2" /> View
             </span>
           </DropdownMenuItem>
-          
-          <DropdownMenuSeparator />
-          {!isAvailable && (
-            <DropdownMenuItem 
-              onClick={() => handleStatusUpdate(EquipmentStatus.AVAILABLE)}
-              className="text-green-600 hover:!text-green-600"
-            >
-              <span className="flex items-center">
-                <Check className="h-4 w-4 mr-2" /> Mark Available
-              </span>
-            </DropdownMenuItem>
-          )}
-          {!isInUse && (
-            <DropdownMenuItem 
-              onClick={() => handleStatusUpdate(EquipmentStatus.IN_USE)}
-              className="text-blue-600 hover:!text-blue-600"
-            >
-              <span className="flex items-center">
-                <Check className="h-4 w-4 mr-2" /> Mark In Use
-              </span>
-            </DropdownMenuItem>
-          )}
-          {!isMaintenance && (
-            <DropdownMenuItem 
-              onClick={() => {
-                handleStatusUpdate(EquipmentStatus.MAINTENANCE);
-                window.location.href = `/maintenance/new?equipmentId=${data.id}`;
-              }}
-              className="text-yellow-600 hover:!text-yellow-600"
-            >
-              <span className="flex items-center">
-                <Wrench className="h-4 w-4 mr-2" /> Mark for Maintenance
-              </span>
-            </DropdownMenuItem>
-          )}
-          
-          <DropdownMenuSeparator />
-          <DropdownMenuItem 
-            onClick={() => setShowDeleteDialog(true)}
-            className="text-destructive hover:!text-destructive"
-          >
-            <span className="flex items-center">
-              <Trash2 className="h-4 w-4 mr-2" /> Delete
-            </span>
-          </DropdownMenuItem>
+          {
+            canAddEquipment && (
+              <>
+                <DropdownMenuSeparator />
+                {!isAvailable && (
+                  <DropdownMenuItem
+                    onClick={() => handleStatusUpdate(EquipmentStatus.AVAILABLE)}
+                    className="text-green-600 hover:!text-green-600"
+                  >
+                    <span className="flex items-center">
+                      <Check className="h-4 w-4 mr-2" /> Mark Available
+                    </span>
+                  </DropdownMenuItem>
+                )}
+                {!isInUse && (
+                  <DropdownMenuItem
+                    onClick={() => handleStatusUpdate(EquipmentStatus.IN_USE)}
+                    className="text-blue-600 hover:!text-blue-600"
+                  >
+                    <span className="flex items-center">
+                      <Check className="h-4 w-4 mr-2" /> Mark In Use
+                    </span>
+                  </DropdownMenuItem>
+                )}
+                {!isMaintenance && (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      handleStatusUpdate(EquipmentStatus.MAINTENANCE);
+                      window.location.href = `/maintenance/new?equipmentId=${data.id}`;
+                    }}
+                    className="text-yellow-600 hover:!text-yellow-600"
+                  >
+                    <span className="flex items-center">
+                      <Wrench className="h-4 w-4 mr-2" /> Mark for Maintenance
+                    </span>
+                  </DropdownMenuItem>
+                )}
+
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setShowDeleteDialog(true)}
+                  className="text-destructive hover:!text-destructive"
+                >
+                  <span className="flex items-center">
+                    <Trash2 className="h-4 w-4 mr-2" /> Delete
+                  </span>
+                </DropdownMenuItem></>
+            )
+          }
+
+
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -152,7 +171,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={handleDelete}
               className="bg-red-600 hover:bg-red-700"
               disabled={isLoading}

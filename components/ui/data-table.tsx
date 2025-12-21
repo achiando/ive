@@ -1,28 +1,28 @@
 "use client"
 
 import {
-  ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
+    ColumnDef,
+    ColumnFiltersState,
+    SortingState,
+    VisibilityState,
+    flexRender,
+    getCoreRowModel,
+    getFilteredRowModel,
+    getPaginationRowModel,
+    getSortedRowModel,
+    useReactTable,
 } from "@tanstack/react-table"
 import React from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table"
 
 interface DataTableProps<TData, TValue> {
@@ -30,8 +30,9 @@ interface DataTableProps<TData, TValue> {
   data: TData[]
   filterColumnId: string
   filterColumnPlaceholder: string
-  onRowSelectionChange?: (selectedRows: string[]) => void // Add this prop
-  children?: React.ReactNode // New prop for custom filters
+  onRowSelectionChange?: (selectedRows: string[]) => void
+  children?: React.ReactNode
+  meta?: any // Add meta prop for table actions
 }
 
 export function DataTable<TData, TValue>({
@@ -39,8 +40,9 @@ export function DataTable<TData, TValue>({
   data,
   filterColumnId,
   filterColumnPlaceholder,
-  onRowSelectionChange, // Destructure the new prop
-  children, // Destructure the new prop
+  onRowSelectionChange,
+  children,
+  meta, // Destructure the meta prop
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -53,24 +55,34 @@ export function DataTable<TData, TValue>({
   const table = useReactTable({
     data,
     columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
+    onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    initialState: {
-      pagination: {
-        pageSize: 20, // Set default page size to 20
-      },
+    onRowSelectionChange: (updater) => {
+      const newRowSelection = typeof updater === 'function' 
+        ? updater(rowSelection)
+        : updater;
+      setRowSelection(newRowSelection);
+      
+      // Get the selected row IDs
+      const selectedRowIds = Object.keys(newRowSelection);
+      onRowSelectionChange?.(selectedRowIds);
     },
     state: {
       sorting,
       columnFilters,
       columnVisibility,
       rowSelection,
+    },
+    meta, // Pass meta to the table instance
+    initialState: {
+      pagination: {
+        pageSize: 20, // Set default page size to 20
+      },
     },
   })
 

@@ -5,15 +5,16 @@ import { DataTable } from "@/components/ui/data-table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { createConsumable } from "@/lib/actions/consumable";
 import { ConsumableCategory } from "@prisma/client";
 import { GridIcon, ListIcon, PlusCircle } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Fragment, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { createConsumable, getAllConsumables } from "@/lib/actions/consumable";
+import { ConsumableCard } from "./ConsumableCard";
 import { ConsumableForm, ConsumableFormValues } from "./ConsumableForm";
 import { ConsumableStats } from "./ConsumableStats";
-import { ConsumableCard } from "./ConsumableCard";
 import { columns } from "./columns";
 
 interface ConsumablesPageClientProps {
@@ -64,6 +65,13 @@ export function ConsumablesPageClient({ consumables }: ConsumablesPageClientProp
       toast.error(result.message);
     }
   };
+    const { data: session } = useSession();
+    const canAddConsumable = [
+      'TECHNICIAN',
+      'ADMIN_TECHNICIAN',
+      'LAB_MANAGER',
+      'ADMIN'
+    ].includes(session?.user?.role || '');
 
   const renderFilters = (showSearchInput: boolean) => (
     <Fragment>
@@ -105,7 +113,9 @@ export function ConsumablesPageClient({ consumables }: ConsumablesPageClientProp
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          {
+            canAddConsumable && (
+              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button>
                 <PlusCircle className="mr-2 h-4 w-4" />
@@ -124,6 +134,8 @@ export function ConsumablesPageClient({ consumables }: ConsumablesPageClientProp
               </div>
             </DialogContent>
           </Dialog>
+            )
+          }
           <div className="flex items-center space-x-2">
             <Button
               variant="outline"

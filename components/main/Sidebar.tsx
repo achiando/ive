@@ -106,7 +106,7 @@ export function Sidebar() {
     },
     { 
       name: 'SOP Manuals', 
-      href: '/sop-manuals', 
+      href: '/sop', 
       icon: FileText,
       roles: [UserRole.STUDENT, UserRole.FACULTY, UserRole.TECHNICIAN, UserRole.ADMIN_TECHNICIAN, UserRole.LAB_MANAGER, UserRole.ADMIN]
     },

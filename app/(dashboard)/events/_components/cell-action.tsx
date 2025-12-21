@@ -1,7 +1,6 @@
 
 "use client";
 
-import { MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,10 +10,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useRouter } from "next/navigation";
 import { deleteEvent } from "@/lib/actions/event";
-import { EventWithVenue } from "./EventCard";
+import { MoreHorizontal } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { EventWithVenue } from "./EventCard";
 
 interface CellActionProps {
   data: EventWithVenue;
@@ -34,6 +35,13 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
       }
     }
   };
+     const { data: session } = useSession();
+      const canAddEvent = [
+        'TECHNICIAN',
+        'ADMIN_TECHNICIAN',
+        'LAB_MANAGER',
+        'ADMIN'
+      ].includes(session?.user?.role || '');
 
   return (
     <DropdownMenu>
@@ -49,16 +57,24 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
           Copy ID
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => router.push(`/events/${data.id}`)}>
-          Edit
-        </DropdownMenuItem>
+        {
+          canAddEvent && (
+            <DropdownMenuItem onClick={() => router.push(`/events/${data.id}`)}>
+              Edit
+            </DropdownMenuItem>
+          )
+        }
         <DropdownMenuItem onClick={() => router.push(`/events/${data.id}/view`)}>
           View
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={onDelete} className="text-red-600 hover:!text-red-600">
-          Delete
-        </DropdownMenuItem>
+        {
+          canAddEvent && (
+            <DropdownMenuItem onClick={onDelete} className="text-red-600 hover:!text-red-600">
+              Delete
+            </DropdownMenuItem>
+          )
+        }
       </DropdownMenuContent>
     </DropdownMenu>
   );

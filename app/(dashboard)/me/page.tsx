@@ -5,6 +5,7 @@ import { getCurrentUser } from '@/lib/actions/user';
 import { BookingStatus, ProjectStatus, RegistrationStatus, UserRole } from '@prisma/client';
 import { format } from 'date-fns';
 import { Edit } from 'lucide-react';
+import Image from 'next/image'; // Import Image component
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
@@ -60,6 +61,7 @@ export default async function ProfilePage() {
     yearOfStudy?: number | null;
     program?: string | null;
     lastLogin?: Date | null;
+    profileImage?: string | null; // Add profileImage to UserProfile type
     // Relations
     equipmentBookings?: Array<{
       id: string;
@@ -107,6 +109,20 @@ export default async function ProfilePage() {
             <CardDescription>Your basic profile details</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex items-center gap-4 col-span-full">
+              <div className="relative h-24 w-24 rounded-full overflow-hidden border-2 border-primary/50">
+                <Image
+                  src={typedUser.profileImage || '/logo.png'} // Use profileImage or default logo
+                  alt="Profile Picture"
+                  layout="fill"
+                  objectFit="cover"
+                />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Profile Picture</p>
+                <p className="font-medium">Your current profile image</p>
+              </div>
+            </div>
             <div>
               <p className="text-sm text-muted-foreground">Full Name</p>
               <p className="font-medium">{`${typedUser.firstName} ${typedUser.lastName}`}</p>

@@ -16,8 +16,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { deleteConsumableAllocation } from "@/lib/actions/consumable-allocation";
 import { ConsumableAllocationWithRelations } from "@/types/consumable";
@@ -60,12 +59,12 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => navigator.clipboard.writeText(data.id)}>
-            <span className="flex items-center">
-              <span className="mr-2">📋</span> Copy ID
-            </span>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
+          {/* <DropdownMenuItem onClick={() => navigator.clipboard.writeText(data.id)}>
+              <span className="flex items-center">
+                <span className="mr-2">📋</span> Copy ID
+              </span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator /> */}
           
           <DropdownMenuItem onClick={() => router.push(`/dashboard/consumables/allocations/${data.id}`)}>
             <span className="flex items-center">

@@ -1,5 +1,6 @@
 "use client";
 
+import { MultiFileUpload } from "@/components/ui/multi-file-upload";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -17,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -43,6 +45,8 @@ interface EventFormProps {
 }
 
 export function EventForm({ initialData, onSubmit, createdById }: EventFormProps) {
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | undefined>(initialData?.imageUrl || undefined);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -57,12 +61,25 @@ export function EventForm({ initialData, onSubmit, createdById }: EventFormProps
     },
   });
 
+  useEffect(() => {
+    form.setValue("imageUrl", uploadedImageUrl || "");
+    form.trigger("imageUrl");
+  }, [uploadedImageUrl, form]);
+
   const handleSubmit = (data: FormValues) => {
     const formattedData: FormValues = {
       ...data,
       createdById: data.createdById || createdById,
     };
     onSubmit(formattedData);
+  };
+
+  const handleImageUploadComplete = (urls: string[]) => {
+    if (urls.length > 0) {
+      setUploadedImageUrl(urls[0]);
+    } else {
+      setUploadedImageUrl(undefined);
+    }
   };
 
   return (
@@ -212,19 +229,16 @@ export function EventForm({ initialData, onSubmit, createdById }: EventFormProps
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="imageUrl"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Image URL</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., https://example.com/image.jpg" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+        <FormItem>
+          <FormLabel>Event Image</FormLabel>
+          <MultiFileUpload onUploadComplete={handleImageUploadComplete} maxFiles={1} acceptedFileTypes={{ "image/*": [".jpeg", ".png", ".gif", ".webp"] }} />
+          {uploadedImageUrl && (
+            <p className="text-sm text-muted-foreground">
+              Current Image: <a href={uploadedImageUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{uploadedImageUrl}</a>
+            </p>
           )}
-        />
+          <FormMessage>{form.formState.errors.imageUrl?.message}</FormMessage>
+        </FormItem>
         <Button type="submit" disabled={form.formState.isSubmitting}>
           {initialData ? "Save Changes" : "Create Event"}
         </Button>

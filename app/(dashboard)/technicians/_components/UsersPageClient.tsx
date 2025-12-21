@@ -1,7 +1,10 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable } from "@/components/ui/data-table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RegistrationStatus, User, UserRole } from "@prisma/client";
 import { Plus } from "lucide-react";
 import Link from "next/link";
@@ -19,7 +22,7 @@ interface UsersPageClientProps {
   };
 }
 
-export function UsersPageClient({ users }: UsersPageClientProps) {
+export function UsersPageClient({ users, statistics }: UsersPageClientProps) {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRole, setSelectedRole] = useState<UserRole | "all">("all");

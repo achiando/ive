@@ -1,5 +1,6 @@
 "use client";
  
+import { MultiFileUpload } from '@/components/ui/multi-file-upload';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -14,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 
@@ -63,7 +64,8 @@ interface EquipmentFormProps {
 
 export function EquipmentForm({ initialData, onSubmit, onCancel }: EquipmentFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const manualFileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | undefined>(initialData?.image || undefined);
+  const [uploadedManualUrl, setUploadedManualUrl] = useState<string | undefined>(initialData?.manualUrl || undefined);
 
   // Define available categories
   const categories = [
@@ -78,27 +80,38 @@ export function EquipmentForm({ initialData, onSubmit, onCancel }: EquipmentForm
 
   const form = useForm<EquipmentFormValues>({
     resolver: zodResolver(equipmentFormSchema),
-    defaultValues: initialData || {
-      name: '',
-      description: '',
-      category: '',
-      manufacturer: '',
-      model: '',
-      serialNumber: '',
-      location: '',
-      status: EquipmentStatus.AVAILABLE,
-      dailyCapacity: 1,
-      purchaseDate: undefined,
-      purchasePrice: '',
-      warrantyExpiry: undefined,
-      estimatedPrice: '',
-      actualPrice: '',
-      notes: '',
-      requiresSafetyTest: false,
-      image: '',
-      manualUrl: '',
+    defaultValues: {
+      name: initialData?.name || '',
+      description: initialData?.description || '',
+      category: initialData?.category || '',
+      manufacturer: initialData?.manufacturer || '',
+      model: initialData?.model || '',
+      serialNumber: initialData?.serialNumber || '',
+      location: initialData?.location || '',
+      status: initialData?.status || EquipmentStatus.AVAILABLE,
+      dailyCapacity: initialData?.dailyCapacity || 1,
+      purchaseDate: initialData?.purchaseDate ? new Date(initialData.purchaseDate) : undefined,
+      purchasePrice: initialData?.purchasePrice || '',
+      warrantyExpiry: initialData?.warrantyExpiry ? new Date(initialData.warrantyExpiry) : undefined,
+      estimatedPrice: initialData?.estimatedPrice || '',
+      actualPrice: initialData?.actualPrice || '',
+      notes: initialData?.notes || '',
+      requiresSafetyTest: initialData?.requiresSafetyTest || false,
+      image: initialData?.image || '',
+      manualUrl: initialData?.manualUrl || '',
     },
   });
+
+  // Update form values when uploadedImageUrl or uploadedManualUrl changes
+  useEffect(() => {
+    form.setValue("image", uploadedImageUrl || "");
+    form.trigger("image");
+  }, [uploadedImageUrl, form]);
+
+  useEffect(() => {
+    form.setValue("manualUrl", uploadedManualUrl || "");
+    form.trigger("manualUrl");
+  }, [uploadedManualUrl, form]);
 
   async function handleFormSubmit(data: EquipmentFormValues) {
     setIsSubmitting(true);
@@ -108,6 +121,22 @@ export function EquipmentForm({ initialData, onSubmit, onCancel }: EquipmentForm
       setIsSubmitting(false);
     }
   }
+
+  const handleImageUploadComplete = (urls: string[]) => {
+    if (urls.length > 0) {
+      setUploadedImageUrl(urls[0]);
+    } else {
+      setUploadedImageUrl(undefined);
+    }
+  };
+
+  const handleManualUploadComplete = (urls: string[]) => {
+    if (urls.length > 0) {
+      setUploadedManualUrl(urls[0]);
+    } else {
+      setUploadedManualUrl(undefined);
+    }
+  };
 
   return (
     <Form {...form}>
@@ -411,45 +440,33 @@ export function EquipmentForm({ initialData, onSubmit, onCancel }: EquipmentForm
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="image"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Equipment Image URL</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="https://example.com/image.jpg"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-              <FormDescription>
-                Enter the URL of the equipment image
-              </FormDescription>
-            </FormItem>
+        <FormItem>
+          <FormLabel>Equipment Image</FormLabel>
+          <MultiFileUpload onUploadComplete={handleImageUploadComplete} maxFiles={1} acceptedFileTypes={{ "image/*": [".jpeg", ".png", ".gif", ".webp"] }} />
+          {uploadedImageUrl && (
+            <p className="text-sm text-muted-foreground">
+              Current Image: <a href={uploadedImageUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{uploadedImageUrl}</a>
+            </p>
           )}
-        />
+          <FormMessage>{form.formState.errors.image?.message}</FormMessage>
+          <FormDescription>
+            Upload an image for the equipment
+          </FormDescription>
+        </FormItem>
 
-        <FormField
-          control={form.control}
-          name="manualUrl"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Equipment Manual URL</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="https://example.com/manual.pdf"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-              <FormDescription>
-                Enter the URL of the equipment manual (PDF)
-              </FormDescription>
-            </FormItem>
+        <FormItem>
+          <FormLabel>Equipment Manual</FormLabel>
+          <MultiFileUpload onUploadComplete={handleManualUploadComplete} maxFiles={1} acceptedFileTypes={{ "application/pdf": [".pdf"] }} />
+          {uploadedManualUrl && (
+            <p className="text-sm text-muted-foreground">
+              Current Manual: <a href={uploadedManualUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{uploadedManualUrl}</a>
+            </p>
           )}
-        />
+          <FormMessage>{form.formState.errors.manualUrl?.message}</FormMessage>
+          <FormDescription>
+            Upload a manual (PDF) for the equipment
+          </FormDescription>
+        </FormItem>
 
         <div className="flex justify-end space-x-4 pt-4">
           <Button

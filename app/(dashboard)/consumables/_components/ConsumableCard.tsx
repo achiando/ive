@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConsumableWithRelations } from "@/types/consumable"; // Import the new type
+import { useSession } from "next-auth/react";
 
 interface ConsumableCardProps {
   consumable: ConsumableWithRelations;
@@ -26,6 +27,13 @@ export function ConsumableCard({ consumable }: ConsumableCardProps) {
     consumable.currentStock === 0,
     [consumable.currentStock]
   );
+    const { data: session } = useSession();
+    const canAddConsumable = [
+      'TECHNICIAN',
+      'ADMIN_TECHNICIAN',
+      'LAB_MANAGER',
+      'ADMIN'
+    ].includes(session?.user?.role || '');
   
   return (
     <Card className="h-full flex flex-col transition-all hover:shadow-md">
@@ -92,12 +100,17 @@ export function ConsumableCard({ consumable }: ConsumableCardProps) {
         </div>
       </CardContent>
       <CardFooter className="flex justify-between sm:flex-row gap-2 pt-2">
-        <Button variant="outline" size="sm" asChild className="w-full">
+        {
+          canAddConsumable && (
+              <Button variant="outline" size="sm" asChild className="w-full">
           <Link href={`/consumables/${consumable.id}`}>
             <Pencil className="mr-2 h-4 w-4" />
             Edit
           </Link>
         </Button>
+          )
+        }
+      
         <Button variant="outline" size="sm" asChild className="w-full">
           <Link href={`/consumables/${consumable.id}/view`}> {/* Assuming a view page exists */}
             <Eye className="mr-2 h-4 w-4" />

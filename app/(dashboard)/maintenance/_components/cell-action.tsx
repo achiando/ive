@@ -25,6 +25,7 @@ import { deleteMaintenance } from "@/lib/actions/maintenance";
 import { MaintenanceWithRelations } from "@/types/maintenance";
 import { MaintenanceStatus } from "@prisma/client";
 import { Check, MoreHorizontal, PackageSearch, Pencil, Trash2, UserPlus } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -116,6 +117,13 @@ export const CellAction: React.FC<CellActionProps> = ({
   const filteredTechnicians = technicians.filter(tech =>
     `${tech.firstName} ${tech.lastName} ${tech.email}`.toLowerCase().includes(technicianSearchTerm.toLowerCase())
   );
+    const { data: session } = useSession();
+    const canManageConsummables = [
+      'TECHNICIAN',
+      'ADMIN_TECHNICIAN',
+      'LAB_MANAGER',
+      'ADMIN'
+    ].includes(session?.user?.role || '');
 
   return (
     <>
@@ -128,11 +136,11 @@ export const CellAction: React.FC<CellActionProps> = ({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => navigator.clipboard.writeText(data.id)}>
+          {/* <DropdownMenuItem onClick={() => navigator.clipboard.writeText(data.id)}>
             <span className="flex items-center">
               <span className="mr-2">📋</span> Copy ID
             </span>
-          </DropdownMenuItem>
+          </DropdownMenuItem> */}
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => router.push(`/maintenance/${data.id}`)}>
             <span className="flex items-center">

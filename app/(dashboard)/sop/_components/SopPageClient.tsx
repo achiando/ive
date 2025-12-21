@@ -8,7 +8,7 @@ import { getEquipmentById } from "@/lib/actions/equipment"; // Import getEquipme
 import { deleteSafetyTest } from "@/lib/actions/safety-test";
 import { SafetyTestWithRelations } from "@/types/safety-test";
 import { ManualType, SafetyTestFrequency, UserRole } from "@prisma/client";
-import { Plus, Search } from "lucide-react";
+import { ArrowLeft, Plus, Search } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -104,6 +104,9 @@ export function SopPageClient({ initialSafetyTests, equipmentId }: SopPageClient
   return (
     <>
       <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-4 py-4">
+         <Button variant="ghost" onClick={() => window.history.back()} className="mr-2">
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
         <div className="relative w-full md:max-w-sm">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
@@ -145,7 +148,7 @@ export function SopPageClient({ initialSafetyTests, equipmentId }: SopPageClient
           </Select>
 
           {canManageSOPs && (
-            <Button onClick={() => router.push('/dashboard/sop/new')}>
+            <Button onClick={() => router.push('/sop/new')}>
               <Plus className="mr-2 h-4 w-4" /> Add SOP
             </Button>
           )}
@@ -157,6 +160,12 @@ export function SopPageClient({ initialSafetyTests, equipmentId }: SopPageClient
         data={filteredSafetyTests}
         filterColumnId="name"
         filterColumnPlaceholder="Filter by name..."
+        meta={{
+          onEdit: (safetyTest: SafetyTestWithRelations) => {
+            router.push(`/dashboard/sop/${safetyTest.id}/edit`);
+          },
+          onDelete: handleDelete
+        }}
       />
     </>
   );

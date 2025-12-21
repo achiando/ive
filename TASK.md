@@ -31,12 +31,12 @@
 - **Fixed type error in `lib/actions/booking.ts`**: Imported `BookingAnalyticsData` from `types/booking.ts`.
 - **Fixed type error in `lib/actions/equipment.ts`**: Updated the `select` statement in `getProjectsForEquipment` to include all fields required by the `Project` type.
 - **Fixed type error in `lib/email.ts`**: Removed duplicate `title` property from the `PENDING` object in `statusMap`.
-- **Implemented User Profile and Edit Functionality:**
-    - Created `app/(dashboard)/me/page.tsx` for displaying the current user's profile.
-    - Created `app/(dashboard)/me/edit/page.tsx` for editing the current user's profile.
-    - Created `app/(dashboard)/me/_components/ProfileForm.tsx` for the profile editing form.
-    - Added `getCurrentUser` server action to `lib/actions/user.ts` to fetch the authenticated user's full profile.
-    - Added `updateMyProfile` server action to `lib/actions/user.ts` to allow users to update their own non-sensitive profile information.
+- **Implemented User Profile Image Upload:**
+    - Integrated `MultiFileUpload` component into `app/(dashboard)/me/_components/ProfileForm.tsx` for `profileImage` field, with `/logo.png` as default.
+    - Updated `app/(dashboard)/me/page.tsx` to display the `profileImage` or fallback to `/logo.png`, and moved the profile image display into the "Personal Information" card.
+- **Implemented Program Selection in Profile Edit:**
+    - Added a "Program" selection field to `app/(dashboard)/me/_components/ProfileForm.tsx` using `programs` data from `@/data/program` and the `Select` component.
+    - Replaced the "Department" input field with a `Select` component using the `programs` data in `app/(dashboard)/me/_components/ProfileForm.tsx`.
 - **Implemented SOP (Safety Test) Feature:**
     - **Schema:** Added `SafetyTestFrequency` enum, `SafetyTest` model (with `manualUrl`, `manualType`), and `SafetyTestAttempt` model to `prisma/schema.prisma`.
     - **Types:** Created `types/safety-test.ts` with `SafetyTestFormValues`, `GetSafetyTestsParams`, `SafetyTestWithRelations`, `SafetyTestAttemptWithRelations`.
@@ -69,7 +69,9 @@
 - **Implemented Cloudinary Multi-File Upload Component:**
     -   Created API route `app/api/cloudinary-upload/route.ts` for secure multi-file uploads to Cloudinary.
     -   Developed reusable `components/ui/multi-file-upload.tsx` component for file selection, preview, upload progress, and returning Cloudinary URLs.
-- Integrated `MultiFileUpload` into `AddDocumentDialog.tsx`: Replaced the URL input with the `MultiFileUpload` component, updated form schema and submission logic to handle multiple file uploads.
+- - Integrated `MultiFileUpload` into `EquipmentForm.tsx`: Replaced the image and manual URL input fields with the `MultiFileUpload` component, configured for single file uploads.
+- Enhanced `MultiFileUpload.tsx`: Implemented automatic upload on file selection and refined file size/count restriction messages.
+- Integrated `MultiFileUpload` into `SOPForm.tsx`: Replaced the manual URL input with the `MultiFileUpload` component, adapting it to handle a single uploaded file URL.
 - Enhanced `app/(dashboard)/consumables/allocations/[id]/page.tsx` to allow pre-selection of `bookingId` or `maintenanceId` from URL parameters for new consumable allocations.
 - Implemented robust authorization checks in `lib/actions/booking.ts` and `lib/actions/consumable-allocation.ts` to ensure non-admin users can only access/manage their own bookings and consumable allocations, including analytics.
 - Fixed column definition and date formatting in `app/(dashboard)/consumables/allocations/_components/columns.tsx` to resolve 'Column with id' error and 'Invalid time value' error.

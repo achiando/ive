@@ -10,6 +10,7 @@ import { createEquipment } from "@/lib/actions/equipment";
 import { EquipmentWithRelations } from "@/types/equipment";
 import { UserRole } from "@prisma/client";
 import { GridIcon, ListIcon, PlusCircle } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Fragment, useMemo, useState } from "react"; // Import Fragment
 import { toast } from "sonner"; // Assuming toast is available for client-side notifications
@@ -73,7 +74,13 @@ export function EquipmentsPageClient({ equipments }: EquipmentsPageClientProps) 
     }
   };
 
-  const canAddEquipment = true;
+  const { data: session } = useSession();
+  const canAddEquipment = [
+    'TECHNICIAN',
+    'ADMIN_TECHNICIAN',
+    'LAB_MANAGER',
+    'ADMIN'
+  ].includes(session?.user?.role || '');
 
   const renderFilters = (showSearchInput: boolean) => (
     <Fragment>

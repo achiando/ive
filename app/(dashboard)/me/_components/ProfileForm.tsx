@@ -10,6 +10,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { MultiFileUpload } from "@/components/ui/multi-file-upload";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { programs } from "@/data/program"; // Import programs
 import { updateMyProfile } from "@/lib/actions/user";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { User } from "@prisma/client";
@@ -47,7 +56,7 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
       phoneNumber: initialData.phoneNumber || "",
       department: initialData.department || "",
       position: initialData.position || "",
-      profileImage: initialData.profileImage || "",
+      profileImage: initialData.profileImage || "/logo.png",
       employeeId: initialData.employeeId || "",
       studentId: initialData.studentId || "",
       yearOfStudy: initialData.yearOfStudy || null,
@@ -75,6 +84,26 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="profileImage"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Profile Image</FormLabel>
+                <FormControl>
+                  <MultiFileUpload
+                    value={field.value ? [field.value] : []}
+                    onChange={(urls) => field.onChange(urls[0] || null)}
+                    onRemove={() => field.onChange(null)}
+                    maxFiles={1}
+                    maxSize={5 * 1024 * 1024} // 5MB
+                    fileTypes={["image/*"]}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <FormField
             control={form.control}
             name="firstName"
@@ -124,13 +153,23 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Department</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="e.g., Computer Science" 
-                    {...field} 
-                    value={field.value ?? ''} 
-                  />
-                </FormControl>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value ?? ""}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your department" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {programs.map((program) => (
+                      <SelectItem key={program} value={program}>
+                        {program}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -216,13 +255,23 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Program</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="e.g., Bachelor of Science" 
-                    {...field} 
-                    value={field.value ?? ''} 
-                  />
-                </FormControl>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value ?? ""}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your program" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {programs.map((program) => (
+                      <SelectItem key={program} value={program}>
+                        {program}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
