@@ -1,10 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { generateAssessmentFromEquipment } from '@/lib/actions/ai-assessment';
 import { getSafetyTestById } from '@/lib/actions/safety-test';
+import { NextRequest, NextResponse } from 'next/server';
 
 // Gemini API configuration
-const GOOGLE_API_KEY = process.env.GEMINI_API_KEY; // Use GEMINI_API_KEY as defined in lib/actions/ai-assessment.ts
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY; // Use GEMINI_API_KEY as defined in lib/actions/ai-assessment.ts
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 // Simple in-memory cache for manual text (use Redis in production)
@@ -249,28 +248,52 @@ export async function POST(req: NextRequest) {
     let contentSource = '';
     let assessmentPrompt = '';
 
+    // Helper function to get content from equipment as fallback
+    const getEquipmentContent = async (safetyTestId: string | undefined, documentTitle: string): Promise<string> => {
+      if (!equipmentId) {
+        throw new Error('Equipment ID is required for fallback content generation.');
+      }
+
+      let actualSafetyTestName = documentTitle;
+      if (safetyTestId) {
+        const safetyTest = await getSafetyTestById(safetyTestId);
+        if (safetyTest) {
+          actualSafetyTestName = safetyTest.name;
+        }
+      }
+      
+      const equipmentContent = await generateAssessmentFromEquipment(equipmentId, actualSafetyTestName);
+      console.log('✅ Generated content from equipment details');
+      return equipmentContent;
+    };
+
+    // Handle content source resolution
     if (userMessage) { // Clarification request
       if (manualUrl) {
-        contentSource = await fetchManualText(manualUrl);
-      } else if (equipmentId && safetyTestId) {
-        // Fetch safety test name for context
-        const safetyTest = await getSafetyTestById(safetyTestId);
-        if (!safetyTest) throw new Error("Safety Test not found for context.");
-        contentSource = await generateAssessmentFromEquipment(equipmentId, safetyTest.name);
+        try {
+          contentSource = await fetchManualText(manualUrl);
+          console.log('✅ Successfully fetched manual content for clarification');
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          console.warn('⚠️ Could not fetch manual, falling back to equipment details:', errorMessage);
+          contentSource = await getEquipmentContent(safetyTestId, documentTitle);
+        }
       } else {
-        return NextResponse.json({ error: 'Missing content source for clarification' }, { status: 400 });
+        contentSource = await getEquipmentContent(safetyTestId, documentTitle);
       }
       assessmentPrompt = buildPrompt(contentSource, documentTitle, userMessage);
     } else { // Quiz generation request
       if (manualUrl) {
-        contentSource = await fetchManualText(manualUrl);
-      } else if (equipmentId && safetyTestId) {
-        // Fetch safety test name for context
-        const safetyTest = await getSafetyTestById(safetyTestId);
-        if (!safetyTest) throw new Error("Safety Test not found for context.");
-        contentSource = await generateAssessmentFromEquipment(equipmentId, safetyTest.name);
+        try {
+          contentSource = await fetchManualText(manualUrl);
+          console.log('✅ Successfully fetched manual content for assessment');
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          console.warn('⚠️ Could not fetch manual, falling back to equipment details:', errorMessage);
+          contentSource = await getEquipmentContent(safetyTestId, documentTitle);
+        }
       } else {
-        return NextResponse.json({ error: 'Missing content source for assessment generation' }, { status: 400 });
+        contentSource = await getEquipmentContent(safetyTestId, documentTitle);
       }
       assessmentPrompt = buildPrompt(contentSource, documentTitle);
     }

@@ -3,12 +3,11 @@
 import { prisma } from "@/lib/prisma";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-
 export async function generateAssessmentFromEquipment(equipmentId: string, safetyTestName: string): Promise<string> {
   if (!process.env.GEMINI_API_KEY) {
     throw new Error("GEMINI_API_KEY is not set.");
   }
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
   const equipment = await prisma.equipment.findUnique({
     where: { id: equipmentId },
