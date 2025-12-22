@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { SafetyTestWithRelations } from "@/types/safety-test"
 import { UserRole } from "@prisma/client"
-import { Copy, Edit, FileText, MoreHorizontal, Trash } from "lucide-react"
+import { Edit, FileText, MoreHorizontal, Trash } from "lucide-react"
 import { useSession } from "next-auth/react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -49,11 +49,8 @@ export const CellAction: React.FC<CellActionProps> = ({ data, onEdit, onDelete }
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuItem onClick={() => onCopy(data.id)}>
-          <Copy className="mr-2 h-4 w-4" /> Copy ID
-        </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href={`/dashboard/sop/${data.id}/view`}>
+          <Link href={`/sop/${data.id}/view`}>
             <FileText className="mr-2 h-4 w-4" /> View
           </Link>
         </DropdownMenuItem>

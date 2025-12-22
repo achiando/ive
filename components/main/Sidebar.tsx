@@ -103,19 +103,19 @@ export function Sidebar() {
       name: 'Events', 
       href: '/events', 
       icon: Calendar,
-      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.STUDENT, UserRole.FACULTY,UserRole.TECHNICIAN,UserRole.ADMIN_TECHNICIAN,UserRole.OTHER]
+      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.STUDENT, UserRole.FACULTY,UserRole.TECHNICIAN,UserRole.ADMIN_TECHNICIAN,UserRole.OTHER,UserRole.LECTURER]
     },
     { 
       name: 'SOP Manuals', 
       href: '/sop', 
       icon: FileText,
-      roles: [UserRole.STUDENT, UserRole.FACULTY, UserRole.TECHNICIAN, UserRole.ADMIN_TECHNICIAN, UserRole.LAB_MANAGER, UserRole.ADMIN,UserRole.OTHER]
+      roles: [UserRole.STUDENT, UserRole.FACULTY, UserRole.TECHNICIAN, UserRole.ADMIN_TECHNICIAN, UserRole.LAB_MANAGER, UserRole.ADMIN,UserRole.OTHER,UserRole.LECTURER]
     },
     { 
       name: 'Settings', 
       href: '/me', 
       icon: Settings,
-      roles: [UserRole.ADMIN, UserRole.LAB_MANAGER, UserRole.STUDENT, UserRole.FACULTY, UserRole.TECHNICIAN, UserRole.ADMIN_TECHNICIAN,UserRole.OTHER]  
+      roles: [UserRole.ADMIN, UserRole.LAB_MANAGER, UserRole.STUDENT, UserRole.FACULTY, UserRole.TECHNICIAN, UserRole.ADMIN_TECHNICIAN,UserRole.OTHER,UserRole.LECTURER]  
     },
   ];
 

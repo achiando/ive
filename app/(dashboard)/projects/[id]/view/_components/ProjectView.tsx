@@ -256,7 +256,7 @@ export function ProjectView({ project, userRole, backPath = '/projects' }: Proje
         <CardTitle>Project Bookings</CardTitle>
       </CardHeader>
       <CardContent>
-        <Button onClick={() => router.push(`/booking/new?projectId=${project.id}`)}>
+        <Button onClick={() => router.push(`/bookings/new?projectId=${project.id}`)}>
           Create New Booking
         </Button>
       </CardContent>

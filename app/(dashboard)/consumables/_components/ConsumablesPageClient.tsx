@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { ConsumableCard } from "./ConsumableCard";
 import { ConsumableForm, ConsumableFormValues } from "./ConsumableForm";
 import { ConsumableStats } from "./ConsumableStats";
-import { columns } from "./columns";
+import { useConsumableColumns } from "./columns";
 
 interface ConsumablesPageClientProps {
   consumables: any[]; // TODO: Define a proper type for ConsumableWithRelations
@@ -23,6 +23,7 @@ interface ConsumablesPageClientProps {
 
 export function ConsumablesPageClient({ consumables }: ConsumablesPageClientProps) {
   const router = useRouter();
+  const columns = useConsumableColumns();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | "all">("all");
   const [view, setView] = useState<'table' | 'grid'>('table');
@@ -65,13 +66,13 @@ export function ConsumablesPageClient({ consumables }: ConsumablesPageClientProp
       toast.error(result.message);
     }
   };
-    const { data: session } = useSession();
-    const canAddConsumable = [
-      'TECHNICIAN',
-      'ADMIN_TECHNICIAN',
-      'LAB_MANAGER',
-      'ADMIN'
-    ].includes(session?.user?.role || '');
+  const { data: session } = useSession();
+  const canAddConsumable = [
+    'TECHNICIAN',
+    'ADMIN_TECHNICIAN',
+    'LAB_MANAGER',
+    'ADMIN'
+  ].includes(session?.user?.role || '');
 
   const renderFilters = (showSearchInput: boolean) => (
     <Fragment>
@@ -115,25 +116,30 @@ export function ConsumablesPageClient({ consumables }: ConsumablesPageClientProp
         <div className="flex items-center gap-2">
           {
             canAddConsumable && (
-              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Consumable
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Add New Consumable</DialogTitle>
-              </DialogHeader>
-              <div className="py-4">
-                <ConsumableForm 
-                  onSubmit={handleCreateConsumable}
-                  onCancel={() => setIsCreateDialogOpen(false)}
-                />
-              </div>
-            </DialogContent>
-          </Dialog>
+              <>     <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Consumable
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Add New Consumable</DialogTitle>
+                  </DialogHeader>
+                  <div className="py-4">
+                    <ConsumableForm
+                      onSubmit={handleCreateConsumable}
+                      onCancel={() => setIsCreateDialogOpen(false)}
+                    />
+                  </div>
+                </DialogContent>
+              </Dialog>
+                <Button onClick={() => router.push('/consumables/bulk-upload')}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Bulk Upload
+                </Button>
+              </>
             )
           }
           <div className="flex items-center space-x-2">
@@ -158,18 +164,18 @@ export function ConsumablesPageClient({ consumables }: ConsumablesPageClientProp
       </div>
 
       {/* Analytics Cards */}
-      <ConsumableStats 
-        consumables={filteredConsumables} 
-        isLoading={isLoading} 
+      <ConsumableStats
+        consumables={filteredConsumables}
+        isLoading={isLoading}
       />
 
       {/* Main Content Area */}
       {view === 'table' ? (
-        <DataTable 
-          columns={columns} 
+        <DataTable
+          columns={columns}
           data={filteredConsumables}
-          filterColumnId="name" 
-          filterColumnPlaceholder="Filter by name..." 
+          filterColumnId="name"
+          filterColumnPlaceholder="Filter by name..."
         >
           {renderFilters(true)}
         </DataTable>

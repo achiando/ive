@@ -94,9 +94,7 @@ export function ProjectForm({ initialData, projectId }: ProjectFormProps) {
       } else {
         // Create new project
         await handleCreateProject(data); // Call server action
-        toast.success('Project created successfully', {
-          description: `"${data.title}" has been created.`,
-        });
+        toast.success('Project created successfully');
       }
       
       // Redirection is now handled by the server actions

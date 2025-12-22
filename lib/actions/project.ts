@@ -429,9 +429,9 @@ export async function generateProjectInviteToken(projectId: string): Promise<str
 
   const isAdmin = adminRoles.includes(user.role as typeof adminRoles[number]);
 
-  if (!isAdmin) {
-    throw new Error('Not authorized to generate invite links for this project.');
-  }
+  // if (!isAdmin) {
+  //   throw new Error('Not authorized to generate invite links for this project.');
+  // }
 
   // Generate new token for new invitation
   const token = uuidv4();

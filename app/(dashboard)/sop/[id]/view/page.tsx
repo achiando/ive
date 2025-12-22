@@ -70,7 +70,7 @@ export default function SopViewPage() {
             The SOP manual you're looking for doesn't exist or has been removed.
           </p>
           <Button asChild>
-            <Link href="/dashboard/sop">
+            <Link href="/sop">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to SOP Manuals
             </Link>
@@ -112,7 +112,7 @@ export default function SopViewPage() {
     if (isFirstLogin) {
       queryParams.set('firstLogin', 'true');
     }
-    router.push(`/dashboard/assessment?${queryParams.toString()}`);
+    router.push(`/assessment?${queryParams.toString()}`);
   };
 
   return (
@@ -134,7 +134,7 @@ export default function SopViewPage() {
         )}
         <div className="flex items-center justify-between mb-4">
           {!isFirstLoginSafetyFlow && (
-            <Button variant="ghost" onClick={() => router.push("/dashboard/sop")} className="flex items-center">
+            <Button variant="ghost" onClick={() => router.push("/sop")} className="flex items-center">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to SOP Manuals
             </Button>

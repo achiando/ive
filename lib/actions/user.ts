@@ -4,7 +4,7 @@
 import { authOptions } from "@/lib/auth";
 import { sendEmail, sendStatusUpdateEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
-import { Faculty, Prisma, RegistrationStatus, User, UserRole } from "@prisma/client";
+import { Prisma, RegistrationStatus, User, UserRole } from "@prisma/client";
 import bcrypt from 'bcryptjs';
 import { getServerSession } from "next-auth";
 import { unstable_cache as cache, revalidateTag } from 'next/cache';
@@ -23,61 +23,46 @@ function generateRandomPassword(length = 10) {
  * Fetches all users from the database.
  * Caches the result for 1 hour.
  */
-export const getUsers = cache(
-  async (status?: RegistrationStatus, roles?: UserRole[]) => {
-    const whereClause: Prisma.UserWhereInput = {};
+export const getUsers = async (status?: RegistrationStatus, roles?: UserRole[]) => {
+  const whereClause: Prisma.UserWhereInput = {};
 
-    if (status) {
-      whereClause.status = status;
-    }
-    if (roles && roles.length > 0) {
-      whereClause.role = { in: roles };
-    }
-
-    return prisma.user.findMany({
-      where: whereClause,
-      orderBy: { createdAt: "desc" },
-    });
-  },
-  ["users"], // cache key
-  {
-    tags: ["users"], // ✅ THIS enables revalidateTag
-    revalidate: 3600,
+  if (status) {
+    whereClause.status = status;
   }
-);
+  if (roles && roles.length > 0) {
+    whereClause.role = { in: roles };
+  }
+
+  return prisma.user.findMany({
+    where: whereClause,
+    orderBy: { createdAt: "desc" },
+  });
+};
 
 
 /**
  * Fetches a user by their ID.
  * Caches the result for 1 hour.
  */
-export const getUserById = cache(
-  async (id: string | undefined | null) => {
-    if (!id) {
-      console.error('No user ID provided to getUserById');
-      return null;
-    }
-    
-    try {
-      const user = await prisma.user.findUnique({
-        where: { id },
-        include: {
-          faculty: true,
-        },
-      });
-      return user;
-    } catch (error) {
-      console.error('Error fetching user by ID:', error);
-      return null;
-    }
-  },
-  ["user_by_id"],
-  {
-    tags: ["users", "user"], // ✅ depends on users
-    revalidate: 3600,
+export const getUserById = async (id: string | undefined | null) => {
+  if (!id) {
+    console.error('No user ID provided to getUserById');
+    return null;
   }
-) as (id: string | undefined | null) => Promise<(User & { faculty: Faculty | null }) | null>;
-
+  
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id },
+      include: {
+        faculty: true,
+      },
+    });
+    return user;
+  } catch (error) {
+    console.error('Error fetching user by ID:', error);
+    return null;
+  }
+}
 /**
  * Fetches the currently authenticated user's profile with extended details.
  */

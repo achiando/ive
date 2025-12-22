@@ -13,6 +13,7 @@ import { useState } from 'react';
 const ROLE_OPTIONS = [
   { value: UserRole.STUDENT, label: 'Student' },
   { value: UserRole.FACULTY, label: 'Faculty' },
+  { value: UserRole.LECTURER, label: 'Lecturer' },
   { value: UserRole.OTHER, label: 'Other' }
 ];
 

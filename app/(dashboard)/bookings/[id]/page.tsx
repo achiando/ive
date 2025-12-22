@@ -45,6 +45,16 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
 
   const equipmentList = await getEquipments();
 
+  const handleSubmitSuccess = async (bookingId?: string) => {
+    "use server";
+    if (isNewBooking && bookingId) {
+      redirect(`/consumables/allocations/new?bookingId=${bookingId}`);
+    } else {
+      // Return a special flag to indicate the form should navigate back
+      return { navigateBack: true };
+    }
+  };
+
   const handleFormSubmit = async (formData: BookingFormData) => {
     "use server"; // Mark as server action
     console.log("handleFormSubmit called with:", { formData, isNewBooking, initialData, userId, searchProjectId });
@@ -72,15 +82,6 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
     }
   };
 
-  const handleSubmitSuccess = async (bookingId?: string) => {
-    "use server";
-    if (isNewBooking && bookingId) {
-      redirect(`/consumables/allocations/new?bookingId=${bookingId}`);
-    } else {
-      // Return a special flag to indicate the form should navigate back
-      return { navigateBack: true };
-    }
-  };
 
   return (
     <div className="space-y-8">
