@@ -50,7 +50,7 @@ export function Sidebar() {
       name: 'Dashboard', 
       href: '/dashboard', 
       icon: LayoutDashboard,
-      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.ADMIN_TECHNICIAN, UserRole.TECHNICIAN, UserRole.STUDENT,UserRole.FACULTY, UserRole.LECTURER]
+      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.ADMIN_TECHNICIAN, UserRole.TECHNICIAN, UserRole.STUDENT,UserRole.FACULTY, UserRole.LECTURER,UserRole.OTHER]
     },
     { 
       name: 'Users', 
@@ -62,19 +62,19 @@ export function Sidebar() {
       name: 'Equipments', 
       href: '/equipments', 
       icon: FolderGit2,
-      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.ADMIN_TECHNICIAN, UserRole.TECHNICIAN,UserRole.STUDENT,UserRole.FACULTY,UserRole.LECTURER]
+      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.ADMIN_TECHNICIAN, UserRole.TECHNICIAN,UserRole.STUDENT,UserRole.FACULTY,UserRole.LECTURER,UserRole.OTHER]
     },
     { 
       name: 'Projects', 
       href: '/projects', 
       icon: SearchCode,
-      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.STUDENT, UserRole.FACULTY,UserRole.TECHNICIAN,UserRole.ADMIN_TECHNICIAN,UserRole.LECTURER,UserRole.FACULTY]
+      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.STUDENT, UserRole.FACULTY,UserRole.TECHNICIAN,UserRole.ADMIN_TECHNICIAN,UserRole.LECTURER,UserRole.FACULTY,UserRole.OTHER]
     },
     { 
       name: 'Bookings', 
       href: '/bookings', 
       icon: Calendar,
-      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.STUDENT, UserRole.FACULTY,UserRole.TECHNICIAN,UserRole.ADMIN_TECHNICIAN,UserRole.FACULTY,UserRole.LECTURER]
+      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.STUDENT, UserRole.FACULTY,UserRole.TECHNICIAN,UserRole.ADMIN_TECHNICIAN,UserRole.FACULTY,UserRole.LECTURER,UserRole.OTHER]
     },
     { 
       name: 'Maintenance', 
@@ -86,7 +86,7 @@ export function Sidebar() {
       name: 'Consumables', 
       href: '/consumables', 
       icon: Package,
-      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN,UserRole.TECHNICIAN,UserRole.ADMIN_TECHNICIAN,UserRole.FACULTY,UserRole.LECTURER,UserRole.STUDENT]
+      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN,UserRole.TECHNICIAN,UserRole.ADMIN_TECHNICIAN,UserRole.FACULTY,UserRole.LECTURER,UserRole.STUDENT,UserRole.OTHER]
     },
     { 
       name: 'Technicians', 
@@ -102,19 +102,19 @@ export function Sidebar() {
       name: 'Events', 
       href: '/events', 
       icon: Calendar,
-      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.STUDENT, UserRole.FACULTY,UserRole.TECHNICIAN,UserRole.ADMIN_TECHNICIAN]
+      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.STUDENT, UserRole.FACULTY,UserRole.TECHNICIAN,UserRole.ADMIN_TECHNICIAN,UserRole.OTHER]
     },
     { 
       name: 'SOP Manuals', 
       href: '/sop', 
       icon: FileText,
-      roles: [UserRole.STUDENT, UserRole.FACULTY, UserRole.TECHNICIAN, UserRole.ADMIN_TECHNICIAN, UserRole.LAB_MANAGER, UserRole.ADMIN]
+      roles: [UserRole.STUDENT, UserRole.FACULTY, UserRole.TECHNICIAN, UserRole.ADMIN_TECHNICIAN, UserRole.LAB_MANAGER, UserRole.ADMIN,UserRole.OTHER]
     },
     { 
       name: 'Settings', 
       href: '/me', 
       icon: Settings,
-      roles: [UserRole.ADMIN, UserRole.LAB_MANAGER, UserRole.STUDENT, UserRole.FACULTY, UserRole.TECHNICIAN, UserRole.ADMIN_TECHNICIAN]  
+      roles: [UserRole.ADMIN, UserRole.LAB_MANAGER, UserRole.STUDENT, UserRole.FACULTY, UserRole.TECHNICIAN, UserRole.ADMIN_TECHNICIAN,UserRole.OTHER]  
     },
   ];
 
