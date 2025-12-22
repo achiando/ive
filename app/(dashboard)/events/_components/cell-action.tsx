@@ -67,6 +67,9 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
         <DropdownMenuItem onClick={() => router.push(`/events/${data.id}/view`)}>
           View
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => router.push(`/events/${data.id}/register`)}>
+          Register
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         {
           canAddEvent && (

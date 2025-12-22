@@ -207,14 +207,24 @@ model Event {
 }
 
 model EventParticipation {
-  id       String   @id @default(cuid())
-  user     User     @relation("UserEventParticipations", fields: [userId], references: [id], onDelete: Cascade)
-  userId   String
-  event    Event    @relation("EventParticipations", fields: [eventId], references: [id], onDelete: Cascade)
-  eventId  String
-  joinedAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  // For registered users
+  user        User?    @relation("UserEventParticipations", fields: [userId], references: [id], onDelete: Cascade)
+  userId      String?
+  // For non-registered users
+  guestName   String?
+  guestEmail  String?  @db.VarChar(255)
+  
+  event       Event    @relation("EventParticipations", fields: [eventId], references: [id], onDelete: Cascade)
+  eventId     String
+  joinedAt    DateTime @default(now())
 
-  @@unique([userId, eventId])
+  // Allow multiple registrations per user/email as long as they're for different events
+  @@unique([id])
+  @@unique([userId, eventId], name: "unique_user_event")
+  @@unique([guestEmail, eventId], name: "unique_guest_event")
+  @@index([guestEmail])
+  @@index([userId])
 }
 
 model Faculty {

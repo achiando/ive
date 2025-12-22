@@ -1,7 +1,6 @@
-
 import { Button } from "@/components/ui/button";
 import { getEventById } from "@/lib/actions/event";
-import { isUserRegisteredForEvent } from "@/lib/actions/event-participation";
+import { isRegisteredForEvent } from "@/lib/actions/event-participation";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import Link from "next/link";
@@ -9,10 +8,13 @@ import { EventRegistrationForm } from "./_components/EventRegistrationForm";
 
 export default async function EventRegisterPage({
   params,
+  searchParams,
 }: {
   params: { id: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
 }) {
   const { id } = params;
+  const asGuest = searchParams?.asGuest === 'true';
 
   if (!id) {
     return (
@@ -41,14 +43,25 @@ export default async function EventRegisterPage({
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
   let isRegistered = false;
+  let isGuest = false;
 
   if (userId) {
-    isRegistered = await isUserRegisteredForEvent(id, userId);
+    const registration = await isRegisteredForEvent(id, userId);
+    isRegistered = registration.isRegistered;
+    isGuest = registration.asGuest;
+  } else if (asGuest) {
+    // For guests, we'll check registration status in the client component
+    // since we don't have their email in the server component
+    isRegistered = false;
   }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4">
-      <EventRegistrationForm event={eventData} isRegistered={isRegistered} />
+      <EventRegistrationForm 
+        event={eventData} 
+        isRegistered={isRegistered || isGuest} 
+        asGuest={asGuest}
+      />
     </div>
   );
 }
