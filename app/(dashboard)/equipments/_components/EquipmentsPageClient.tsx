@@ -6,24 +6,24 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createEquipment } from "@/lib/actions/equipment";
-// import { EquipmentWithRelations, UserRole } from "@/types/equipment";
 import { EquipmentWithRelations } from "@/types/equipment";
 import { UserRole } from "@prisma/client";
 import { GridIcon, ListIcon, PlusCircle } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Fragment, useMemo, useState } from "react"; // Import Fragment
-import { toast } from "sonner"; // Assuming toast is available for client-side notifications
-import { columns } from "./columns";
+import { Fragment, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { getColumns } from "./columns"; // Import getColumns
 import { EquipmentCard } from "./EquipmentCard";
 import { EquipmentForm } from "./EquipmentForm";
 import { EquipmentStats } from "./EquipmentStats";
 
 interface EquipmentsPageClientProps {
   equipments: EquipmentWithRelations[];
+  userRole: UserRole | undefined; // Add userRole prop
 }
 
-export function EquipmentsPageClient({ equipments }: EquipmentsPageClientProps) {
+export function EquipmentsPageClient({ equipments, userRole }: EquipmentsPageClientProps) {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string | "all">("all");
@@ -198,21 +198,21 @@ export function EquipmentsPageClient({ equipments }: EquipmentsPageClientProps) 
       {/* Main Content Area */}
       {view === 'table' ? (
         <DataTable
-          columns={columns}
+          columns={getColumns(userRole as UserRole)} // Pass userRole to getColumns
           data={filteredEquipments}
           filterColumnId="name"
           filterColumnPlaceholder="Filter by name..."
         >
-          {renderFilters(true)} {/* Pass filters as children to DataTable */}
+          {renderFilters(true)}
         </DataTable>
       ) : (
         <div className="space-y-4">
           <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-4 py-4">
-            {renderFilters(true)} {/* Render filters as standalone div */}
+            {renderFilters(true)}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredEquipments.map((equipment) => (
-              <EquipmentCard key={equipment.id} equipment={equipment} userRole={UserRole.ADMIN} />
+              <EquipmentCard key={equipment.id} equipment={equipment} userRole={userRole as UserRole} /> {/* Pass userRole to EquipmentCard */}
             ))}
           </div>
         </div>

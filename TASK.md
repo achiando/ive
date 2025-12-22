@@ -80,3 +80,12 @@
 - **Modified `app/(dashboard)/projects/[id]/view/_components/ProjectView.tsx`**:
     - Removed the tab/select functionality, making all project details scrollable.
     - Added a "Create New Booking" button to the Project Bookings section, which navigates to `/booking/new?projectId=<project.id>`.
+- **Implemented Event View Page**:
+    - Created `app/(dashboard)/events/[id]/view/page.tsx` to display event details and participants.
+    - Created `app/(dashboard)/events/[id]/view/_components/EventDetails.tsx` to render event information.
+    - Created `app/(dashboard)/events/[id]/view/_components/ParticipantsDataTable.tsx` to display event participants in a table.
+    - Created `app/(dashboard)/events/[id]/view/_components/columns.tsx` to define the columns for the participants data table.
+- **Implemented Role-Based Equipment Visibility and Column Hiding**:
+    - Modified `app/(dashboard)/equipments/_components/columns.tsx` to accept `userRole` and conditionally display `serialNumber`, `dailyCapacity`, `createdAt`, and `actions` columns only for `ADMIN` or `TECHNICIAN` roles.
+    - Modified `app/(dashboard)/equipments/page.tsx` to fetch `userRole` from the session and filter out equipment with `IN_USE`, `OUT_OF_SERVICE`, and `MAINTENANCE` statuses for non-admin/technician users.
+    - Modified `app/(dashboard)/equipments/_components/EquipmentsPageClient.tsx` to accept and pass the `userRole` prop to `getColumns` and `EquipmentCard`.

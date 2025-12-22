@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProjectWithDetails } from '@/types/project';
-import { Project as BaseProject, ProjectDocument, ProjectMember, UserRole } from '@prisma/client';
+import { Project as BaseProject, ProjectDocument, ProjectMember, UserRole, ProjectStatus } from '@prisma/client'; // Import ProjectStatus
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -45,6 +45,7 @@ export function ProjectView({ project, userRole, backPath = '/projects' }: Proje
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [teamMembers, setTeamMembers] = useState<Array<{ name: string; regNumber: string }>>([]);
 
+  const isRejected = project.status === ProjectStatus.REJECTED; // New variable for rejected status
 
 
   // Generate QR code when dialog opens
@@ -191,6 +192,7 @@ export function ProjectView({ project, userRole, backPath = '/projects' }: Proje
         <Button
           onClick={() => router.push(`/projects/${project.id}/documents`)}
           className="ml-2"
+          disabled={isRejected} // Disable if project is rejected
         >
           <FileIcon className="mr-2 h-4 w-4 text-white" />
           Upload Document
@@ -223,6 +225,7 @@ export function ProjectView({ project, userRole, backPath = '/projects' }: Proje
         <Button
           onClick={() => router.push(`/projects/${project.id}/members`)}
           className="ml-2"
+          disabled={isRejected} // Disable if project is rejected
         >
           <Users className="mr-2 h-4 w-4 text-white" />
           Manage Members
@@ -256,7 +259,10 @@ export function ProjectView({ project, userRole, backPath = '/projects' }: Proje
         <CardTitle>Project Bookings</CardTitle>
       </CardHeader>
       <CardContent>
-        <Button onClick={() => router.push(`/bookings/new?projectId=${project.id}`)}>
+        <Button 
+          onClick={() => router.push(`/bookings/new?projectId=${project.id}`)}
+          disabled={isRejected} // Disable if project is rejected
+        >
           Create New Booking
         </Button>
       </CardContent>

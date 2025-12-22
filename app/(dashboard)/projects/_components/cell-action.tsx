@@ -60,9 +60,15 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const handleStatusUpdate = async (status: ProjectStatus) => {
     setIsLoading(true);
     try {
-      await updateProject(data.id, { status });
-      toast.success("Project status updated successfully.");
-      router.refresh();
+      const result = await updateProject(data.id, { status });
+      if (result.success) {
+        toast.success("Project status updated successfully.");
+        router.refresh();
+      } else {
+        toast.error("Failed to update project status.", {
+          description: result.message,
+        });
+      }
     } catch (error: any) {
       toast.error("Failed to update project status.", {
         description: error.message,
@@ -72,9 +78,13 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
     }
   };
 
-  const canEdit = isCreator || isAdminOrManager;
-  const canDelete = isCreator || isAdminOrManager;
-  const canChangeStatus = isAdminOrManager;
+  const canEdit = (isCreator || isAdminOrManager) && data.status !== ProjectStatus.REJECTED;
+  const canDelete = (isCreator || isAdminOrManager); // Delete is always available for rejected projects
+  const canChangeStatus = isAdminOrManager && data.status !== ProjectStatus.REJECTED;
+  const canManageMembersAndDocuments = data.status !== ProjectStatus.REJECTED;
+  const canManageBookings = (data.status === ProjectStatus.APPROVED || data.status === ProjectStatus.COMPLETED) && data.status !== ProjectStatus.REJECTED;
+  const canMakeBooking = data.status === ProjectStatus.APPROVED && data.status !== ProjectStatus.REJECTED;
+
 
   return (
     <>
@@ -106,39 +116,44 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
             </DropdownMenuItem>
           )}
           
-          <DropdownMenuItem onClick={() => router.push(`/projects/${data.id}/members`)}>
-            <span className="flex items-center">
-              <Users className="h-4 w-4 mr-2" /> Manage Members
-            </span>
-          </DropdownMenuItem>
+          {canManageMembersAndDocuments && (
+            <>
+              <DropdownMenuItem onClick={() => router.push(`/projects/${data.id}/members`)}>
+                <span className="flex items-center">
+                  <Users className="h-4 w-4 mr-2" /> Manage Members
+                </span>
+              </DropdownMenuItem>
 
-          <DropdownMenuItem onClick={() => router.push(`/projects/${data.id}/documents`)}>
-            <span className="flex items-center">
-              <FileText className="h-4 w-4 mr-2" /> Manage Documents
-            </span>
-          </DropdownMenuItem>
-           {(data.status === 'APPROVED' || data.status === 'COMPLETED') && (
+              <DropdownMenuItem onClick={() => router.push(`/projects/${data.id}/documents`)}>
+                <span className="flex items-center">
+                  <FileText className="h-4 w-4 mr-2" /> Manage Documents
+                </span>
+              </DropdownMenuItem>
+            </>
+          )}
+
+          {canManageBookings && (
             <>
               <DropdownMenuItem onClick={() => router.push(`/bookings?projectId=${data.id}`)}>
                 <span className="flex items-center">
                   <FileText className="h-4 w-4 mr-2" /> Manage Bookings
                 </span>
               </DropdownMenuItem>
-              {data.status === 'APPROVED' && (
-                <DropdownMenuItem onClick={() => router.push(`/bookings/new?projectId=${data.id}`)}>
-                  <span className="flex items-center">
-                    <FileText className="h-4 w-4 mr-2" /> Make Booking
-                  </span>
-                </DropdownMenuItem>
-              )}
             </>
           )}
+          {canMakeBooking && (
+            <DropdownMenuItem onClick={() => router.push(`/bookings/new?projectId=${data.id}`)}>
+              <span className="flex items-center">
+                <FileText className="h-4 w-4 mr-2" /> Make Booking
+              </span>
+            </DropdownMenuItem>
+          )}
 
-          {canChangeStatus && data.status === 'PENDING' && (
+          {canChangeStatus && data.status === ProjectStatus.PENDING && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem 
-                onClick={() => handleStatusUpdate('APPROVED')}
+                onClick={() => handleStatusUpdate(ProjectStatus.APPROVED)}
                 className="text-green-600 hover:!text-green-600"
               >
                 <span className="flex items-center">
@@ -146,7 +161,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
                 </span>
               </DropdownMenuItem>
               <DropdownMenuItem 
-                onClick={() => handleStatusUpdate('REJECTED')}
+                onClick={() => handleStatusUpdate(ProjectStatus.REJECTED)}
                 className="text-amber-600 hover:!text-amber-600"
               >
                 <span className="flex items-center">
@@ -156,11 +171,11 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
             </>
           )}
 
-          {canChangeStatus && data.status === 'APPROVED' && (
+          {canChangeStatus && data.status === ProjectStatus.APPROVED && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem 
-                onClick={() => handleStatusUpdate('ARCHIVED')}
+                onClick={() => handleStatusUpdate(ProjectStatus.ARCHIVED)}
                 className="text-orange-600 hover:!text-orange-600"
               >
                 <span className="flex items-center">

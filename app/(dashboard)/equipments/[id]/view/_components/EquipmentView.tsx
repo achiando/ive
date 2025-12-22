@@ -74,6 +74,7 @@ export function EquipmentView({ equipment, userRole, onUpdateStatus }: Equipment
   // The parent page.tsx will handle initial loading and error states
 
   const { 
+    id,
     name, 
     model, 
     serialNumber, 
@@ -248,11 +249,7 @@ export function EquipmentView({ equipment, userRole, onUpdateStatus }: Equipment
               <Separator className="my-4" />
               
               <div className="flex justify-end gap-2">
-                <Button variant="outline" size="sm">
-                  <Wrench className="mr-2 h-4 w-4" />
-                  Log Maintenance
-                </Button>
-                <Button size="sm" onClick={() => console.log('Mark for Maintenance')}>
+                <Button size="sm" onClick={() => router.push(`/maintenance/new?equipmentId=${id}`)}>
                   <Wrench className="mr-2 h-4 w-4" />
                   Mark for Maintenance
                 </Button>

@@ -1,69 +1,25 @@
+import { getEventById } from "@/lib/actions/event";
+import { getEventParticipants } from "@/lib/actions/event-participation";
+import { notFound } from "next/navigation";
+import { ParticipantsDataTable } from "./_components/ParticipantsDataTable";
+import { EventDetails } from "./_components/EventDetails";
 
-import { createEvent, getEventById, updateEvent } from "@/lib/actions/event";
-import { authOptions } from "@/lib/auth";
-import { getServerSession } from "next-auth";
-import { redirect } from "next/navigation";
-import { EventForm, EventFormValues } from "../../_components/EventForm";
+export default async function EventViewPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const event = await getEventById(params.id);
+  const participants = await getEventParticipants(params.id);
 
-
-interface EventPageProps {
-  params: {
-    id: string;
-  };
-}
-
-export default async function EventPage({ params }: EventPageProps) {
-  const { id } = await params;
-
-  const session = await getServerSession(authOptions);
-  const createdById = session?.user?.id;
-
-  if (!createdById) {
-    redirect("/api/auth/signin"); // Redirect to login if user is not authenticated
+  if (!event) {
+    notFound();
   }
-
-  const isNewEvent = id === 'new';
-  const eventData = isNewEvent ? null : await getEventById(id);
-
-  if (!isNewEvent && !eventData) {
-    return <div>Event not found.</div>;
-  }
-
-  const handleSubmit = async (data: EventFormValues) => {
-    "use server";
-
-    if (isNewEvent) {
-      await createEvent({ ...data, createdById: createdById });
-    } else {
-      if (eventData) {
-        await updateEvent(eventData.id, data);
-      }
-    }
-    redirect("/events");
-  };
-
-  const sanitizedEventData = eventData ? {
-    id: eventData.id,
-    name: eventData.name,
-    startDate: eventData.startDate.toISOString(),
-    endDate: eventData.endDate.toISOString(),
-    description: eventData.description ?? undefined,
-    venue: eventData.venue ?? undefined,
-    maxParticipants: eventData.maxParticipants ?? undefined, // Convert null to undefined
-    imageUrl: eventData.imageUrl ?? undefined,
-    createdById: eventData.createdById,
-  } : undefined;
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-        {isNewEvent ? "Create New Event" : "Edit Event"}
-      </h1>
-      <EventForm
-        initialData={sanitizedEventData}
-        onSubmit={handleSubmit}
-        createdById={createdById}
-      />
+    <div className="space-y-6">
+      <EventDetails event={event} />
+      <ParticipantsDataTable data={participants} />
     </div>
   );
 }

@@ -73,6 +73,10 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
     'LAB_MANAGER',
     'ADMIN'
   ].includes(session?.user?.role || '');
+  const canDeleteEquipment = [
+    'LAB_MANAGER',
+    'ADMIN'
+  ].includes(session?.user?.role || '');
 
   return (
     <>
@@ -85,12 +89,6 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => navigator.clipboard.writeText(data.id)}>
-            <span className="flex items-center">
-              <span className="mr-2">📋</span> Copy ID
-            </span>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
           {
             canAddEquipment && (
               <DropdownMenuItem onClick={() => router.push(`/equipments/${data.id}`)}>
@@ -149,14 +147,19 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
                 )}
 
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => setShowDeleteDialog(true)}
-                  className="text-destructive hover:!text-destructive"
-                >
-                  <span className="flex items-center">
-                    <Trash2 className="h-4 w-4 mr-2" /> Delete
-                  </span>
-                </DropdownMenuItem></>
+                {
+                  canDeleteEquipment && (
+                    <DropdownMenuItem
+                      onClick={() => setShowDeleteDialog(true)}
+                      className="text-destructive hover:!text-destructive"
+                    >
+                      <span className="flex items-center">
+                        <Trash2 className="h-4 w-4 mr-2" /> Delete
+                      </span>
+                    </DropdownMenuItem>
+                  )
+                }
+              </>
             )
           }
 
