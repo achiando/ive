@@ -250,14 +250,18 @@ export async function deleteSafetyTest(id: string): Promise<{ success: boolean; 
 }
 
 export async function recordSafetyTestAttempt(
-  safetyTestId: string,
-  equipmentId: string,
+  safetyTestId: string | undefined,
+  equipmentId: string | undefined,
   score: number, // score is handled locally, not persisted
   totalQuestions: number // totalQuestions is handled locally, not persisted
 ): Promise<{ success: boolean; message: string }> {
   const session = await getServerSession(authOptions);
   if (!session) {
     return { success: false, message: "Unauthorized: You must be logged in to record a safety test attempt." };
+  }
+
+  if (!safetyTestId && !equipmentId) {
+    return { success: false, message: "Cannot record safety test attempt: Either safetyTestId or equipmentId must be provided." };
   }
 
   const userId = session.user.id;
@@ -271,8 +275,8 @@ export async function recordSafetyTestAttempt(
         completedAt: new Date(),
       },
     });
-    revalidatePath(`/dashboard/sop/${safetyTestId}`);
-    revalidatePath(`/dashboard/equipments/${equipmentId}`); // Revalidate equipment page to show updated attempts
+    if (safetyTestId) revalidatePath(`/dashboard/sop/${safetyTestId}`);
+    if (equipmentId) revalidatePath(`/dashboard/equipments/${equipmentId}`); // Revalidate equipment page to show updated attempts
     return { success: true, message: "Safety test attempt recorded successfully." };
   } catch (error: any) {
     console.error("Error recording safety test attempt:", error);

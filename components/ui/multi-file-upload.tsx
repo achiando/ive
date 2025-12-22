@@ -3,9 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { FileIcon, UploadCloudIcon, XIcon } from "lucide-react";
+import { FileIcon, UploadCloudIcon, XIcon, LinkIcon } from "lucide-react"; // Import LinkIcon
 import React, { useCallback, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
+import { Input } from "./input"; // Assuming Input component is available
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs"; // Assuming Tabs components are available
 
 interface MultiFileUploadProps {
   /** Array of file URLs to display as already uploaded */
@@ -24,6 +26,8 @@ interface MultiFileUploadProps {
   /** Alternative way to specify file types (for backward compatibility) */
   fileTypes?: string[];
   className?: string;
+  /** Optional: Whether to show the link tab for adding URLs directly */
+  showLinkTab?: boolean;
 }
 
 const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
@@ -36,8 +40,8 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   acceptedFileTypes: propAcceptedFileTypes,
   fileTypes,
   className,
+  showLinkTab = false, // Default to false
 }) => {
-  // Handle both acceptedFileTypes and fileTypes props for backward compatibility
   const acceptedFileTypes = React.useMemo(() => {
     if (propAcceptedFileTypes) return propAcceptedFileTypes;
     if (fileTypes?.length) {
@@ -46,17 +50,19 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
         return acc;
       }, {} as Record<string, string[]>);
     }
-    // Default if neither is provided
     return {
       "image/*": [".jpeg", ".png", ".gif", ".webp"],
       "application/pdf": [".pdf"],
     };
   }, [propAcceptedFileTypes, fileTypes]);
+
   const [files, setFiles] = useState<File[]>([]);
   const [currentUrls, setCurrentUrls] = useState<string[]>(value || []);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"file" | "link">(showLinkTab ? "file" : "file"); // Default to file tab
+  const [linkInput, setLinkInput] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const onDrop = useCallback(
@@ -71,10 +77,9 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
       }
 
       if (acceptedFiles.length === 0) {
-        return; // No valid files to process
+        return;
       }
 
-      // If maxFiles is 1, replace existing files, otherwise add
       const newFiles = maxFiles === 1 ? acceptedFiles : [...files, ...acceptedFiles];
       setFiles(newFiles);
       await handleUpload(newFiles);
@@ -94,14 +99,12 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
       const newUrls = currentUrls.filter((_, i) => i !== index);
       setCurrentUrls(newUrls);
       onChange?.(newUrls);
-      // If this was the last URL and there are no files, call onRemove
       if (newUrls.length === 0 && files.length === 0) {
         onRemove?.();
       }
     } else {
       setFiles((prevFiles) => {
         const newFiles = prevFiles.filter((file) => file !== fileToRemove);
-        // If this was the last file and there are no URLs, call onRemove
         if (newFiles.length === 0 && currentUrls.length === 0) {
           onRemove?.();
         }
@@ -141,7 +144,7 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
       setCurrentUrls(newUrls);
       onChange?.(newUrls);
       onUploadComplete?.(data.urls);
-      setFiles([]); // Clear files after successful upload
+      setFiles([]);
     } catch (error: any) {
       console.error("Upload error:", error);
       setUploadError(error.message || "An unexpected error occurred during upload.");
@@ -150,27 +153,82 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
     }
   };
 
+  const handleAddLink = () => {
+    if (linkInput.trim() && !currentUrls.includes(linkInput.trim())) {
+      const newUrls = [...currentUrls, linkInput.trim()];
+      setCurrentUrls(newUrls);
+      onChange?.(newUrls);
+      setLinkInput("");
+    }
+  };
+
   return (
     <div className={cn("space-y-4", className)}>
-      <div
-        {...getRootProps()}
-        className={cn(
-          "flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 text-center transition-colors",
-          isDragActive ? "border-primary bg-primary/10" : "border-gray-300 hover:border-gray-400"
-        )}
-      >
-        <input type="file" multiple {...getInputProps()} />
-        <UploadCloudIcon className="mb-2 size-8 text-gray-400" />
-        {isDragActive ? (
-          <p>Drop the files here ...</p>
-        ) : (
-          <p>Drag 'n' drop some files here, or click to select files</p>
-        )}
-        <p className="text-sm text-gray-500">
-          Max {maxFiles} file(s), up to {maxFileSize / (1024 * 1024)}MB each.
-          Accepted types: {Object.values(acceptedFileTypes).flat().join(", ")}
-        </p>
-      </div>
+      {showLinkTab ? (
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "file" | "link")}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="file">
+              <UploadCloudIcon className="mr-2 h-4 w-4" /> File Upload
+            </TabsTrigger>
+            <TabsTrigger value="link">
+              <LinkIcon className="mr-2 h-4 w-4" /> Add Link
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="file" className="mt-4">
+            <div
+              {...getRootProps()}
+              className={cn(
+                "flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 text-center transition-colors",
+                isDragActive ? "border-primary bg-primary/10" : "border-gray-300 hover:border-gray-400"
+              )}
+            >
+              <input type="file" multiple {...getInputProps()} />
+              <UploadCloudIcon className="mb-2 size-8 text-gray-400" />
+              {isDragActive ? (
+                <p>Drop the files here ...</p>
+              ) : (
+                <p>Drag 'n' drop some files here, or click to select files</p>
+              )}
+              <p className="text-sm text-gray-500">
+                Max {maxFiles} file(s), up to {maxFileSize / (1024 * 1024)}MB each.
+                Accepted types: {Object.values(acceptedFileTypes).flat().join(", ")}
+              </p>
+            </div>
+          </TabsContent>
+          <TabsContent value="link" className="mt-4">
+            <div className="flex flex-col space-y-2">
+              <Input
+                placeholder="Paste your link here"
+                value={linkInput}
+                onChange={(e) => setLinkInput(e.target.value)}
+              />
+              <Button onClick={handleAddLink} disabled={!linkInput.trim()}>
+                Add Link
+              </Button>
+            </div>
+          </TabsContent>
+        </Tabs>
+      ) : (
+        <div
+          {...getRootProps()}
+          className={cn(
+            "flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 text-center transition-colors",
+            isDragActive ? "border-primary bg-primary/10" : "border-gray-300 hover:border-gray-400"
+          )}
+        >
+          <input type="file" multiple {...getInputProps()} />
+          <UploadCloudIcon className="mb-2 size-8 text-gray-400" />
+          {isDragActive ? (
+            <p>Drop the files here ...</p>
+          ) : (
+            <p>Drag 'n' drop some files here, or click to select files</p>
+          )}
+          <p className="text-sm text-gray-500">
+            Max {maxFiles} file(s), up to {maxFileSize / (1024 * 1024)}MB each.
+            Accepted types: {Object.values(acceptedFileTypes).flat().join(", ")}
+          </p>
+        </div>
+      )}
 
       {uploadError && (
         <p className="text-sm text-destructive">{uploadError}</p>
@@ -209,14 +267,14 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
               </li>
             ))}
             {currentUrls.map((url, index) => {
-              const fileName = url.split('/').pop() || `file-${index}`;
+              const fileName = url.split('/').pop() || `link-${index}`; // Use link-index for links
               return (
                 <li
                   key={`url-${index}`}
                   className="flex items-center justify-between rounded-md border p-2"
                 >
                   <div className="flex items-center gap-2">
-                    <FileIcon className="size-4 text-gray-500" />
+                    <LinkIcon className="size-4 text-gray-500" /> {/* Use LinkIcon for links */}
                     <a
                       href={url}
                       target="_blank"

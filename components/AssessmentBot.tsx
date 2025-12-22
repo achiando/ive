@@ -7,13 +7,13 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 interface AssessmentBotProps {
-  safetyTestId?: string;
-  equipmentId?: string; // equipmentId can still be optional for the bot's general use
+  safetyTestId: string | undefined;
+  equipmentId: string | undefined; // equipmentId can still be optional for the bot's general use
   manualUrl?: string | null;
   documentTitle: string;
   onComplete?: (equipmentId?: string) => void;
   // onRecordAttempt now expects equipmentId to be a string, matching the server action
-  onRecordAttempt: (safetyTestId: string, equipmentId: string, score: number, totalQuestions: number) => Promise<{ success: boolean; message: string }>;
+  onRecordAttempt: (safetyTestId: string | undefined, equipmentId: string | undefined, score: number, totalQuestions: number) => Promise<{ success: boolean; message: string }>;
   open: boolean; // Added open prop
 }
 
@@ -66,32 +66,27 @@ export function AssessmentBot({
   // Helper function to parse questions from Gemini's response
   const parseQuestions = (text: string): QuizQA[] => {
     const questions: QuizQA[] = [];
-    const questionBlocks = text.split(/\*\*Q\d+\.\s+/).filter(Boolean);
+    // Regex to capture each question block
+    const questionRegex = /\*\*Q(\d+)\.\s*([\s\S]*?)\n(A\.[\s\S]*?)\n(B\.[\s\S]*?)\n(C\.[\s\S]*?)\n(D\.[\s\S]*?)\n\*\*Answer:\s*([A-D])\*\*\s*([\s\S]*?(?=\*\*Q\d+\.|\n\n|$))/g;
 
-    questionBlocks.forEach(block => {
-      const lines = block.split('\n').filter(line => line.trim() !== '');
-      if (lines.length < 6) return; // Expect at least question, 4 options, answer, explanation
+    let match;
+    while ((match = questionRegex.exec(text)) !== null) {
+      const [, , questionText, optionA, optionB, optionC, optionD, answerLetter, explanationText] = match;
 
-      const question = lines[0].trim();
-      const options: string[] = [];
-      let answer = '';
-      let explanation = '';
+      const options = [
+        optionA.substring(2).trim(),
+        optionB.substring(2).trim(),
+        optionC.substring(2).trim(),
+        optionD.substring(2).trim(),
+      ];
 
-      for (let i = 1; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (line.startsWith('A.') || line.startsWith('B.') || line.startsWith('C.') || line.startsWith('D.')) {
-          options.push(line.substring(2).trim());
-        } else if (line.startsWith('**Answer:')) {
-          answer = line.replace('**Answer:', '').trim().charAt(0);
-        } else if (line.startsWith('Explanation:')) { // Handle alternative explanation format
-          explanation = line.replace('Explanation:', '').trim();
-        }
-      }
-
-      if (question && options.length === 4 && answer && explanation) {
-        questions.push({ question, options, answer, explanation });
-      }
-    });
+      questions.push({
+        question: questionText.trim(),
+        options: options,
+        answer: answerLetter.trim(),
+        explanation: explanationText.trim(),
+      });
+    }
     return questions;
   };
 
@@ -117,7 +112,7 @@ export function AssessmentBot({
     setError('');
 
     try {
-      const res = await fetch('/api/gemini-assessment', {
+      const res = await fetch('/api/openai-assessment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -127,7 +122,7 @@ export function AssessmentBot({
           documentTitle,
         }),
       });
-
+   
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
         setError(errorData.error || `Server error: ${res.status}`);
@@ -136,14 +131,16 @@ export function AssessmentBot({
       }
 
       const data = await res.json();
+   console.log('✅ Generated content from equipment details', data.result.choices[0].message);
 
-      if (!data.result?.candidates?.[0]?.content?.parts?.[0]?.text) {
+      if (!data.result?.choices?.[0]?.message?.content) {
         setError('Unable to generate assessment. The document may be empty or inaccessible.');
         setState('error');
         return;
       }
 
-      const content = data.result.candidates[0].content.parts[0].text;
+      const content = data.result.choices[0].message.content;
+      console.log('✅ Generated content from equipment details', content);
       const parsed = parseQuestions(content);
       if (!parsed || !Array.isArray(parsed) || parsed.length < 1) {
         setError('No valid questions could be generated from this SOP manual.');
@@ -205,7 +202,7 @@ export function AssessmentBot({
       setState('finished');
 
       // Record safety test attempt via prop
-      if (safetyTestId && equipmentId) { // Only record if both safetyTestId and equipmentId are available
+      if (safetyTestId || equipmentId) { // Record if either safetyTestId or equipmentId is available
         try {
           const result = await onRecordAttempt(safetyTestId, equipmentId, finalScore, questions.length);
           if (result.success) {
@@ -218,8 +215,8 @@ export function AssessmentBot({
           toast.error("Failed to record safety test attempt.");
         }
       } else {
-        console.warn("Skipping recording safety test attempt: safetyTestId or equipmentId is missing.");
-        toast.info("Assessment completed, but attempt not recorded as safety test ID or equipment ID was missing.");
+        console.warn("Skipping recording safety test attempt: Neither safetyTestId nor equipmentId is present.");
+        toast.info("Assessment completed, but attempt not recorded as neither safety test ID nor equipment ID was present.");
       }
     }
   };
@@ -232,7 +229,7 @@ export function AssessmentBot({
     setError('');
 
     try {
-      const res = await fetch('/api/gemini-assessment', {
+      const res = await fetch('/api/openai-assessment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

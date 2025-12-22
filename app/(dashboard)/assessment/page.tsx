@@ -49,28 +49,6 @@ export default async function AssessmentTestPage({ searchParams }: AssessmentTes
   }
 
 
-  // Conditional rendering: AssessmentBot requires a string equipmentId for recording attempts
-  if (!equipmentId) {
-    return (
-      <div className="container mx-auto p-8">
-        <h1 className="text-3xl font-bold mb-6">Assessment Bot Test Page</h1>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-          <p className="text-red-700">Equipment ID is required to start an assessment.</p>
-          <p className="text-red-700">Please provide an `equipmentId` in the URL search parameters.</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!equipmentId) {
-    return (
-      <div className="container mx-auto p-8">
-        <h1 className="text-3xl font-bold mb-6">Error</h1>
-        <p>Equipment ID is required to start the assessment.</p>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto p-8">
       <h1 className="text-3xl font-bold mb-6">Assessment Bot Test Page</h1>
