@@ -60,7 +60,7 @@ export function PendingPageClient({
 
   const handleSignOut = async () => {
     await signOut({ redirect: false });
-    router.push('/auth/login');
+    router.push('/login');
   };
 
   const toggleEventSelection = (event: Event) => {
