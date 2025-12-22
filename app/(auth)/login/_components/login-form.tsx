@@ -47,7 +47,7 @@ export default function LoginForm() {
       });
 
       if (result?.error) {
-        toast('Login Failed',{
+        toast('Login Failed', {
           description: "Invalid email or password",
         });
         return;
@@ -56,20 +56,38 @@ export default function LoginForm() {
       if (result?.ok) {
         const response = await fetch('/api/auth/session');
         const session = await response.json();
-        const userRole = session?.user?.role;
-        
+        const userStatus = session?.user?.status;
+
         // Get the appropriate redirect path based on role
-        toast("Login Successful",{
+        toast("Login Successful", {
           description: "Welcome back!",
         });
-        
+
         setTimeout(() => {
-            router.push('/dashboard');
-            router.refresh();
-          }, 1000);
+          // Redirect based on user status
+          switch (userStatus) {
+            case 'PENDING':
+              router.push('/pending');
+              break;
+            case 'REJECTED':
+              router.push('/rejected');
+              break;
+            case 'SUSPENDED':
+              router.push('/suspended');
+              break;
+            case 'APPROVED':
+              // For approved users, you can still use role-based redirection if needed
+              router.push('/dashboard');
+              break;
+            default:
+              // Fallback to dashboard for any unexpected status
+              router.push('/dashboard');
+          }
+          router.refresh();
+        }, 1000);
       }
     } catch (error) {
-      toast("Login Failed",{
+      toast("Login Failed", {
         description: "Something went wrong. Please try again.",
       });
     } finally {
@@ -128,21 +146,21 @@ export default function LoginForm() {
               <p className="text-sm text-red-600">{errors.password.message}</p>
             )}
           </div>
-          
+
           <div className="flex justify-end">
-            <Link 
-              href="/forgot-password" 
+            <Link
+              href="/forgot-password"
               className="text-sm text-primary hover:underline"
             >
               Forgot password?
             </Link>
           </div>
-          
+
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Sign In
           </Button>
-          
+
           <div className="text-center text-sm">
             Don't have an account?{' '}
             <Link href="/register" className="font-medium text-primary hover:underline">

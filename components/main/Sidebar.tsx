@@ -125,7 +125,7 @@ export function Sidebar() {
 
   const handleSignOut = async () => {
     await signOut({ redirect: false });
-    router.push('/auth/signin');
+    router.push('/login');
   };
 
   return (

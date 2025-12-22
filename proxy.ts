@@ -44,6 +44,7 @@ export async function proxy(request: NextRequest) {
 
   const userStatus = token.status as RegistrationStatus;
   const userRole = token.role as UserRole;
+  console.log(userRole, userStatus);
 
   // Handle different user statuses
   if (userStatus === RegistrationStatus.PENDING) {

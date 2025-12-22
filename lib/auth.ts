@@ -25,6 +25,15 @@ export const authOptions: NextAuthOptions = {
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
+          select: {
+            id: true,
+            email: true,
+            password: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+            status: true  // Make sure to explicitly select status
+          }
         });
 
         if (!user) {
@@ -79,8 +88,8 @@ export const authOptions: NextAuthOptions = {
     signIn: "/auth/login",
     error: "/auth/error",
   },
-// In your auth.ts file, update the JWT configuration
- jwt: {
+  // In your auth.ts file, update the JWT configuration
+  jwt: {
     secret: process.env.NEXTAUTH_SECRET,
     // encryption: true,
     // signingKey: '{"kty":"oct","kid":"--","alg":"HS256","k":"--"}',

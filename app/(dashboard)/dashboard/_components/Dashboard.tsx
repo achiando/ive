@@ -1,10 +1,10 @@
 "use client";
 
+import { Skeleton } from "@/components/ui/skeleton";
 import { UserRole } from "@prisma/client";
 import { AdminDashboard } from "./AdminDashboard";
 import { StudentDashboard } from "./StudentDashboard";
 import { TechnicianDashboard } from "./TechnicianDashboard";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface DashboardProps {
   userRole: UserRole;
@@ -43,6 +43,7 @@ export function Dashboard({ userRole, dashboardData, isLoading, currentUserId }:
     case UserRole.STUDENT:
     case UserRole.LECTURER:
     case UserRole.FACULTY:
+    case UserRole.OTHER:
       return <StudentDashboard dashboardData={dashboardData} isLoading={isLoading} />;
     case UserRole.TECHNICIAN:
     case UserRole.ADMIN_TECHNICIAN:

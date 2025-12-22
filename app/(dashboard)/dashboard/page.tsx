@@ -12,14 +12,20 @@ import { Dashboard } from "./_components/Dashboard";
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
 
+  console.log("session", session?.user?.status);
+
   if (!session?.user || !session.user.id || !session.user.role) {
-    redirect("/auth/login");
+    redirect("/login");
+  }
+
+  if (session?.user?.status === "PENDING") {
+    redirect("/pending");
   }
 
   const { id: userId, role: userRole } = session.user;
   let dashboardData: any = null;
-  let isLoading = false; // Data is fetched on server, so not "loading" in client sense
-
+  let isLoading = false; 
+  
   try {
     switch (userRole) {
       case UserRole.ADMIN:
@@ -29,6 +35,7 @@ export default async function DashboardPage() {
       case UserRole.STUDENT:
       case UserRole.LECTURER:
       case UserRole.FACULTY:
+      case UserRole.OTHER:
         dashboardData = await getStudentDashboardData(userId);
         break;
       case UserRole.TECHNICIAN:
