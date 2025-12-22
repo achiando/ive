@@ -6,7 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { updateUserSelections } from "@/lib/actions/user";
 import { cn } from "@/lib/utils";
 import { EquipmentWithRelations } from "@/types/equipment";
-import { Equipment, Event } from "@prisma/client";
+import { Event } from "@prisma/client";
 import { Calendar, CheckCircle2, ChevronDown, Clock, Cpu, Loader2, Lock, Plus, RefreshCw } from "lucide-react";
 import { Session } from "next-auth";
 import { signOut } from "next-auth/react";
@@ -185,10 +185,10 @@ export function PendingPageClient({
                                 <Calendar className="mr-2 h-4 w-4" />
                                 Add Events
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setViewMode('add-equipment')}>
+                            {/* <DropdownMenuItem onClick={() => setViewMode('add-equipment')}>
                                 <Cpu className="mr-2 h-4 w-4" />
                                 Add Equipment
-                            </DropdownMenuItem>
+                            </DropdownMenuItem> */}
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
@@ -223,7 +223,7 @@ export function PendingPageClient({
                     </div>
 
                     {/* Selected Equipment */}
-                    <div>
+                    {/* <div>
                         <h3 className="text-lg font-medium text-gray-900 mb-2">Selected Equipment</h3>
                         {selectedEquipment.length > 0 ? (
                             <div className="space-y-2">
@@ -243,7 +243,7 @@ export function PendingPageClient({
                         <Button variant="outline" className="mt-4 w-full" onClick={() => setViewMode('add-equipment')}>
                             <Plus className="mr-2 h-4 w-4" /> Add/View Equipment
                         </Button>
-                    </div>
+                    </div> */}
                 </div>
                 <div className="mt-6 flex justify-end">
                     <Button onClick={handleSaveSelections} disabled={isLoading}>

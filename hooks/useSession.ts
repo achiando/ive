@@ -1,4 +1,4 @@
-import { UserRole, RegistrationStatus } from '@prisma/client'; // Import RegistrationStatus
+import { RegistrationStatus, UserRole } from '@prisma/client'; // Import RegistrationStatus
 import { useSession as useNextAuthSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -23,7 +23,7 @@ type RoleCheck = {
 };
 
 export function useSession(required = false) {
-  const { data: session, status } = useNextAuthSession();
+  const { data: session } = useNextAuthSession();
   const router = useRouter();
   const [user, setUser] = useState<UserSession | null>(null);
   const [loading, setLoading] = useState(true);
@@ -81,7 +81,7 @@ export function useSession(required = false) {
   return {
     // User data
     user,
-    status,
+    status: session?.user.status,
     loading,
     isAuthenticated: !!user,
     
