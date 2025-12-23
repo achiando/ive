@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { FileIcon, UploadCloudIcon, XIcon, LinkIcon } from "lucide-react"; // Import LinkIcon
+import { FileIcon, LinkIcon, UploadCloudIcon, XIcon } from "lucide-react"; // Import LinkIcon
 import React, { useCallback, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Input } from "./input"; // Assuming Input component is available
@@ -40,7 +40,7 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   acceptedFileTypes: propAcceptedFileTypes,
   fileTypes,
   className,
-  showLinkTab = false, // Default to false
+  showLinkTab = true, // Default to false
 }) => {
   const acceptedFileTypes = React.useMemo(() => {
     if (propAcceptedFileTypes) return propAcceptedFileTypes;

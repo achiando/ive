@@ -268,6 +268,7 @@ model Equipment {
   consumables   Consumable[]     @relation("EquipmentConsumables")
   safetyTestAttempts SafetyTestAttempt[] // Add this relation
   users        User[]        @relation("UserEquipment")
+  generatedQuizzes GeneratedQuiz[]
 }
 
 model Maintenance {
@@ -428,6 +429,7 @@ model SafetyTest {
   createdAt               DateTime            @default(now())
   updatedAt               DateTime            @updatedAt
   attempts                SafetyTestAttempt[]
+  generatedQuizzes GeneratedQuiz[]
 }
 
 // Add this model
@@ -444,4 +446,18 @@ model SafetyTestAttempt {
   updatedAt    DateTime   @updatedAt
 
   @@unique([safetyTestId, userId, equipmentId, completedAt]) // A user can complete the same test for the same equipment multiple times
+}
+
+// New model for storing generated quiz questions
+model GeneratedQuiz {
+  id           String     @id @default(cuid())
+  safetyTestId String?
+  safetyTest   SafetyTest? @relation(fields: [safetyTestId], references: [id])
+  equipmentId  String?
+  equipment    Equipment?  @relation(fields: [equipmentId], references: [id])
+  questions    Json       // Store the array of QuizQA objects as JSON
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([safetyTestId, equipmentId]) // A unique quiz for a given safetyTestId and equipmentId combination
 }

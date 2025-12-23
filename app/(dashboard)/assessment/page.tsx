@@ -51,7 +51,6 @@ export default async function AssessmentTestPage({ searchParams }: AssessmentTes
 
   return (
     <div className="container mx-auto p-8">
-      <h1 className="text-3xl font-bold mb-6">Assessment Bot Test Page</h1>
       <AssessmentBot
         safetyTestId={safetyTestId}
         equipmentId={equipmentId}

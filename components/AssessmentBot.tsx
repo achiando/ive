@@ -122,25 +122,24 @@ export function AssessmentBot({
           documentTitle,
         }),
       });
-   
+   console.log('✅ Generated content from equipment details', res);
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
+        const errorData = await res.json().catch(() => ({ error: "An unknown error occurred." }));
         setError(errorData.error || `Server error: ${res.status}`);
         setState('error');
         return;
       }
 
       const data = await res.json();
-   console.log('✅ Generated content from equipment details', data.result.choices[0].message);
+      console.log('✅ Generated content from equipment details', data);
+      const content = data.result?.choices?.[0]?.message?.content;
 
-      if (!data.result?.choices?.[0]?.message?.content) {
-        setError('Unable to generate assessment. The document may be empty or inaccessible.');
+      if (!content) {
+        setError('Unable to generate assessment. The response was empty.');
         setState('error');
         return;
       }
-
-      const content = data.result.choices[0].message.content;
-      console.log('✅ Generated content from equipment details', content);
+      
       const parsed = parseQuestions(content);
       if (!parsed || !Array.isArray(parsed) || parsed.length < 1) {
         setError('No valid questions could be generated from this SOP manual.');
@@ -249,7 +248,7 @@ export function AssessmentBot({
       }
 
       const data = await res.json();
-      const responseText = data.result?.candidates?.[0]?.content?.parts?.[0]?.text;
+      const responseText = data.result?.choices?.[0]?.message?.content;
 
       if (!responseText) {
         setError('Unable to get clarification. Please try again.');
