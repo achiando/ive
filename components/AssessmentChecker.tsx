@@ -64,7 +64,7 @@ export function AssessmentChecker() {
     }
 
     checkAssessmentStatus();
-  }, [status, session?.user?.id, session?.user?.role]); // Add session.user.role to dependency array
+  }, [status, session?.user?.id, session?.user?.role]); 
 
   if (isLoading || status === "loading") {
     return null; // Or a loading spinner if desired

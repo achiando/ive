@@ -122,7 +122,7 @@ export function AssessmentBot({
           documentTitle,
         }),
       });
-   console.log('✅ Generated content from equipment details', res);
+
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({ error: "An unknown error occurred." }));
         setError(errorData.error || `Server error: ${res.status}`);
@@ -131,15 +131,15 @@ export function AssessmentBot({
       }
 
       const data = await res.json();
-      console.log('✅ Generated content from equipment details', data);
-      const content = data.result?.choices?.[0]?.message?.content;
 
+      const content = data.result?.choices?.[0]?.message?.content;
+      console.log('✅ Generated content from equipment details', content);
       if (!content) {
         setError('Unable to generate assessment. The response was empty.');
         setState('error');
         return;
       }
-      
+
       const parsed = parseQuestions(content);
       if (!parsed || !Array.isArray(parsed) || parsed.length < 1) {
         setError('No valid questions could be generated from this SOP manual.');
@@ -204,6 +204,7 @@ export function AssessmentBot({
       if (safetyTestId || equipmentId) { // Record if either safetyTestId or equipmentId is available
         try {
           const result = await onRecordAttempt(safetyTestId, equipmentId, finalScore, questions.length);
+          console.log('✅ Safety test attempt recorded successfully.', result);
           if (result.success) {
             toast.success(result.message);
           } else {
@@ -309,37 +310,35 @@ export function AssessmentBot({
             </div>
           </div>
           <Progress value={((current + 1) / questions.length) * 100} className="mb-6" />
-          
+
           <div className="bg-gray-50 p-4 rounded-lg mb-6">
             <p className="font-medium mb-4">{questions[current].question}</p>
-            
+
             <div className="space-y-3">
               {questions[current].options.map((option, index) => {
                 const letter = String.fromCharCode(65 + index);
                 const isSelected = userAnswer === letter;
                 const isCorrect = showExplanation && letter === questions[current].answer;
-                
+
                 return (
                   <button
                     key={letter}
-                    className={`w-full text-left p-3 rounded-md border transition-colors ${
-                      isSelected 
-                        ? 'bg-blue-50 border-blue-300' 
-                        : isCorrect 
-                          ? 'bg-green-50 border-green-300' 
+                    className={`w-full text-left p-3 rounded-md border transition-colors ${isSelected
+                        ? 'bg-blue-50 border-blue-300'
+                        : isCorrect
+                          ? 'bg-green-50 border-green-300'
                           : 'hover:bg-gray-100 border-gray-200'
-                    }`}
+                      }`}
                     onClick={() => !showExplanation && setUserAnswer(letter)}
                     disabled={showExplanation}
                   >
                     <div className="flex items-center">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-3 ${
-                        isSelected 
-                          ? 'bg-blue-100 text-blue-700' 
-                          : isCorrect 
-                            ? 'bg-green-100 text-green-700' 
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-3 ${isSelected
+                          ? 'bg-blue-100 text-blue-700'
+                          : isCorrect
+                            ? 'bg-green-100 text-green-700'
                             : 'bg-gray-100 text-gray-600'
-                      }`}>
+                        }`}>
                         {letter}
                       </div>
                       {option}
@@ -350,24 +349,23 @@ export function AssessmentBot({
             </div>
 
             {!showExplanation ? (
-              <Button 
-                onClick={submitAnswer} 
-                disabled={!userAnswer} 
+              <Button
+                onClick={submitAnswer}
+                disabled={!userAnswer}
                 className="w-full mt-6"
               >
                 Submit Answer
               </Button>
             ) : (
               <div className="mt-6 p-4 rounded-lg bg-blue-50 border border-blue-100">
-                <div className={`font-medium mb-2 ${
-                  userAnswer === questions[current].answer ? 'text-green-700' : 'text-red-700'
-                }`}>
+                <div className={`font-medium mb-2 ${userAnswer === questions[current].answer ? 'text-green-700' : 'text-red-700'
+                  }`}>
                   {userAnswer === questions[current].answer ? 'Correct!' : 'Incorrect'}
                 </div>
                 <p className="text-sm text-gray-700 mb-4">
                   {questions[current].explanation}
                 </p>
-                <Button 
+                <Button
                   onClick={nextQuestion}
                   className="w-full"
                 >
@@ -383,17 +381,17 @@ export function AssessmentBot({
         <div className="space-y-6">
           <div className="text-center">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg 
-                className="w-8 h-8 text-green-600" 
-                fill="none" 
-                stroke="currentColor" 
+              <svg
+                className="w-8 h-8 text-green-600"
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M5 13l4 4L19 7" 
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
                 />
               </svg>
             </div>
@@ -401,13 +399,13 @@ export function AssessmentBot({
             <p className="text-gray-600 mb-6">
               You scored {answers.filter(a => a.correct).length} out of {questions.length} questions correctly.
             </p>
-            
+
             <div className="mb-8">
               <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-green-500 transition-all duration-500" 
+                <div
+                  className="h-full bg-green-500 transition-all duration-500"
                   style={{
-                    width: `${(answers.filter(a => a.correct).length / questions.length) * 100}%` 
+                    width: `${(answers.filter(a => a.correct).length / questions.length) * 100}%`
                   }}
                 />
               </div>
@@ -425,25 +423,23 @@ export function AssessmentBot({
             <h3 className="font-semibold text-gray-900">Question Review</h3>
             <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
               {questions.map((q, i) => (
-                <div 
-                  key={i} 
-                  className={`p-3 rounded-lg border ${
-                    answers[i]?.correct 
-                      ? 'bg-green-50 border-green-200' 
+                <div
+                  key={i}
+                  className={`p-3 rounded-lg border ${answers[i]?.correct
+                      ? 'bg-green-50 border-green-200'
                       : 'bg-red-50 border-red-200'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className={`flex-shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center ${
-                      answers[i]?.correct ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                    }`}>
+                    <div className={`flex-shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center ${answers[i]?.correct ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      }`}>
                       {answers[i]?.correct ? '✓' : '✗'}
                     </div>
                     <div className="flex-1">
                       <p className="font-medium text-gray-900">{q.question}</p>
                       <div className="mt-2 text-sm text-gray-600">
                         <p className={answers[i]?.correct ? 'text-green-700' : 'text-red-700'}>
-                          {answers[i]?.correct 
+                          {answers[i]?.correct
                             ? 'You answered correctly'
                             : `Your answer: ${answers[i]?.user} | Correct: ${q.answer}`
                           }
@@ -471,8 +467,8 @@ export function AssessmentBot({
                 onKeyDown={(e) => e.key === 'Enter' && askClarification()}
                 disabled={loadingClarify}
               />
-              <Button 
-                onClick={askClarification} 
+              <Button
+                onClick={askClarification}
                 disabled={!clarification.trim() || loadingClarify}
                 variant="outline"
               >
@@ -492,7 +488,7 @@ export function AssessmentBot({
           </div>
 
           <div className="pt-4">
-            <Button 
+            <Button
               onClick={() => {
                 if (onComplete) onComplete(equipmentId);
                 setOpen(false);
