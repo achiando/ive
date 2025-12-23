@@ -13,7 +13,12 @@ export function ParticipantsDataTable({ data }: ParticipantsDataTableProps) {
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">Participants</h2>
-      <DataTable columns={columns} data={data} />
+      <DataTable 
+        columns={columns} 
+        data={data} 
+        filterColumnId="email" 
+        filterColumnPlaceholder="Search participants..."
+      />
     </div>
   );
 }

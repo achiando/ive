@@ -60,19 +60,12 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const handleStatusUpdate = async (status: ProjectStatus) => {
     setIsLoading(true);
     try {
-      const result = await updateProject(data.id, { status });
-      if (result.success) {
-        toast.success("Project status updated successfully.");
-        router.refresh();
-      } else {
-        toast.error("Failed to update project status.", {
-          description: result.message,
-        });
-      }
-    } catch (error: any) {
-      toast.error("Failed to update project status.", {
-        description: error.message,
-      });
+      await updateProject(data.id, { status });
+      toast.success("Project status updated successfully.");
+      router.refresh();
+    } catch (error) {
+      console.error("Failed to update project status:", error);
+      toast.error("Failed to update project status.");
     } finally {
       setIsLoading(false);
     }
@@ -82,9 +75,8 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const canDelete = (isCreator || isAdminOrManager); // Delete is always available for rejected projects
   const canChangeStatus = isAdminOrManager && data.status !== ProjectStatus.REJECTED;
   const canManageMembersAndDocuments = data.status !== ProjectStatus.REJECTED;
-  const canManageBookings = (data.status === ProjectStatus.APPROVED || data.status === ProjectStatus.COMPLETED) && data.status !== ProjectStatus.REJECTED;
-  const canMakeBooking = data.status === ProjectStatus.APPROVED && data.status !== ProjectStatus.REJECTED;
-
+  const canManageBookings = data.status === ProjectStatus.APPROVED || data.status === ProjectStatus.COMPLETED;
+  const canMakeBooking = data.status === ProjectStatus.APPROVED;
 
   return (
     <>
@@ -115,7 +107,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
               </span>
             </DropdownMenuItem>
           )}
-          
+
           {canManageMembersAndDocuments && (
             <>
               <DropdownMenuItem onClick={() => router.push(`/projects/${data.id}/members`)}>
@@ -152,7 +144,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
           {canChangeStatus && data.status === ProjectStatus.PENDING && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => handleStatusUpdate(ProjectStatus.APPROVED)}
                 className="text-green-600 hover:!text-green-600"
               >
@@ -160,7 +152,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
                   <Check className="h-4 w-4 mr-2" /> Approve
                 </span>
               </DropdownMenuItem>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => handleStatusUpdate(ProjectStatus.REJECTED)}
                 className="text-amber-600 hover:!text-amber-600"
               >
@@ -174,7 +166,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
           {canChangeStatus && data.status === ProjectStatus.APPROVED && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => handleStatusUpdate(ProjectStatus.ARCHIVED)}
                 className="text-orange-600 hover:!text-orange-600"
               >
@@ -188,7 +180,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
           {canDelete && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => setShowDeleteDialog(true)}
                 className="text-red-600 hover:!text-red-600"
               >
@@ -212,7 +204,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={handleDelete}
               className="bg-red-600 hover:bg-red-700"
               disabled={isLoading}

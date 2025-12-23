@@ -48,7 +48,7 @@ export function EventDetails({ event }: EventDetailsProps) {
         </div>
         <div>
           <h3 className="font-semibold">Created By</h3>
-          <p>{event.createdBy?.name}</p>
+          <p>{event.createdBy?.firstName + " " + event.createdBy?.lastName}</p>
         </div>
       </CardContent>
     </Card>

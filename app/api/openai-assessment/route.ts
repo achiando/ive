@@ -19,38 +19,61 @@ async function generateQuizWithAI(
 ): Promise<QuizQA[] | null> {
   let contentSource = '';
   
-  // 1. Resolve Content Source with proper fallbacks
-  try {
-    if (manualUrl) {
+  // Priority 1: Direct manualUrl from request
+  if (manualUrl) {
+    try {
       contentSource = await fetchManualText(manualUrl);
-      console.log('✅ Successfully fetched manual content.');
-    } else {
-      throw new Error("No manual URL provided, attempting fallbacks.");
+      console.log('✅ Successfully fetched manual content from request URL.');
+    } catch (error: any) {
+      console.warn(`⚠️ Manual from request URL failed: ${error.message}. Proceeding to fallbacks.`);
     }
-  } catch (error: any) {
-    console.warn(`⚠️ Manual source failed: ${error.message}. Attempting DB fallbacks.`);
-    if (equipmentId) {
-      try {
-        const equipment = await prisma.equipment.findUnique({ where: { id: equipmentId } });
-        console.log('✅ Successfully fetched equipment details.', equipment);
-        if (!equipment) throw new Error('Equipment not found for fallback.');
+  }
+
+  // Priority 2: Equipment - try its manual first, then its details
+  if (!contentSource && equipmentId) {
+    try {
+      const equipment = await prisma.equipment.findUnique({ where: { id: equipmentId } });
+      if (!equipment) throw new Error('Equipment not found.');
+
+      if (equipment.manualUrl) {
+        try {
+          contentSource = await fetchManualText(equipment.manualUrl);
+          console.log('✅ Successfully fetched manual content from equipment record.');
+        } catch (manualError: any) {
+          console.warn(`⚠️ Manual from equipment record failed: ${manualError.message}. Falling back to equipment details.`);
+        }
+      }
+
+      if (!contentSource) {
         contentSource = `Equipment Name: ${equipment.name}\nDescription: ${equipment.description || 'N/A'}`;
-        console.log('✅ Using equipment details as fallback content source.');
-      } catch (fallbackError: any) {
-        console.warn(`⚠️ Equipment fallback failed: ${fallbackError.message}.`);
+        console.log('✅ Using equipment name/description as content source.');
       }
+    } catch (error: any) {
+      console.warn(`⚠️ Equipment fallback failed entirely: ${error.message}.`);
     }
-    
-    if (!contentSource && safetyTestId) {
-      try {
-        const safetyTest = await prisma.safetyTest.findUnique({ where: { id: safetyTestId } });
-        console.log('✅ Successfully fetched safety test details.', safetyTest);
-        if (!safetyTest) throw new Error('Safety Test not found for fallback.');
-        contentSource = `Safety Test: ${safetyTest.name}\nDescription: ${safetyTest.description || 'N/A'}`;
-        console.log('✅ Using safety test details as fallback content source.');
-      } catch (fallbackError: any) {
-        console.warn(`⚠️ Safety Test fallback failed: ${fallbackError.message}.`);
+  }
+  
+  // Priority 3: Safety Test - try its manual first, then its details
+  if (!contentSource && safetyTestId) {
+    try {
+      const safetyTest = await prisma.safetyTest.findUnique({ where: { id: safetyTestId } });
+      if (!safetyTest) throw new Error('Safety Test not found.');
+
+      if (safetyTest.manualUrl) {
+        try {
+          contentSource = await fetchManualText(safetyTest.manualUrl);
+          console.log('✅ Successfully fetched manual content from safety test record.');
+        } catch (manualError: any) {
+          console.warn(`⚠️ Manual from safety test record failed: ${manualError.message}. Falling back to safety test details.`);
+        }
       }
+
+      if (!contentSource) {
+        contentSource = `Safety Test: ${safetyTest.name}\nDescription: ${safetyTest.description || 'N/A'}`;
+        console.log('✅ Using safety test name/description as content source.');
+      }
+    } catch (error: any) {
+      console.warn(`⚠️ Safety Test fallback failed entirely: ${error.message}.`);
     }
   }
 

@@ -41,7 +41,7 @@ export interface SafetyTestAttemptWithRelations {
   id: string;
   safetyTestId: string | null;
   userId: string;
-  equipmentId: string;
+  equipmentId: string | null;
   completedAt: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -55,7 +55,7 @@ export interface SafetyTestAttemptWithRelations {
     id: string;
     name: string;
     serialNumber: string | null;
-  };
+  } | null;
   safetyTest: {
     id: string;
     name: string;
