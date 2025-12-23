@@ -133,7 +133,7 @@ export function AssessmentBot({
       const data = await res.json();
 
       const content = data.result?.choices?.[0]?.message?.content;
-      console.log('✅ Generated content from equipment details', content);
+ 
       if (!content) {
         setError('Unable to generate assessment. The response was empty.');
         setState('error');

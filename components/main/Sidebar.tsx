@@ -25,7 +25,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user,status, loading, hasAnyRole, role } = useSession(true);
-  console.log("user", status);
+
   
   if (loading) {
     return (

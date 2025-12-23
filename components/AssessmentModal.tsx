@@ -28,12 +28,12 @@ export function AssessmentModal({
   documentTitle,
 }: AssessmentModalProps) {
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen}>
       <DialogContent className="sm:max-w-[800px] p-0">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle>Safety Assessment Required</DialogTitle>
           <DialogDescription>
-            Please complete this safety assessment to proceed.
+            Please complete this safety assessment to proceed. This window cannot be closed until the assessment is finished.
           </DialogDescription>
         </DialogHeader>
         <div className="p-6 pt-0">
@@ -44,7 +44,7 @@ export function AssessmentModal({
             documentTitle={documentTitle}
             onRecordAttempt={recordSafetyTestAttempt}
             open={true} // Always open when in the modal
-            onComplete={() => onClose()} // Close modal on completion
+            onComplete={() => onClose()} // This is now the only way to close the modal
           />
         </div>
       </DialogContent>
