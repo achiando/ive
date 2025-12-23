@@ -147,9 +147,34 @@ export function buildOpenAIPrompt(contentSource: string, safetyTestName: string,
     ? contentToUse.substring(0, 3000)
     : contentToUse;
 
+  const userPrompt = `Your task is to create a safety quiz with EXACTLY ${numQuestions} questions related to the safety test "${safetyTestName}".
+
+Follow these instructions:
+1.  First, try to create questions based on the provided "Content" below.
+2.  **If the "Content" is minimal, not useful, or missing, then create general safety questions about the topic "${safetyTestName}".** For example, if the topic is "Drill Press", ask about general workshop safety, securing workpieces, and using personal protective equipment.
+3.  You MUST follow this PRECISE format for each question:
+
+**Q1.** [Clear question text]
+A. [Option A text]
+B. [Option B text]
+C. [Option C text]
+D. [Option D text]
+**Answer: X** [Brief explanation why this is correct]
+
+(Continue for Q2, Q3, etc., up to ${numQuestions})
+
+IMPORTANT RULES:
+- Generate exactly ${numQuestions} questions.
+- Each question must have 4 options (A, B, C, D).
+- Mark the correct answer clearly with **Answer: [Letter]**.
+- Focus on practical safety procedures, hazards, and best practices.
+
+Content:
+${finalContent}`;
+
   return [
     { role: "system", content: systemMessage },
-    { role: "user", content: `Create EXACTLY ${numQuestions} safety quiz questions from the following content related to the safety test "${safetyTestName}". Follow this PRECISE format for each question:\n\n**Q1.** [Clear question text]\nA. [Option A text]\nB. [Option B text] \nC. [Option C text]\nD. [Option D text]\n**Answer: X** [Brief explanation why this is correct]\n\n**Q2.** [Next question...]\n\nIMPORTANT RULES:\n- Generate exactly ${numQuestions} questions, no more, no less\n- Each question must have exactly 4 options (A, B, C, D)\n- Mark the correct answer clearly with **Answer: [Letter]**\n- Focus on safety procedures, equipment operation, hazards, and best practices\n- Make questions practical and relevant to actual SOP usage\n\nContent: ${finalContent}` }
+    { role: "user", content: userPrompt }
   ];
 }
 
@@ -177,7 +202,7 @@ export async function callOpenAIWithRetry(messages: Array<{ role: string; conten
         presence_penalty: 0,
       })
     });
-    console.log('✅ OpenAI API response received', openaiRes);
+    // console.log('✅ OpenAI API response received', openaiRes);
 
     if (!openaiRes.ok) {
       const errorText = await openaiRes.text();
