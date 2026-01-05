@@ -2,14 +2,13 @@
 
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getEquipmentById } from "@/lib/actions/equipment"; // Import getEquipmentById
 import { deleteSafetyTest } from "@/lib/actions/safety-test";
 import { SafetyTestWithRelations } from "@/types/safety-test";
-import { ManualType, SafetyTestFrequency, UserRole } from "@prisma/client";
-import { ArrowLeft, Plus, Search } from "lucide-react";
+import { ManualType, SafetyTestFrequency } from "@prisma/client";
+import { ArrowLeft, Plus } from "lucide-react";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -20,11 +19,6 @@ interface SopPageClientProps {
   equipmentId?: string; // New optional prop
 }
 
-const isAdminOrManager = (role: UserRole) => {
-  // Check if the role is either 'TECHNICIAN' or 'LECTURER'
-  return role === 'TECHNICIAN' || role === 'LECTURER';
-};
-
 export function SopPageClient({ initialSafetyTests, equipmentId }: SopPageClientProps) {
   const router = useRouter();
   const { data: session } = useSession();
@@ -34,8 +28,13 @@ export function SopPageClient({ initialSafetyTests, equipmentId }: SopPageClient
   const [selectedManualType, setSelectedManualType] = useState<ManualType | "all">("all");
   const [equipmentTypes, setEquipmentTypes] = useState<string[]>([]); // State to store equipment types
 
-  const userRole = session?.user?.role;
-  const canManageSOPs = userRole ? isAdminOrManager(userRole) : false;
+
+  const canManageSOPs = [
+    'TECHNICIAN',
+    'ADMIN_TECHNICIAN',
+    'LAB_MANAGER',
+    'ADMIN'
+  ].includes(session?.user?.role || '');
 
   useEffect(() => {
     if (equipmentId) {
@@ -103,57 +102,33 @@ export function SopPageClient({ initialSafetyTests, equipmentId }: SopPageClient
 
   return (
     <>
-      <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-4 py-4">
-         <Button variant="ghost" onClick={() => window.history.back()} className="mr-2">
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="relative w-full md:max-w-sm">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Search SOPs..."
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            className="pl-10 w-full"
-          />
-        </div>
-        <div className="flex space-x-2">
-          {/* Frequency Filter */}
-          <Select value={selectedFrequency} onValueChange={(value: SafetyTestFrequency | "all") => setSelectedFrequency(value)}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by Frequency" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Frequencies</SelectItem>
-              {Object.values(SafetyTestFrequency).map((freq) => (
-                <SelectItem key={freq} value={freq}>
-                  {freq.replace(/_/g, ' ')}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
 
-          {/* Manual Type Filter */}
-          <Select value={selectedManualType} onValueChange={(value: ManualType | "all") => setSelectedManualType(value)}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by Manual Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Manual Types</SelectItem>
-              {Object.values(ManualType).map((type) => (
-                <SelectItem key={type} value={type}>
-                  {type}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {canManageSOPs && (
-            <Button onClick={() => router.push('/sop/new')}>
-              <Plus className="mr-2 h-4 w-4" /> Add SOP
-            </Button>
-          )}
+      <div className="flex justify-between">
+        <div className="flex items-center">
+          <Button variant="ghost" onClick={() => window.history.back()} className="mr-2">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+            SOP Manuals
+          </h1>
         </div>
+
+        {
+          canManageSOPs && (
+            <div className=" py-4">
+
+              <Button asChild>
+                <Link href="/sop/new">
+                  <Plus className="-ml-1 mr-2 h-5 w-5" />
+                  Add SOP Manual
+                </Link>
+              </Button>
+
+            </div>
+          )
+        }
       </div>
+
 
       <DataTable
         columns={columns}
@@ -162,7 +137,7 @@ export function SopPageClient({ initialSafetyTests, equipmentId }: SopPageClient
         filterColumnPlaceholder="Filter by name..."
         meta={{
           onEdit: (safetyTest: SafetyTestWithRelations) => {
-            router.push(`/dashboard/sop/${safetyTest.id}/edit`);
+            router.push(`/sop/${safetyTest.id}/edit`);
           },
           onDelete: handleDelete
         }}

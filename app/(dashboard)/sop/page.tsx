@@ -1,7 +1,4 @@
-import { Button } from "@/components/ui/button";
 import { getSafetyTests } from "@/lib/actions/safety-test";
-import { Plus } from "lucide-react";
-import Link from "next/link";
 import { SopPageClient } from "./_components/SopPageClient";
 
 export default async function SopPage() {
@@ -9,22 +6,6 @@ export default async function SopPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-          SOP Manuals
-        </h1>
-        <div className="flex justify-end items-center py-4">
-          <div className='flex space-x-2'>
-            <Button asChild>
-              <Link href="/sop/new">
-                <Plus className="-ml-1 mr-2 h-5 w-5" />
-                Add SOP Manual
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </div>
-
       <SopPageClient initialSafetyTests={safetyTests} />
     </div>
   );

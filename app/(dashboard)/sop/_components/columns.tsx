@@ -1,21 +1,13 @@
 "use client"
 
-import { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown, MoreHorizontal, FileText, Video, Link as LinkIcon, Trash, Edit } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Badge } from "@/components/ui/badge"
 import { SafetyTestWithRelations } from "@/types/safety-test"
-import { UserRole, SafetyTestFrequency, ManualType } from "@prisma/client"
+import { ManualType } from "@prisma/client"
+import { ColumnDef } from "@tanstack/react-table"
 import { format } from "date-fns"
+import { ArrowUpDown, FileText, Link as LinkIcon, Video } from "lucide-react"
 import Link from "next/link"
 import { CellAction } from "./cell-action"
 
@@ -56,7 +48,7 @@ export const columns: ColumnDef<SafetyTestWithRelations>[] = [
       )
     },
     cell: ({ row }) => (
-      <Link href={`/dashboard/sop/${row.original.id}`} className="text-blue-600 hover:underline">
+      <Link href={`/sop/${row.original.id}/view`} className="text-blue-600 hover:underline">
         {row.original.name}
       </Link>
     ),
