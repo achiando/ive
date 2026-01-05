@@ -40,7 +40,7 @@
 - **Implemented SOP (Safety Test) Feature:**
     - **Schema:** Added `SafetyTestFrequency` enum, `SafetyTest` model (with `manualUrl`, `manualType`), and `SafetyTestAttempt` model to `prisma/schema.prisma`.
     - **Types:** Created `types/safety-test.ts` with `SafetyTestFormValues`, `GetSafetyTestsParams`, `SafetyTestWithRelations`, `SafetyTestAttemptWithRelations`.
-    - **Server Actions:** Created `lib/actions/safety-test.ts` with CRUD operations for `SafetyTest` and `recordSafetyTestAttempt`.
+    - **Server Actions:** Created `lib/actions/safety-test.ts` with CRUD operations for `SafetyTest` and `recordSafetyTestAttempt`. Implemented explicit null handling for `safetyTestId` and `equipmentId`, and added validation for `userId` to prevent null constraint violations.
     - **UI Structure:**
         - Created `app/(dashboard)/sop/page.tsx` (SOP List Page).
         - Created `app/(dashboard)/sop/[id]/page.tsx` (SOP Create/Edit Page).
@@ -65,7 +65,7 @@
     - **`app/(dashboard)/sop/[id]/page.tsx`**: Refactored to be a Server Component, fetching data and passing it to `SopFormClient`.
     - **`app/(dashboard)/sop/_components/SopFormClient.tsx`**: Created as a new Client Component to handle form logic.
     - **`app/(dashboard)/sop/_components/SOPForm.tsx`**: Modified to be a purely presentational component, accepting `onSubmitAction` and callbacks as props.
-    - **`components/AssessmentBot.tsx`**: Fixed JSX parsing error in `formatClarificationResponse` function.
+    - **`components/AssessmentBot.tsx`**: Modified `parseQuestions` function to remove all occurrences of asterisks from the question text.
 - **Implemented Cloudinary Multi-File Upload Component:**
     -   Created API route `app/api/cloudinary-upload/route.ts` for secure multi-file uploads to Cloudinary.
     -   Developed reusable `components/ui/multi-file-upload.tsx` component for file selection, preview, upload progress, and returning Cloudinary URLs.
@@ -88,4 +88,5 @@
 - **Implemented Role-Based Equipment Visibility and Column Hiding**:
     - Modified `app/(dashboard)/equipments/_components/columns.tsx` to accept `userRole` and conditionally display `serialNumber`, `dailyCapacity`, `createdAt`, and `actions` columns only for `ADMIN` or `TECHNICIAN` roles.
     - Modified `app/(dashboard)/equipments/page.tsx` to fetch `userRole` from the session and filter out equipment with `IN_USE`, `OUT_OF_SERVICE`, and `MAINTENANCE` statuses for non-admin/technician users.
-    - Modified `app/(dashboard)/equipments/_components/EquipmentsPageClient.tsx` to accept and pass the `userRole` prop to `getColumns` and `EquipmentCard`.
+    - Modified `app/(dashboard)/equipments/_components/EquipmentsPageClient.tsx` to accept and pass the `userRole` prop to `getColumns` and `EquipmentCard`.## [Task Completed] - Asterisks removed from question text in AssessmentBot.tsx
+## [Task Completed] - Null constraint violation in recordSafetyTestAttempt fixed and TASK.md updated

@@ -43,6 +43,11 @@ export function AssessmentBot({
   const [error, setError] = useState('');
   const [open, setOpen] = useState(true);
 
+  console.log("Safety Test ID:", safetyTestId);
+  console.log("Equipment ID:", equipmentId);
+  console.log("Manual URL:", manualUrl);
+  console.log("Document Title:", documentTitle);
+
   useEffect(() => {
     if (open && state === 'idle') {
       startQuizInternal();
@@ -81,7 +86,7 @@ export function AssessmentBot({
       ];
 
       questions.push({
-        question: questionText.trim(),
+        question: questionText.trim().replace(/\*\*/g, ''), // Remove all occurrences of **
         options: options,
         answer: answerLetter.trim(),
         explanation: explanationText.trim(),

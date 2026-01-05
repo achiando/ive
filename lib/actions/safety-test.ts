@@ -3,9 +3,9 @@
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
-    GetSafetyTestsParams,
-    SafetyTestFormValues,
-    SafetyTestWithRelations
+  GetSafetyTestsParams,
+  SafetyTestFormValues,
+  SafetyTestWithRelations
 } from "@/types/safety-test";
 import { UserRole } from "@prisma/client";
 import { getServerSession } from "next-auth";
@@ -260,18 +260,33 @@ export async function recordSafetyTestAttempt(
     return { success: false, message: "Unauthorized: You must be logged in to record a safety test attempt." };
   }
 
-  if (!safetyTestId && !equipmentId) {
-    return { success: false, message: "Cannot record safety test attempt: Either safetyTestId or equipmentId must be provided." };
+  if ((!safetyTestId || safetyTestId.trim() === '') && (!equipmentId || equipmentId.trim() === '')) {
+    return { success: false, message: "Cannot record safety test attempt: Either safetyTestId or equipmentId must be provided and cannot be empty." };
   }
 
   const userId = session.user.id;
+  console.log("User ID:", userId);
+  if (!userId || userId.trim() === '') {
+    return { success: false, message: "Cannot record safety test attempt: User ID is missing or invalid." };
+  }
+  
+  // Ensure at least one of the required fields is provided and not empty
+  const hasValidSafetyTestId = safetyTestId && safetyTestId.trim() !== '';
+  const hasValidEquipmentId = equipmentId && equipmentId.trim() !== '';
+  console.log("Safety Test ID:", safetyTestId);
+  console.log("Equipment ID:", equipmentId);
+  console.log("Has valid Safety Test ID:", hasValidSafetyTestId);
+  console.log("Has valid Equipment ID:", hasValidEquipmentId);
+  if (!hasValidSafetyTestId && !hasValidEquipmentId) {
+    return { success: false, message: "Cannot record safety test attempt: Either safetyTestId or equipmentId must be provided and cannot be empty." };
+  }
 
   try {
     await prisma.safetyTestAttempt.create({
       data: {
-        safetyTestId,
+        safetyTestId: hasValidSafetyTestId ? safetyTestId : null,
         userId,
-        equipmentId,
+        equipmentId: hasValidEquipmentId ? equipmentId : null,
         completedAt: new Date(),
       },
     });
