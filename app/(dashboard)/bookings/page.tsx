@@ -1,10 +1,10 @@
-import { getServerSession } from "next-auth";
+import { deleteBooking, getBookingAnalytics, getBookings, updateBookingStatus } from "@/lib/actions/booking";
 import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
-import { getBookings, updateBookingStatus, deleteBooking, getBookingAnalytics } from "@/lib/actions/booking";
-import { BookingsPageClient } from "./_components/BookingsPageClient";
-import { BookingStatus, BookingAnalyticsData } from "@/types/booking"; // Import BookingStatus enum and BookingAnalyticsData
+import { BookingAnalyticsData, BookingStatus } from "@/types/booking"; // Import BookingStatus enum and BookingAnalyticsData
+import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { BookingsPageClient } from "./_components/BookingsPageClient";
 
 interface BookingsPageProps {
   searchParams: {
@@ -21,11 +21,12 @@ export default async function BookingsPage({ searchParams }: BookingsPageProps) 
   if (!session) {
     redirect("/login");
   }
+  const searchPage = await searchParams;
 
-  const page = parseInt(searchParams.page || '1');
-  const pageSize = parseInt(searchParams.pageSize || '10');
-  const status = searchParams.status || undefined;
-  const searchQuery = searchParams.search || undefined;
+  const page = parseInt(searchPage.page || '1');
+  const pageSize = parseInt(searchPage.pageSize || '10');
+  const status = searchPage.status || undefined;
+  const searchQuery = searchPage.search || undefined;
 
   const { data: bookings, total } = await getBookings({
     userId: session.user.id, // Fetch bookings for the current user
