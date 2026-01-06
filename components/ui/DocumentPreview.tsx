@@ -27,6 +27,7 @@ const getYouTubeVideoId = (url: string): string | null => {
 export function DocumentPreview({ url, onUserInteraction }: DocumentPreviewProps) {
   const youtubePlayerRef = useRef<any>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const linkRef = useRef<HTMLAnchorElement>(null);
   const [youTubeApiReady, setYouTubeApiReady] = useState(false);
 
   useEffect(() => {
@@ -165,7 +166,7 @@ export function DocumentPreview({ url, onUserInteraction }: DocumentPreviewProps
   return (
     <div className="flex items-center justify-center h-full bg-gray-100 text-gray-500 rounded-lg min-h-[60vh]">
       <a
-        ref={iframeRef as React.RefObject<HTMLAnchorElement>} // Cast ref for generic link
+        ref={linkRef}
         href={url}
         target="_blank"
         rel="noopener noreferrer"
