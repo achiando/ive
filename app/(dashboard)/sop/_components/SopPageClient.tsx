@@ -59,7 +59,7 @@ export function SopPageClient({ initialSafetyTests, equipmentId }: SopPageClient
       setEquipmentTypes([]);
     }
   }, [equipmentId]);
-  console.log("equipmentTypes", equipmentTypes);
+
 
   const filteredSafetyTests = useMemo(() => {
     let currentTests = safetyTests;
@@ -89,8 +89,6 @@ export function SopPageClient({ initialSafetyTests, equipmentId }: SopPageClient
 
     return currentTests;
   }, [safetyTests, searchTerm, selectedFrequency, selectedManualType, equipmentId, equipmentTypes]);
-
-  console.log("SopPageClient: filteredSafetyTests", filteredSafetyTests); // Add this line
 
   const handleDelete = async (id: string) => {
     try {
