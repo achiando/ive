@@ -2,19 +2,19 @@
 
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { extractTextFromDocument } from "@/lib/utils/document-text-extractor";
 import { AlertCircle, Bot, Loader2, Send } from "lucide-react";
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 interface AssessmentBotProps {
   safetyTestId: string | undefined;
-  equipmentId: string | undefined; // equipmentId can still be optional for the bot's general use
+  equipmentId: string | undefined; 
   manualUrl?: string | null;
   documentTitle: string;
   onComplete?: (equipmentId?: string) => void;
-  // onRecordAttempt now expects equipmentId to be a string, matching the server action
   onRecordAttempt: (safetyTestId: string | undefined, equipmentId: string | undefined, score: number, totalQuestions: number) => Promise<{ success: boolean; message: string }>;
-  open: boolean; // Added open prop
+  open: boolean;
 }
 
 type QuizState = 'idle' | 'loading' | 'quiz' | 'finished' | 'error';
@@ -28,6 +28,7 @@ export function AssessmentBot({
   documentTitle,
   onComplete,
   onRecordAttempt,
+  open,
 }: AssessmentBotProps) {
   const [state, setState] = useState<QuizState>('idle');
   const [questions, setQuestions] = useState<QuizQA[]>([]);
@@ -36,17 +37,10 @@ export function AssessmentBot({
   const [userAnswer, setUserAnswer] = useState('');
   const [showExplanation, setShowExplanation] = useState(false);
   const [score, setScore] = useState<number | null>(null);
-  const [feedback, setFeedback] = useState<string>('');
   const [clarification, setClarification] = useState('');
   const [clarifyResponse, setClarifyResponse] = useState('');
   const [loadingClarify, setLoadingClarify] = useState(false);
   const [error, setError] = useState('');
-  const [open, setOpen] = useState(true);
-
-  console.log("Safety Test ID:", safetyTestId);
-  console.log("Equipment ID:", equipmentId);
-  console.log("Manual URL:", manualUrl);
-  console.log("Document Title:", documentTitle);
 
   useEffect(() => {
     if (open && state === 'idle') {
@@ -60,34 +54,27 @@ export function AssessmentBot({
       setUserAnswer('');
       setShowExplanation(false);
       setScore(null);
-      setFeedback('');
       setClarification('');
       setClarifyResponse('');
       setLoadingClarify(false);
       setError('');
     }
-  }, [open]);
+  }, [open, state]);
 
-  // Helper function to parse questions from Gemini's response
   const parseQuestions = (text: string): QuizQA[] => {
     const questions: QuizQA[] = [];
-    // Regex to capture each question block
     const questionRegex = /\*\*Q(\d+)\.\s*([\s\S]*?)\n(A\.[\s\S]*?)\n(B\.[\s\S]*?)\n(C\.[\s\S]*?)\n(D\.[\s\S]*?)\n\*\*Answer:\s*([A-D])\*\*\s*([\s\S]*?(?=\*\*Q\d+\.|\n\n|$))/g;
-
     let match;
     while ((match = questionRegex.exec(text)) !== null) {
       const [, , questionText, optionA, optionB, optionC, optionD, answerLetter, explanationText] = match;
-
-      const options = [
-        optionA.substring(2).trim(),
-        optionB.substring(2).trim(),
-        optionC.substring(2).trim(),
-        optionD.substring(2).trim(),
-      ];
-
       questions.push({
-        question: questionText.trim().replace(/\*\*/g, ''), // Remove all occurrences of **
-        options: options,
+        question: questionText.trim().replace(/\*\*/g, ''),
+        options: [
+          optionA.substring(2).trim(),
+          optionB.substring(2).trim(),
+          optionC.substring(2).trim(),
+          optionD.substring(2).trim(),
+        ],
         answer: answerLetter.trim(),
         explanation: explanationText.trim(),
       });
@@ -95,21 +82,18 @@ export function AssessmentBot({
     return questions;
   };
 
-  // Helper function to format clarification response
   const formatClarificationResponse = (text: string): string => {
-    // Basic markdown to HTML conversion for display
     return text
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
-      .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
-      .replace(/^- (.*)$/gm, '<li>$1</li>') // List items
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/^- (.*)$/gm, '<li>$1</li>')
       .replace(/(\n|^)(#+)\s*(.*)/g, (match, newline, hashes, content) => {
         const level = hashes.length;
         return `${newline}<h${level}>${content}</h${level}>`;
-      }) // Headers
-      .replace(/\n/g, '<br />'); // Newlines
+      })
+      .replace(/\n/g, '<br />');
   };
 
-  // Internal quiz starter with retry logic
   const startQuizInternal = async (retryCount = 0) => {
     setState('loading');
     setQuestions([]);
@@ -117,13 +101,18 @@ export function AssessmentBot({
     setError('');
 
     try {
+      if (!manualUrl) {
+        throw new Error("No manual URL provided to extract content.");
+      }
+      const manualText = await extractTextFromDocument(manualUrl);
+
       const res = await fetch('/api/openai-assessment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           safetyTestId,
           equipmentId,
-          manualUrl,
+          manualText,
           documentTitle,
         }),
       });
@@ -136,9 +125,8 @@ export function AssessmentBot({
       }
 
       const data = await res.json();
-
       const content = data.result?.choices?.[0]?.message?.content;
- 
+
       if (!content) {
         setError('Unable to generate assessment. The response was empty.');
         setState('error');
@@ -146,7 +134,12 @@ export function AssessmentBot({
       }
 
       const parsed = parseQuestions(content);
-      if (!parsed || !Array.isArray(parsed) || parsed.length < 1) {
+      if (!parsed || parsed.length < 1) {
+        if (retryCount < 2) {
+          console.log("Parsing failed or returned no questions, retrying...");
+          await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+          return startQuizInternal(retryCount + 1);
+        }
         setError('No valid questions could be generated from this SOP manual.');
         setState('error');
         return;
@@ -154,27 +147,6 @@ export function AssessmentBot({
 
       setQuestions(parsed);
       setState('quiz');
-      setError('');
-      setCurrent(0);
-      setAnswers([]);
-      setScore(null);
-      setFeedback('');
-      setShowExplanation(false);
-      setUserAnswer('');
-      setClarification('');
-      setClarifyResponse('');
-      setLoadingClarify(false);
-
-      if (parsed.length < 3 && retryCount < 2) {
-        console.log(`Only ${parsed.length} questions parsed, retrying...`);
-        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
-        return startQuizInternal(retryCount + 1);
-      }
-
-      if (parsed.length < 3) {
-        throw new Error('Unable to generate sufficient questions. The document may be too short.');
-      }
-
     } catch (e: any) {
       console.error('Quiz generation error:', e);
       setError(e.message || 'An error occurred while generating the quiz.');
@@ -184,10 +156,8 @@ export function AssessmentBot({
 
   const submitAnswer = () => {
     if (!userAnswer) return;
-
     const currentQuestion = questions[current];
     const isCorrect = userAnswer === currentQuestion.answer;
-
     setAnswers(prev => [...prev, { user: userAnswer, correct: isCorrect }]);
     setShowExplanation(true);
   };
@@ -195,21 +165,17 @@ export function AssessmentBot({
   const nextQuestion = async () => {
     setShowExplanation(false);
     setUserAnswer('');
-    setClarifyResponse(''); // Clear clarification response for next question
+    setClarifyResponse('');
 
     if (current < questions.length - 1) {
       setCurrent(prev => prev + 1);
     } else {
-      // Quiz finished
       const finalScore = answers.filter(a => a.correct).length;
       setScore(finalScore);
       setState('finished');
-
-      // Record safety test attempt via prop
-      if (safetyTestId || equipmentId) { // Record if either safetyTestId or equipmentId is available
+      if (safetyTestId || equipmentId) {
         try {
           const result = await onRecordAttempt(safetyTestId, equipmentId, finalScore, questions.length);
-          console.log('✅ Safety test attempt recorded successfully.', result);
           if (result.success) {
             toast.success(result.message);
           } else {
@@ -219,53 +185,35 @@ export function AssessmentBot({
           console.error("Failed to record safety test attempt:", error);
           toast.error("Failed to record safety test attempt.");
         }
-      } else {
-        console.warn("Skipping recording safety test attempt: Neither safetyTestId nor equipmentId is present.");
-        toast.info("Assessment completed, but attempt not recorded as neither safety test ID nor equipment ID was present.");
       }
     }
   };
 
   const askClarification = async () => {
-    if (!clarification.trim()) return;
-
+    if (!clarification.trim() || !manualUrl) return;
     setLoadingClarify(true);
     setClarifyResponse('');
     setError('');
-
     try {
+      const manualText = await extractTextFromDocument(manualUrl);
       const res = await fetch('/api/openai-assessment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           safetyTestId,
           equipmentId,
-          manualUrl,
+          manualText,
           documentTitle,
           userMessage: clarification,
         }),
       });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        setError(errorData.error || `Server error: ${res.status}`);
-        setLoadingClarify(false);
-        return;
-      }
-
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
       const responseText = data.result?.choices?.[0]?.message?.content;
-
-      if (!responseText) {
-        setError('Unable to get clarification. Please try again.');
-        setLoadingClarify(false);
-        return;
-      }
-
+      if (!responseText) throw new Error('Unable to get clarification.');
       setClarifyResponse(responseText);
       setClarification('');
     } catch (e: any) {
-      console.error('Clarification error:', e);
       setError(e.message || 'An error occurred while getting clarification.');
     } finally {
       setLoadingClarify(false);
@@ -402,7 +350,7 @@ export function AssessmentBot({
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Assessment Complete!</h2>
             <p className="text-gray-600 mb-6">
-              You scored {answers.filter(a => a.correct).length} out of {questions.length} questions correctly.
+              You scored {score} out of {questions.length} questions correctly.
             </p>
 
             <div className="mb-8">
@@ -410,14 +358,14 @@ export function AssessmentBot({
                 <div
                   className="h-full bg-green-500 transition-all duration-500"
                   style={{
-                    width: `${(answers.filter(a => a.correct).length / questions.length) * 100}%`
+                    width: `${(score! / questions.length) * 100}%`
                   }}
                 />
               </div>
               <div className="flex justify-between text-sm text-gray-600 mt-2">
                 <span>0%</span>
                 <span>
-                  {Math.round((answers.filter(a => a.correct).length / questions.length) * 100)}%
+                  {Math.round((score! / questions.length) * 100)}%
                 </span>
                 <span>100%</span>
               </div>
@@ -496,7 +444,7 @@ export function AssessmentBot({
             <Button
               onClick={() => {
                 if (onComplete) onComplete(equipmentId);
-                setOpen(false);
+                // setOpen(false); // This would close the modal, which is handled by the parent
               }}
               className="w-full"
             >

@@ -1,27 +1,14 @@
 "use client";
 
-import { AssessmentModal } from "@/components/AssessmentModal";
-import {
-  getRandomAssessmentDetails,
-  hasUserTakenAnyAssessment,
-} from "@/lib/actions/user-assessment";
+import { hasUserTakenAnyAssessment } from "@/lib/actions/user-assessment";
 import { UserRole } from "@prisma/client";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
-
-interface AssessmentDetails {
-  safetyTestId?: string;
-  equipmentId?: string;
-  manualUrl?: string | null;
-  documentTitle: string;
-}
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export function AssessmentChecker() {
   const { data: session, status } = useSession();
-  const [showModal, setShowModal] = useState(false);
-  const [assessmentDetails, setAssessmentDetails] =
-    useState<AssessmentDetails | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     async function checkAssessmentStatus() {
@@ -39,49 +26,28 @@ export function AssessmentChecker() {
         session.user.role &&
         allowedRoles.includes(session.user.role)
       ) {
-        setIsLoading(true);
         try {
           const hasTakenAssessment = await hasUserTakenAnyAssessment();
           if (!hasTakenAssessment) {
-            const details = await getRandomAssessmentDetails();
-            setAssessmentDetails(details);
-            setShowModal(true);
+            // If no assessment has been taken, redirect to the specific SOP page.
+            router.push('/sop/sop-1756819829791/view');
           }
         } catch (error) {
           console.error(
-            "Failed to check assessment status or get random details:",
+            "Failed to check assessment status:",
             error
           );
-        } finally {
-          setIsLoading(false);
         }
-      } else if (
-        status === "unauthenticated" ||
-        (session?.user?.role && !allowedRoles.includes(session.user.role))
-      ) {
-        setIsLoading(false);
       }
     }
 
-    checkAssessmentStatus();
-  }, [status, session?.user?.id, session?.user?.role]); 
+    // Only run the check if the session is authenticated.
+    if (status === "authenticated") {
+      checkAssessmentStatus();
+    }
+  }, [status, session?.user?.id, session?.user?.role, router]);
 
-  if (isLoading || status === "loading") {
-    return null; // Or a loading spinner if desired
-  }
-
-  return (
-    <>
-      {assessmentDetails && (
-        <AssessmentModal
-          isOpen={showModal}
-          onClose={() => setShowModal(false)}
-          safetyTestId={assessmentDetails.safetyTestId}
-          equipmentId={assessmentDetails.equipmentId}
-          manualUrl={assessmentDetails.manualUrl}
-          documentTitle={assessmentDetails.documentTitle}
-        />
-      )}
-    </>
-  );
+  // This component does not render anything itself. It only handles the redirect logic.
+  return null;
 }
+
