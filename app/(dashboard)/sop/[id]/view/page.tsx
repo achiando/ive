@@ -3,9 +3,10 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DocumentPreview } from '@/components/ui/DocumentPreview';
 import { getSafetyTestById } from '@/lib/actions/safety-test';
 import { SafetyTestWithRelations } from '@/types/safety-test';
-import { ManualType, UserRole } from '@prisma/client';
+import { UserRole } from '@prisma/client';
 import { format } from 'date-fns';
 import { AlertCircle, ArrowLeft, CalendarDays, ExternalLink, FileText, Shield, Users } from 'lucide-react';
 import { useSession } from 'next-auth/react';
@@ -25,11 +26,8 @@ export default function SopViewPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Check if this is a first-login flow
   const isFirstLogin = searchParams.get('firstLogin') === 'true';
   const isStudent = session?.user?.role === UserRole.STUDENT;
-  // For first login safety flow, we might have a specific safetyTestId that's mandatory
-  // For now, let's assume any safety test can be part of a first login flow if the param is present
   const isFirstLoginSafetyFlow = isFirstLogin && isStudent;
 
   useEffect(() => {
@@ -80,31 +78,9 @@ export default function SopViewPage() {
     );
   }
 
-  const renderManualContent = () => {
-    if (!safetyTest.manualUrl) {
-      return (
-        <div className="flex items-center justify-center h-full bg-gray-50 text-gray-500">
-          No manual content available.
-        </div>
-      );
-    }
-
-    return (
-      <div className="flex items-center justify-center h-full bg-gray-50 text-gray-500">
-        <a href={safetyTest.manualUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-2">
-          <ExternalLink className="h-5 w-5" />
-          Open {safetyTest.manualType === ManualType.PDF ? "PDF Document" : safetyTest.manualType === ManualType.VIDEO ? "Video" : "Manual Link"}
-        </a>
-      </div>
-    );
-  };
-
   const handleTakeAssessment = () => {
     const queryParams = new URLSearchParams();
     queryParams.set('safetyTestId', safetyTest.id);
-    // If equipmentId is available from a parent context or query param, add it
-    // For now, we assume it might not be directly available on this general SOP view page
-    // If this view page is accessed from an equipment context, equipmentId would be in searchParams
     const equipmentIdFromQuery = searchParams.get('equipmentId');
     if (equipmentIdFromQuery) {
       queryParams.set('equipmentId', equipmentIdFromQuery);
@@ -117,91 +93,82 @@ export default function SopViewPage() {
 
   return (
     <div className="container mx-auto px-4 py-6">
-      {/* Header */}
-      <div className="mb-6">
-        {isFirstLoginSafetyFlow && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-            <div className="flex items-center space-x-2">
-              <Shield className="h-5 w-5 text-blue-600" />
-              <div>
-                <h3 className="text-sm font-semibold text-blue-900">Welcome to the Lab!</h3>
-                <p className="text-sm text-blue-700">
-                  Before accessing the lab facilities, please review this safety manual and complete the assessment.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-        <div className="flex items-center justify-between mb-4">
-          {!isFirstLoginSafetyFlow && (
-            <Button variant="ghost" onClick={() => router.push("/sop")} className="flex items-center">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to SOP Manuals
-            </Button>
-          )}
+      {isFirstLoginSafetyFlow && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
           <div className="flex items-center space-x-2">
-            {safetyTest.manualUrl && (
-              <Button variant="outline" asChild>
-                <a
-                  href={safetyTest.manualUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center"
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Open Manual
-                </a>
-              </Button>
-            )}
+            <Shield className="h-5 w-5 text-blue-600" />
+            <div>
+              <h3 className="text-sm font-semibold text-blue-900">Welcome to the Lab!</h3>
+              <p className="text-sm text-blue-700">
+                Before accessing the lab facilities, please review this safety manual and complete the assessment.
+              </p>
+            </div>
           </div>
         </div>
-
-        <Card>
-          <CardHeader>
-            <div className="flex items-center space-x-2 mb-2">
-              <FileText className="h-5 w-5 text-blue-600" />
-              <Badge variant="secondary">SOP Manual</Badge>
-              {safetyTest.manualType && (
-                <Badge variant="outline">{safetyTest.manualType}</Badge>
-              )}
-              <Badge variant="outline">Frequency: {safetyTest.frequency.replace(/_/g, ' ')}</Badge>
-            </div>
-            <CardTitle className="text-2xl font-bold text-gray-900">
-              {safetyTest.name}
-            </CardTitle>
-            <CardDescription className="text-gray-600 mt-2">
-              {safetyTest.description}
-            </CardDescription>
-            <div className="flex flex-wrap gap-2 mt-4">
-              <div className="flex items-center text-sm text-gray-600">
-                <Users className="h-4 w-4 mr-1" />
-                Required for: {safetyTest.requiredForRoles.length > 0 ? safetyTest.requiredForRoles.map(role => role.replace(/_/g, ' ')).join(', ') : 'All Users'}
-              </div>
-              <div className="flex items-center text-sm text-gray-600">
-                <CalendarDays className="h-4 w-4 mr-1" />
-                Created: {format(new Date(safetyTest.createdAt), "PPP")}
-              </div>
-            </div>
-            {safetyTest.associatedEquipmentTypes && safetyTest.associatedEquipmentTypes.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                <span className="text-sm font-medium text-gray-700">Associated Equipment Types:</span>
-                {safetyTest.associatedEquipmentTypes.map((type, index) => (
-                  <Badge key={index} variant="secondary">{type}</Badge>
-                ))}
-              </div>
-            )}
-          </CardHeader>
-        </Card>
+      )}
+      <div className="flex items-center justify-between mb-4">
+        {!isFirstLoginSafetyFlow && (
+          <Button variant="ghost" onClick={() => router.push("/sop")} className="flex items-center">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to SOP Manuals
+          </Button>
+        )}
+        <div className="flex items-center space-x-2">
+          {safetyTest.manualUrl && (
+            <Button variant="outline" asChild>
+              <a
+                href={safetyTest.manualUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center"
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Open Manual in New Tab
+              </a>
+            </Button>
+          )}
+        </div>
       </div>
 
-      {/* Document Viewer */}
-      <Card className="min-h-[400px] flex items-center justify-center">
-        <CardContent className="p-0 w-full h-full">
-          {renderManualContent()}
-        </CardContent>
+      <Card className="mb-6">
+        <CardHeader>
+          <div className="flex items-center space-x-2 mb-2">
+            <FileText className="h-5 w-5 text-blue-600" />
+            <Badge variant="secondary">SOP Manual</Badge>
+            {safetyTest.manualType && (
+              <Badge variant="outline">{safetyTest.manualType}</Badge>
+            )}
+            <Badge variant="outline">Frequency: {safetyTest.frequency.replace(/_/g, ' ')}</Badge>
+          </div>
+          <CardTitle className="text-2xl font-bold text-gray-900">
+            {safetyTest.name}
+          </CardTitle>
+          <CardDescription className="text-gray-600 mt-2">
+            {safetyTest.description}
+          </CardDescription>
+          <div className="flex flex-wrap gap-4 mt-4 text-sm text-gray-600">
+            <div className="flex items-center">
+              <Users className="h-4 w-4 mr-1" />
+              Required for: {safetyTest.requiredForRoles.length > 0 ? safetyTest.requiredForRoles.map(role => role.replace(/_/g, ' ')).join(', ') : 'All Users'}
+            </div>
+            <div className="flex items-center">
+              <CalendarDays className="h-4 w-4 mr-1" />
+              Created: {format(new Date(safetyTest.createdAt), "PPP")}
+            </div>
+          </div>
+          {safetyTest.associatedEquipmentTypes && safetyTest.associatedEquipmentTypes.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              <span className="text-sm font-medium text-gray-700">Associated Equipment Types:</span>
+              {safetyTest.associatedEquipmentTypes.map((type, index) => (
+                <Badge key={index} variant="secondary">{type}</Badge>
+              ))}
+            </div>
+          )}
+        </CardHeader>
       </Card>
 
-      {/* Assessment Bot Trigger */}
+      <DocumentPreview url={safetyTest.manualUrl || ''} />
+
       <div className="mt-10 flex justify-center">
         <Button onClick={handleTakeAssessment} size="lg" className="bg-blue-600 hover:bg-blue-700 text-white">
           Take Safety Assessment
@@ -210,6 +177,3 @@ export default function SopViewPage() {
     </div>
   );
 }
-
-
-
