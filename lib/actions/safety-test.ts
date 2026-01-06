@@ -64,8 +64,7 @@ export async function getSafetyTests(
     throw new Error("Unauthorized");
   }
 
-  const { searchQuery, associatedEquipmentType, requiredForRole, frequency, page = 1, pageSize = 10 } = params;
-  const skip = (page - 1) * pageSize;
+  const { searchQuery, associatedEquipmentType, requiredForRole, frequency } = params;
 
   const where: any = {};
 
@@ -92,6 +91,8 @@ export async function getSafetyTests(
     where.frequency = frequency;
   }
 
+  console.log("getSafetyTests: where object", where); // Log the where object
+
   try {
     const safetyTests = await prisma.safetyTest.findMany({
       where,
@@ -108,9 +109,9 @@ export async function getSafetyTests(
       orderBy: {
         createdAt: "desc",
       },
-      skip,
-      take: pageSize,
     });
+
+    console.log("getSafetyTests: raw prisma result", safetyTests); // Log the raw result
 
     // Map the results to match the SafetyTestWithRelations type
     const safetyTestsWithRelations = safetyTests.map(test => ({

@@ -20,7 +20,7 @@ interface SopPageClientProps {
 }
 
 export function SopPageClient({ initialSafetyTests, equipmentId }: SopPageClientProps) {
-  console.log("SopPageClient: initialSafetyTests", initialSafetyTests); // Add this line
+  console.log("SopPageClient: initialSafetyTests", initialSafetyTests);
   const router = useRouter();
   const { data: session } = useSession();
   const [safetyTests, setSafetyTests] = useState(initialSafetyTests);
@@ -90,7 +90,7 @@ export function SopPageClient({ initialSafetyTests, equipmentId }: SopPageClient
     return currentTests;
   }, [safetyTests, searchTerm, selectedFrequency, selectedManualType, equipmentId, equipmentTypes]);
 
-console.log("filteredSafetyTests", filteredSafetyTests);
+  console.log("SopPageClient: filteredSafetyTests", filteredSafetyTests); // Add this line
 
   const handleDelete = async (id: string) => {
     try {
