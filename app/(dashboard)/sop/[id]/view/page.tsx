@@ -25,6 +25,7 @@ export default function SopViewPage() {
   const [safetyTest, setSafetyTest] = useState<SafetyTestWithRelations | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isManualInteracted, setIsManualInteracted] = useState(false); // New state for user interaction
 
   const isFirstLogin = searchParams.get('firstLogin') === 'true';
   const isStudent = session?.user?.role === UserRole.STUDENT;
@@ -167,10 +168,15 @@ export default function SopViewPage() {
         </CardHeader>
       </Card>
 
-      <DocumentPreview url={safetyTest.manualUrl || ''} />
+      <DocumentPreview url={safetyTest.manualUrl || ''} onUserInteraction={() => setIsManualInteracted(true)} />
 
       <div className="mt-10 flex justify-center">
-        <Button onClick={handleTakeAssessment} size="lg" className="bg-blue-600 hover:bg-blue-700 text-white">
+        <Button
+          onClick={handleTakeAssessment}
+          size="lg"
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+          disabled={!isManualInteracted && !isFirstLoginSafetyFlow} // Disable if no interaction and not first login flow
+        >
           Take Safety Assessment
         </Button>
       </div>

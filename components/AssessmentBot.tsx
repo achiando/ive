@@ -1,5 +1,6 @@
 "use client";
 
+import { ManualType } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { extractTextFromDocument } from "@/lib/utils/document-text-extractor";
@@ -11,6 +12,7 @@ interface AssessmentBotProps {
   safetyTestId: string | undefined;
   equipmentId: string | undefined; 
   manualUrl?: string | null;
+  manualType?: ManualType; // New prop
   documentTitle: string;
   onComplete?: (equipmentId?: string) => void;
   onRecordAttempt: (safetyTestId: string | undefined, equipmentId: string | undefined, score: number, totalQuestions: number) => Promise<{ success: boolean; message: string }>;
@@ -101,10 +103,17 @@ export function AssessmentBot({
     setError('');
 
     try {
-      if (!manualUrl) {
-        throw new Error("No manual URL provided to extract content.");
+      let manualText = '';
+      if (manualUrl && (manualType === ManualType.LINK || manualType === ManualType.PDF)) {
+        manualText = await extractTextFromDocument(manualUrl);
+      } else if (manualType === ManualType.VIDEO) {
+        // For videos, we don't extract text. The API should rely on documentTitle/equipmentId.
+        // We can optionally send a small descriptive text if the API benefits from it.
+        manualText = `Video manual for: ${documentTitle}`;
+      } else {
+        // Fallback for other types or if manualUrl is missing
+        manualText = `Manual for: ${documentTitle}`;
       }
-      const manualText = await extractTextFromDocument(manualUrl);
 
       const res = await fetch('/api/openai-assessment', {
         method: 'POST',
@@ -195,7 +204,15 @@ export function AssessmentBot({
     setClarifyResponse('');
     setError('');
     try {
-      const manualText = await extractTextFromDocument(manualUrl);
+      let manualText = '';
+      if (manualUrl && (manualType === ManualType.LINK || manualType === ManualType.PDF)) {
+        manualText = await extractTextFromDocument(manualUrl);
+      } else if (manualType === ManualType.VIDEO) {
+        manualText = `Video manual for: ${documentTitle}`;
+      } else {
+        manualText = `Manual for: ${documentTitle}`;
+      }
+
       const res = await fetch('/api/openai-assessment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

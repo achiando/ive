@@ -248,6 +248,7 @@ model Equipment {
   category           String
   manufacturer       String?
   manualUrl     String?
+  manualType    ManualType?
   purchaseDate  DateTime?
   purchasePrice Decimal?         @db.Decimal(10, 2)
   specifications Json?

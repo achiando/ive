@@ -1,11 +1,13 @@
 import { AssessmentBot } from "@/components/AssessmentBot";
 import { getEquipmentById } from '@/lib/actions/equipment'; // Import getEquipmentById
 import { getSafetyTestById, recordSafetyTestAttempt } from '@/lib/actions/safety-test'; // Import getSafetyTestById
+import { ManualType } from '@prisma/client'; // Import ManualType
 
 interface AssessmentTestPageProps {
   searchParams: {
     safetyTestId?: string;
     equipmentId?: string;
+    manualType?: ManualType; // New: manualType from query params
   };
 }
 
@@ -18,6 +20,7 @@ export default async function AssessmentTestPage({ searchParams }: AssessmentTes
   let equipment;
   let documentTitle = "Safety Assessment";
   let manualUrl: string | null | undefined = null;
+  let manualType: ManualType | null = null;
 
   if (safetyTestId) {
     safetyTest = await getSafetyTestById(safetyTestId);
@@ -26,6 +29,7 @@ export default async function AssessmentTestPage({ searchParams }: AssessmentTes
     } else {
       documentTitle = safetyTest.name;
       manualUrl = safetyTest.manualUrl;
+      manualType = safetyTest.manualType || null;
     }
   }
 
@@ -40,9 +44,12 @@ export default async function AssessmentTestPage({ searchParams }: AssessmentTes
       if (!manualUrl) {
         manualUrl = equipment.manualUrl;
       }
+      // Set manualType from equipment if not already set
+      if (!manualType) {
+        manualType = equipment.manualType || null;
+      }
     }
   }
-
   // Fallback for documentTitle if neither safetyTest nor equipment provided a name
   if (!safetyTestId && !equipmentId) {
     documentTitle = "General Safety Assessment";
@@ -55,6 +62,7 @@ export default async function AssessmentTestPage({ searchParams }: AssessmentTes
         safetyTestId={safetyTestId}
         equipmentId={equipmentId}
         manualUrl={manualUrl}
+        manualType={manualType || undefined} 
         documentTitle={documentTitle}
         onRecordAttempt={recordSafetyTestAttempt}
         open={true}

@@ -26,6 +26,33 @@
 - Fixed type error in `app/(dashboard)/projects/[id]/documents/_components/DocumentCard.tsx` by handling `document.fileType` being `null` when passed to the `type` prop of the `<source>` element.
 - Fixed type error in `app/(dashboard)/projects/_components/columns.tsx` by modifying `getStatusVariant` to return valid `Badge` variants and applying custom styling via `className`.
 - Fixed type error in `app/(dashboard)/users/_components/UserRoleStats.tsx` by adding `FACULTY` to `roleIcons` and explicitly typing `roleIcons` as `Record<UserRole, JSX.Element>`.
+- **Enhanced `prisma/seed.ts` for Safety Tests and Equipment Association:**
+    - Modified `prisma/seed.ts` to create separate `SafetyTest` records for each `video_url` in `DOCUMENTS_CONFIG`, generating unique IDs and setting `manualUrl` and `manualType` accordingly.
+    - Updated existing `Equipment` records by setting their `manualUrl` to the `manualUrl` of associated `SafetyTest` records, based on matching equipment names (case-insensitive).
+    - Removed the creation of dummy equipment, focusing solely on updating existing equipment.
+- **Implemented Interaction-Based Assessment Button Enablement:**
+    - Modified `components/ui/DocumentPreview.tsx` to accept an `onUserInteraction` callback.
+    - Integrated dynamic YouTube IFrame Player API loading to detect video play events.
+    - Added click detection for direct links.
+    - Attempted scroll detection for iframes (Google Docs/PDFs), noting potential cross-origin limitations.
+    - Modified `app/(dashboard)/sop/[id]/view/page.tsx` to manage `isManualInteracted` state.
+    - Passed the `onUserInteraction` callback to `DocumentPreview`.
+    - Disabled the "Take Safety Assessment" button by default, enabling it only after user interaction with the manual content, or if it's part of a first-login safety flow.
+- **Integrated `manualType` into Assessment Flow:**
+    - Modified `app/(dashboard)/sop/[id]/view/page.tsx` to pass `safetyTest.manualType` as a query parameter when navigating to the assessment page.
+    - Modified `components/AssessmentBot.tsx` to accept `manualType` as a prop and conditionally extract text from `manualUrl` based on its type (only for `LINK` or `PDF`, sending a descriptive string for `VIDEO`).
+    - Modified `app/(dashboard)/assessment/page.tsx` to read the `manualType` query parameter and pass it to the `AssessmentBot` component.
+- **Enhanced `prisma/seed.ts` for Safety Tests and Equipment Association:**
+    - Modified `prisma/seed.ts` to create separate `SafetyTest` records for each `video_url` in `DOCUMENTS_CONFIG`, generating unique IDs and setting `manualUrl` and `manualType` accordingly.
+    - Updated existing `Equipment` records by setting their `manualUrl` to the `manualUrl` of associated `SafetyTest` records, based on matching equipment names (case-insensitive).
+    - Removed the creation of dummy equipment, focusing solely on updating existing equipment.
+    - **Fixed Google Docs Seeding:** Modified `prisma/seed.ts` to process Google Doc URLs and video URLs independently, ensuring both types of `SafetyTest` records are created.
+    - **Improved Equipment Matching:** Reintroduced flexible equipment matching logic in `prisma/seed.ts` by splitting `equipmentName` (or `doc.title` fallback) into words and creating `OR` conditions for `contains` (case-insensitive) for each word, plus the full phrase.
+    - **Added Debug Logging:** Added detailed logging to `prisma/seed.ts` to show equipment search conditions and results, aiding in debugging matching issues.
+- **Integrated `manualType` into Assessment Flow:**
+    - Modified `app/(dashboard)/sop/[id]/view/page.tsx` to pass `safetyTest.manualType` as a query parameter when navigating to the assessment page.
+    - Modified `components/AssessmentBot.tsx` to accept `manualType` as a prop and conditionally extract text from `manualUrl` based on its type (only for `LINK` or `PDF`, sending a descriptive string for `VIDEO`).
+    - Modified `app/(dashboard)/assessment/page.tsx` to read the `manualType` query parameter and pass it to the `AssessmentBot` component.
 - **Fixed type error in `app/(dashboard)/users/_components/UsersPageClient.tsx`**: Updated `UsersPageClientProps` to use `UserWithCounts[]` for the `users` prop and added the corresponding import.
 - **Fixed type error in `app/(public)/invite/[projectId]/_components/InviteClient.tsx`**: Replaced `sessionStatus === 'loading'` with `sessionLoading` in the disabled prop of the join project button.
 - **Fixed type error in `lib/actions/booking.ts`**: Imported `BookingAnalyticsData` from `types/booking.ts`.
