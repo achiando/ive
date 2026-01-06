@@ -1,9 +1,9 @@
 "use client";
 
-import { ManualType } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { extractTextFromDocument } from "@/lib/utils/document-text-extractor";
+import { ManualType } from "@prisma/client";
 import { AlertCircle, Bot, Loader2, Send } from "lucide-react";
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -27,6 +27,7 @@ export function AssessmentBot({
   safetyTestId,
   equipmentId,
   manualUrl,
+  manualType,
   documentTitle,
   onComplete,
   onRecordAttempt,
@@ -104,14 +105,13 @@ export function AssessmentBot({
 
     try {
       let manualText = '';
-      if (manualUrl && (manualType === ManualType.LINK || manualType === ManualType.PDF)) {
+      if (manualUrl && manualType && (manualType === ManualType.LINK || manualType === ManualType.PDF)) {
         manualText = await extractTextFromDocument(manualUrl);
       } else if (manualType === ManualType.VIDEO) {
         // For videos, we don't extract text. The API should rely on documentTitle/equipmentId.
-        // We can optionally send a small descriptive text if the API benefits from it.
         manualText = `Video manual for: ${documentTitle}`;
       } else {
-        // Fallback for other types or if manualUrl is missing
+        // Fallback for other types or if manualUrl/manualType is missing
         manualText = `Manual for: ${documentTitle}`;
       }
 

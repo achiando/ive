@@ -53,6 +53,11 @@
     - Modified `app/(dashboard)/sop/[id]/view/page.tsx` to pass `safetyTest.manualType` as a query parameter when navigating to the assessment page.
     - Modified `components/AssessmentBot.tsx` to accept `manualType` as a prop and conditionally extract text from `manualUrl` based on its type (only for `LINK` or `PDF`, sending a descriptive string for `VIDEO`).
     - Modified `app/(dashboard)/assessment/page.tsx` to read the `manualType` query parameter and pass it to the `AssessmentBot` component.
+- **Integrated `manualType` into Assessment Flow:**
+    - Modified `app/(dashboard)/sop/[id]/view/page.tsx` to pass `safetyTest.manualType` as a query parameter when navigating to the assessment page.
+    - Modified `components/AssessmentBot.tsx` to accept `manualType` as a prop and conditionally extract text from `manualUrl` based on its type (only for `LINK` or `PDF`, sending a descriptive string for `VIDEO`).
+    - Modified `app/(dashboard)/assessment/page.tsx` to read the `manualType` query parameter and pass it to the `AssessmentBot` component.
+- **Added `console.log` to `SopPageClient.tsx`:** Added a `console.log("SopPageClient: initialSafetyTests", initialSafetyTests);` to `app/(dashboard)/sop/_components/SopPageClient.tsx` to debug why `LINK` type safety tests are not being displayed.
 - **Fixed type error in `app/(dashboard)/users/_components/UsersPageClient.tsx`**: Updated `UsersPageClientProps` to use `UserWithCounts[]` for the `users` prop and added the corresponding import.
 - **Fixed type error in `app/(public)/invite/[projectId]/_components/InviteClient.tsx`**: Replaced `sessionStatus === 'loading'` with `sessionLoading` in the disabled prop of the join project button.
 - **Fixed type error in `lib/actions/booking.ts`**: Imported `BookingAnalyticsData` from `types/booking.ts`.
