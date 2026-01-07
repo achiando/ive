@@ -36,7 +36,7 @@ export default async function ProfilePage() {
   const user = await getCurrentUser();
 
   if (!user) {
-    redirect('/auth/login'); // Redirect to login if no user session
+    redirect('/login'); // Redirect to login if no user session
   }
 
   // Type definitions for user data, matching the structure returned by getCurrentUser
