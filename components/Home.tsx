@@ -50,9 +50,9 @@ export default function Home() {
             <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
               <div className="flex flex-col justify-center space-y-4">
                 <div className="space-y-2">
-                  <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">About CDIE IMS</h2>
+                  <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">About CDIE UMS-User Management System </h2>
                   <p className="max-w-[600px] text-gray-500 md:text-xl/relaxed dark:text-gray-400">
-                    The CDIE Inventory Management System is a comprehensive platform designed to streamline laboratory operations, enhance research productivity, and foster innovation within Kenyatta University.
+                    The CDIE UMS-User Management System is a comprehensive platform designed to streamline laboratory operations, enhance research productivity, and foster innovation within Kenyatta University.
                   </p>
                 </div>
                 <div className="space-y-4">

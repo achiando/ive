@@ -1,4 +1,6 @@
 export const programs = [
+  "Msc. Medical Device Innovation",
+  "IvE/CDIE event",
   "Computer Science",
   "Software Engineering",
   "Electrical Engineering",
