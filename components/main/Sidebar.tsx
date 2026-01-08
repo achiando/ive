@@ -24,9 +24,9 @@ interface NavigationItem {
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user,status, loading, hasAnyRole, role } = useSession(true);
+  const { user, status, loading, hasAnyRole, role } = useSession(true);
 
-  
+
   if (loading) {
     return (
       <div className="hidden md:flex md:flex-shrink-0 w-64 bg-white border-r border-gray-200">
@@ -47,51 +47,51 @@ export function Sidebar() {
   }
 
   const navigation: NavigationItem[] = [
-    { 
-      name: 'Dashboard', 
-      href: '/dashboard', 
+    {
+      name: 'Dashboard',
+      href: '/dashboard',
       icon: LayoutDashboard,
-      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.ADMIN_TECHNICIAN, UserRole.TECHNICIAN, UserRole.STUDENT,UserRole.FACULTY, UserRole.LECTURER,UserRole.OTHER]
+      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.ADMIN_TECHNICIAN, UserRole.TECHNICIAN, UserRole.STUDENT, UserRole.FACULTY, UserRole.LECTURER, UserRole.OTHER]
     },
-    { 
-      name: 'Users', 
-      href: '/users', 
+    {
+      name: 'Users',
+      href: '/users',
       icon: Users,
-      roles: [UserRole.ADMIN,UserRole.LAB_MANAGER]
+      roles: [UserRole.ADMIN, UserRole.LAB_MANAGER]
     },
-    { 
-      name: 'Equipments', 
-      href: '/equipments', 
+    {
+      name: 'Equipments',
+      href: '/equipments',
       icon: FolderGit2,
-      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.ADMIN_TECHNICIAN, UserRole.TECHNICIAN,UserRole.STUDENT,UserRole.FACULTY,UserRole.LECTURER,UserRole.OTHER]
+      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.ADMIN_TECHNICIAN, UserRole.TECHNICIAN, UserRole.STUDENT, UserRole.FACULTY, UserRole.LECTURER, UserRole.OTHER]
     },
-    { 
-      name: 'Projects', 
-      href: '/projects', 
+    {
+      name: 'Projects',
+      href: '/projects',
       icon: SearchCode,
-      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.STUDENT, UserRole.FACULTY,UserRole.TECHNICIAN,UserRole.ADMIN_TECHNICIAN,UserRole.LECTURER,UserRole.FACULTY,UserRole.OTHER]
+      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.STUDENT, UserRole.FACULTY, UserRole.TECHNICIAN, UserRole.ADMIN_TECHNICIAN, UserRole.LECTURER, UserRole.FACULTY, UserRole.OTHER]
     },
-    { 
-      name: 'Bookings', 
-      href: '/bookings', 
+    {
+      name: 'Bookings',
+      href: '/bookings',
       icon: Calendar,
-      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.STUDENT, UserRole.FACULTY,UserRole.TECHNICIAN,UserRole.ADMIN_TECHNICIAN,UserRole.FACULTY,UserRole.LECTURER,UserRole.OTHER]
+      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.STUDENT, UserRole.FACULTY, UserRole.TECHNICIAN, UserRole.ADMIN_TECHNICIAN, UserRole.FACULTY, UserRole.LECTURER, UserRole.OTHER]
     },
-    { 
-      name: 'Maintenance', 
-      href: '/maintenance', 
+    {
+      name: 'Maintenance',
+      href: '/maintenance',
       icon: Wrench,
       roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.ADMIN_TECHNICIAN, UserRole.TECHNICIAN]
     },
-    { 
-      name: 'Consumables', 
-      href: '/consumables', 
+    {
+      name: 'Consumables',
+      href: '/consumables',
       icon: Package,
-      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN,UserRole.TECHNICIAN,UserRole.ADMIN_TECHNICIAN,UserRole.FACULTY,UserRole.LECTURER,UserRole.STUDENT,UserRole.OTHER]
+      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.TECHNICIAN, UserRole.ADMIN_TECHNICIAN, UserRole.FACULTY, UserRole.LECTURER, UserRole.STUDENT, UserRole.OTHER]
     },
-    { 
-      name: 'Technicians', 
-      href: '/technicians', 
+    {
+      name: 'Technicians',
+      href: '/technicians',
       icon: Users,
       roles: [UserRole.ADMIN, UserRole.ADMIN_TECHNICIAN],
       badge: {
@@ -99,35 +99,31 @@ export function Sidebar() {
         variant: 'outline'
       }
     },
-    { 
-      name: 'Events', 
-      href: '/events', 
+    {
+      name: 'Events',
+      href: '/events',
       icon: Calendar,
-      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.STUDENT, UserRole.FACULTY,UserRole.TECHNICIAN,UserRole.ADMIN_TECHNICIAN,UserRole.OTHER,UserRole.LECTURER]
+      roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.STUDENT, UserRole.FACULTY, UserRole.TECHNICIAN, UserRole.ADMIN_TECHNICIAN, UserRole.OTHER, UserRole.LECTURER]
     },
-    { 
-      name: 'SOP Manuals', 
-      href: '/sop', 
+    {
+      name: 'SOP Manuals',
+      href: '/sop',
       icon: FileText,
-      roles: [UserRole.STUDENT, UserRole.FACULTY, UserRole.TECHNICIAN, UserRole.ADMIN_TECHNICIAN, UserRole.LAB_MANAGER, UserRole.ADMIN,UserRole.OTHER,UserRole.LECTURER]
+      roles: [UserRole.STUDENT, UserRole.FACULTY, UserRole.TECHNICIAN, UserRole.ADMIN_TECHNICIAN, UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.OTHER, UserRole.LECTURER]
     },
-    { 
-      name: 'Settings', 
-      href: '/me', 
+    {
+      name: 'Settings',
+      href: '/me',
       icon: Settings,
-      roles: [UserRole.ADMIN, UserRole.LAB_MANAGER, UserRole.STUDENT, UserRole.FACULTY, UserRole.TECHNICIAN, UserRole.ADMIN_TECHNICIAN,UserRole.OTHER,UserRole.LECTURER]  
+      roles: [UserRole.ADMIN, UserRole.LAB_MANAGER, UserRole.STUDENT, UserRole.FACULTY, UserRole.TECHNICIAN, UserRole.ADMIN_TECHNICIAN, UserRole.OTHER, UserRole.LECTURER]
     },
   ];
 
-  const filteredNavigation = useMemo(() => {
-    if (!user || !user.role) {
-      return []; // Should not happen due to 'if (!user) return null;' above, but as a safeguard
-    }
-    return navigation.filter(item => {
-      if (!item.roles) return true; // If no roles specified, visible to all
-      return item.roles.includes(user.role); // Explicitly check user.role
-    });
-  }, [user, navigation]);
+  const filteredNavigation = navigation.filter(item => {
+    if (!user?.role) return false; // If no user or role, show nothing
+    if (!item.roles) return true; // If no roles specified, visible to all
+    return item.roles.includes(user.role);
+  });
 
   const handleSignOut = async () => {
     await signOut({ redirect: false });
@@ -167,8 +163,8 @@ export function Sidebar() {
                     />
                     <span className="flex-1">{item.name}</span>
                     {item.badge && (
-                      <Badge 
-                        variant={item.badge.variant || 'secondary'} 
+                      <Badge
+                        variant={item.badge.variant || 'secondary'}
                         className="ml-2"
                       >
                         {item.badge.text}
@@ -181,7 +177,7 @@ export function Sidebar() {
           </div>
         </div>
         <div className="flex flex-shrink-0 p-4 border-t border-gray-200">
-          <button 
+          <button
             onClick={handleSignOut}
             className="flex items-center w-full px-4 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors duration-150"
           >

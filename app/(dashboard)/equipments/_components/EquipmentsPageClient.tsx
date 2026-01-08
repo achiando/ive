@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createEquipment } from "@/lib/actions/equipment";
 import { EquipmentWithRelations } from "@/types/equipment";
@@ -11,7 +10,7 @@ import { UserRole } from "@prisma/client";
 import { GridIcon, ListIcon, PlusCircle } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Fragment, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { getColumns } from "./columns"; // Import getColumns
 import { EquipmentCard } from "./EquipmentCard";
@@ -83,15 +82,15 @@ export function EquipmentsPageClient({ equipments, userRole }: EquipmentsPageCli
   ].includes(session?.user?.role || '');
 
   const renderFilters = (showSearchInput: boolean) => (
-    <Fragment>
-      {showSearchInput && (
+    <div className="w-full flex flex-col space-y-2">
+      {/* {showSearchInput && (
         <Input
           placeholder="Search by name, model, serial..."
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
-          className="max-w-sm"
+          className="w-full md:max-w-sm"
         />
-      )}
+      )} */}
       <div className="flex space-x-2">
         {/* Status Filter */}
         <Select value={selectedStatus} onValueChange={(value: string | "all") => setSelectedStatus(value)}>
@@ -122,7 +121,7 @@ export function EquipmentsPageClient({ equipments, userRole }: EquipmentsPageCli
           </SelectContent>
         </Select>
       </div>
-    </Fragment>
+    </div>
   );
 
   return (
@@ -202,9 +201,8 @@ export function EquipmentsPageClient({ equipments, userRole }: EquipmentsPageCli
           data={filteredEquipments}
           filterColumnId="name"
           filterColumnPlaceholder="Filter by name..."
-        >
-          {renderFilters(true)}
-        </DataTable>
+          children={renderFilters(true)}
+        />
       ) : (
         <div className="space-y-4">
           <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-4 py-4">

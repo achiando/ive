@@ -1,11 +1,11 @@
 'use client';
 
+import { useSession } from '@/hooks/useSession';
+import { cn } from '@/lib/utils';
+import { UserRole } from '@prisma/client';
+import { Calendar, FolderGit2, LayoutDashboard, SearchCode, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils';
-import { useSession } from '@/hooks/useSession';
-import { UserRole } from '@prisma/client';
-import { LayoutDashboard, FolderGit2, SearchCode, Calendar, Settings } from 'lucide-react';
 
 interface NavigationItem {
   name: string;
@@ -48,8 +48,8 @@ export function BottomNav() {
       roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.STUDENT, UserRole.FACULTY,UserRole.TECHNICIAN,UserRole.ADMIN_TECHNICIAN,UserRole.FACULTY,UserRole.LECTURER,UserRole.OTHER]
     },
     { 
-      name: 'Settings', 
-      href: '/me', 
+      name: 'SOP', 
+      href: '/sop', 
       icon: Settings,
       roles: [UserRole.ADMIN, UserRole.LAB_MANAGER, UserRole.STUDENT, UserRole.FACULTY, UserRole.TECHNICIAN, UserRole.ADMIN_TECHNICIAN,UserRole.OTHER,UserRole.LECTURER]  
     },

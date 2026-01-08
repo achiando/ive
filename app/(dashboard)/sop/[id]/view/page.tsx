@@ -2,7 +2,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DocumentPreview } from '@/components/ui/DocumentPreview';
 import { getSafetyTestById } from '@/lib/actions/safety-test';
 import { SafetyTestWithRelations } from '@/types/safety-test';
@@ -61,7 +61,7 @@ export default function SopViewPage() {
 
   if (error || !safetyTest) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4">
         <div className="max-w-2xl mx-auto text-center">
           <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">SOP Manual Not Found</h1>
@@ -93,7 +93,7 @@ export default function SopViewPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="container mx-auto px-4">
       {isFirstLoginSafetyFlow && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
           <div className="flex items-center space-x-2">

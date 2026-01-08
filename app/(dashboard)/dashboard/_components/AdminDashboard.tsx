@@ -23,9 +23,9 @@ interface AdminDashboardProps {
 
 export function AdminDashboard({ dashboardData, isLoading }: AdminDashboardProps) {
   return (
-    <div className="space-y-6 sm:pt-64">
+    <div className="space-y-6 ">
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-3 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <DashboardStats 
           title="Total Equipment" 
           value={dashboardData?.totalEquipment?.toString() || '0'} 

@@ -43,9 +43,7 @@ function matchesRoute(pathname: string, routes: string[]): boolean {
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
-  console.log('=== MIDDLEWARE START ===');
-  console.log('Path:', pathname);
-  console.log('URL:', request.url);
+
 
   // Skip middleware for static assets
   if (
@@ -61,7 +59,6 @@ export default async function middleware(request: NextRequest) {
     pathname.endsWith('.webp') ||
     pathname.endsWith('.ico')
   ) {
-    console.log('Skipping middleware for static asset');
     return NextResponse.next();
   }
 
@@ -76,40 +73,29 @@ const isPublicRoute =
    pathname.startsWith('/invite/'));
   
   if (isPublicRoute) {
-    console.log('Public route allowed:', pathname);
-    console.log('=== MIDDLEWARE END (Public) ===');
+    
     return NextResponse.next();
   }
   
-  console.log('Not a public route, proceeding with auth check...');
 
-  // Get token
-  console.log('Attempting to get token...');
   let token;
   try {
     token = await getToken({
       req: request,
       secret: process.env.NEXTAUTH_SECRET,
     });
-    console.log('Token retrieved:', token ? 'YES' : 'NO');
   } catch (error) {
     console.error('Error getting token:', error);
     token = null;
   }
 
-  if (token) {
-    console.log('User ID:', token.sub);
-    console.log('User email:', token.email);
-    console.log('User status:', token.status);
-    console.log('User role:', token.role);
-  }
 
   const isAuthenticated = !!token;
 
   // If not authenticated, redirect to login
   if (!isAuthenticated) {
-    console.log('Not authenticated, redirecting to login');
-    const url = new URL('/auth/login', request.url);
+    
+    const url = new URL('/login', request.url);
     url.searchParams.set('callbackUrl', encodeURI(request.url));
     return NextResponse.redirect(url);
   }
@@ -117,60 +103,46 @@ const isPublicRoute =
   const userStatus = token!.status as RegistrationStatus;
   const userRole = token!.role as UserRole;
   
-  console.log('Processing user with role:', userRole, 'status:', userStatus);
+
 
   // Handle PENDING users - regardless of role
   if (userStatus === 'PENDING') {
-    console.log('User is PENDING');
     if (matchesRoute(pathname, pendingRoutes) || pathname.startsWith('/api/auth')) {
-      console.log('Allowing access to pending route');
       return NextResponse.next();
     }
-    console.log('Redirecting PENDING user to /pending');
     return NextResponse.redirect(new URL('/pending', request.url));
   }
 
   // Handle REJECTED users
   if (userStatus === 'REJECTED') {
-    console.log('User is REJECTED');
     if (matchesRoute(pathname, rejectedRoutes) || pathname.startsWith('/api/auth')) {
-      console.log('Allowing access to rejected route');
       return NextResponse.next();
     }
-    console.log('Redirecting REJECTED user to /rejected');
     return NextResponse.redirect(new URL('/rejected', request.url));
   }
 
   // Handle SUSPENDED users
   if (userStatus === 'SUSPENDED') {
-    console.log('User is SUSPENDED');
     if (matchesRoute(pathname, suspendedRoutes) || pathname.startsWith('/api/auth')) {
-      console.log('Allowing access to suspended route');
       return NextResponse.next();
     }
-    console.log('Redirecting SUSPENDED user to /suspended');
     return NextResponse.redirect(new URL('/suspended', request.url));
   }
 
   // Handle APPROVED users
   if (userStatus === 'APPROVED') {
-    console.log('User is APPROVED');
     
     // If an approved user tries to access a status page, redirect to dashboard
     if (pathname.startsWith('/pending') || pathname.startsWith('/rejected') || pathname.startsWith('/suspended')) {
-      console.log('Redirecting approved user from status page to dashboard');
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
 
     // Admin role check for admin routes
     const isAdminRoute = pathname.startsWith('/admin');
     if (isAdminRoute) {
-      console.log('Admin route detected');
       if (userRole !== UserRole.ADMIN) {
-        console.log('User is not admin, redirecting to unauthorized');
         return NextResponse.redirect(new URL('/unauthorized', request.url));
       }
-      console.log('User is admin, allowing access');
     }
 
     // --- START Assessment Check Logic ---
@@ -187,7 +159,6 @@ const isPublicRoute =
       try {
         const hasTakenAssessment = await hasUserTakenAnyAssessment(token!.sub as string); // Pass userId
         if (!hasTakenAssessment) {
-          console.log("Redirecting to SOP page - no assessment taken");
           return NextResponse.redirect(new URL('/sop/sop-1756819829791/view', request.url));
         }
       } catch (error) {
@@ -198,12 +169,9 @@ const isPublicRoute =
     }
     // --- END Assessment Check Logic ---
 
-    console.log('Allowing approved user access');
     return NextResponse.next();
   }
 
-  console.log('No status matched, allowing through');
-  console.log('=== MIDDLEWARE END ===');
   return NextResponse.next();
 }
 

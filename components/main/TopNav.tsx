@@ -1,10 +1,18 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useSession } from '@/hooks/useSession'; // To get user role for logo text
+import { LogOut, User } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { LogOut } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useSession } from '@/hooks/useSession'; // To get user role for logo text
 
 export function TopNav() {
   const router = useRouter();
@@ -26,14 +34,46 @@ export function TopNav() {
         <h1 className="text-xl font-bold text-gray-900">CDIE {role}</h1>
         
         {/* Logout Button */}
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={handleSignOut}
-          className="flex items-center text-gray-600 hover:text-gray-900"
-        >
-          <LogOut className="w-5 h-5" />
-        </Button>
+               <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+         
+                <User className="h-4 w-4" />
+          
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56" align="end" forceMount>
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">{user?.name || 'User'}</p>
+                <p className="text-xs leading-none text-muted-foreground">
+                  {user?.email}
+                </p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <button
+                onClick={() => router.push('/profile')}
+                className="w-full flex items-center"
+              >
+                <User className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </button>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <button
+                onClick={handleSignOut}
+                className="w-full flex items-center text-destructive focus:text-destructive"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </button>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
       </div>
     </nav>
   );
