@@ -60,7 +60,7 @@ export function Sidebar() {
       roles: [UserRole.ADMIN, UserRole.LAB_MANAGER]
     },
     {
-      name: 'Equipments',
+      name: 'Equipment',
       href: '/equipments',
       icon: FolderGit2,
       roles: [UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.ADMIN_TECHNICIAN, UserRole.TECHNICIAN, UserRole.STUDENT, UserRole.FACULTY, UserRole.LECTURER, UserRole.OTHER]
