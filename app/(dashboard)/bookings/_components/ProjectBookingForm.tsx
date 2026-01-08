@@ -7,11 +7,11 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -20,6 +20,7 @@ import { toast } from "sonner";
 
 interface ProjectBookingFormProps {
   projectId?: string; // Passed from parent, if booking is project-specific
+  equipmentIds?: string[]; // Passed from parent, if booking is equipment-specific
   bookingId?: string; // For editing existing booking
   initialData?: BookingDetails; // For pre-filling form in edit mode
   onSuccess?: () => Promise<{ navigateBack?: boolean }>;
