@@ -91,7 +91,6 @@ export async function getSafetyTests(
     where.frequency = frequency;
   }
 
-  console.log("getSafetyTests: where object", where); // Log the where object
 
   try {
     const safetyTests = await prisma.safetyTest.findMany({
@@ -111,7 +110,6 @@ export async function getSafetyTests(
       },
     });
 
-    console.log("getSafetyTests: raw prisma result", safetyTests); // Log the raw result
 
     // Map the results to match the SafetyTestWithRelations type
     const safetyTestsWithRelations = safetyTests.map(test => ({

@@ -487,26 +487,25 @@ export async function getBookings(params: GetBookingsParams = {}): Promise<{ dat
   }
 
   try {
-    const [bookings, total] = await prisma.$transaction([
-      prisma.equipmentBooking.findMany({
-        where,
-        include: {
-          equipment: true,
-          project: {
-            include: {
-              members: true, // Needed for authorization check
-            },
+    const bookings = await prisma.equipmentBooking.findMany({
+      where,
+      include: {
+        equipment: true,
+        project: {
+          include: {
+            members: true, // Needed for authorization check
           },
-          user: true,
         },
-        orderBy: {
-          startDate: 'desc',
-        },
-        skip,
-        take: pageSize,
-      }),
-      prisma.equipmentBooking.count({ where }),
-    ]);
+        user: true,
+      },
+      orderBy: {
+        startDate: 'desc',
+      },
+      skip,
+      take: pageSize,
+    });
+
+    const total = await prisma.equipmentBooking.count({ where });
 
     const formattedBookings = bookings.map(formatBookingDetails);
 

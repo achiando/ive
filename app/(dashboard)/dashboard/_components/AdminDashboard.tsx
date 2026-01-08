@@ -1,10 +1,10 @@
+import { Clock, Package, HardDrive as Tool, Wrench } from 'lucide-react';
 import { DashboardStats } from './DashboardStats';
-import { RecentBookings } from './RecentBookings';
-import { MaintenanceAlerts } from './MaintenanceAlerts';
-import { UpcomingEvents } from './UpcomingEvents';
-import { LowStockAlerts } from './LowStockAlerts';
 import { FullyBookedEquipment } from './FullyBookedEquipment'; // New import
-import { Calendar, Clock, Package, HardDrive as Tool, Users, Wrench } from 'lucide-react';
+import { LowStockAlerts } from './LowStockAlerts';
+import { MaintenanceAlerts } from './MaintenanceAlerts';
+import { RecentBookings } from './RecentBookings';
+import { UpcomingEvents } from './UpcomingEvents';
 
 interface AdminDashboardProps {
   dashboardData: {
@@ -23,7 +23,7 @@ interface AdminDashboardProps {
 
 export function AdminDashboard({ dashboardData, isLoading }: AdminDashboardProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 sm:pt-64">
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <DashboardStats 

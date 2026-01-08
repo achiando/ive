@@ -1,3 +1,4 @@
+import { hasUserTakenAnyAssessment } from "@/lib/actions/user-assessment";
 import { RegistrationStatus, UserRole } from '@prisma/client';
 import { getToken } from 'next-auth/jwt';
 import type { NextRequest } from 'next/server';
@@ -65,7 +66,14 @@ export default async function middleware(request: NextRequest) {
   }
 
   // Check if this is a public route
-  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route)) || pathname.startsWith('/invite/');
+ // In proxy.ts, update the public route check:
+const isPublicRoute = 
+  // Skip middleware for auth-related API routes
+  pathname.startsWith('/api/auth/') && 
+  !pathname.endsWith('/session') &&  // But still process /session
+  // Other public routes
+  (publicRoutes.some(route => pathname.startsWith(route)) || 
+   pathname.startsWith('/invite/'));
   
   if (isPublicRoute) {
     console.log('Public route allowed:', pathname);
@@ -164,6 +172,31 @@ export default async function middleware(request: NextRequest) {
       }
       console.log('User is admin, allowing access');
     }
+
+    // --- START Assessment Check Logic ---
+    const allowedRolesForAssessment: UserRole[] = [
+      UserRole.STUDENT,
+      UserRole.LECTURER,
+      UserRole.TECHNICIAN,
+      UserRole.OTHER,
+      UserRole.FACULTY,
+    ];
+
+  
+    if (allowedRolesForAssessment.includes(userRole) && pathname !== '/sop/sop-1756819829791/view') {
+      try {
+        const hasTakenAssessment = await hasUserTakenAnyAssessment(token!.sub as string); // Pass userId
+        if (!hasTakenAssessment) {
+          console.log("Redirecting to SOP page - no assessment taken");
+          return NextResponse.redirect(new URL('/sop/sop-1756819829791/view', request.url));
+        }
+      } catch (error) {
+        console.error("Failed to check assessment status in middleware:", error);
+        // If checking assessment status fails, redirect to login to prevent unauthorized access.
+        return NextResponse.redirect(new URL('/login', request.url));
+      }
+    }
+    // --- END Assessment Check Logic ---
 
     console.log('Allowing approved user access');
     return NextResponse.next();

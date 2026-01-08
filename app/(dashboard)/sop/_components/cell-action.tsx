@@ -15,7 +15,6 @@ import { Edit, FileText, MoreHorizontal, Trash } from "lucide-react"
 import { useSession } from "next-auth/react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { toast } from "sonner"
 
 interface CellActionProps {
   data: SafetyTestWithRelations;
@@ -34,10 +33,6 @@ export const CellAction: React.FC<CellActionProps> = ({ data, onEdit, onDelete }
   const userRole = session?.user?.role as UserRole;
   const canManageSOPs = isAdminOrManager(userRole);
 
-  const onCopy = (id: string) => {
-    navigator.clipboard.writeText(id);
-    toast.success("SOP ID copied to clipboard.");
-  };
 
   return (
     <DropdownMenu>

@@ -119,10 +119,15 @@ export function Sidebar() {
     },
   ];
 
-  const filteredNavigation = navigation.filter(item => {
-    if (!item.roles) return true;
-    return hasAnyRole(item.roles);
-  });
+  const filteredNavigation = useMemo(() => {
+    if (!user || !user.role) {
+      return []; // Should not happen due to 'if (!user) return null;' above, but as a safeguard
+    }
+    return navigation.filter(item => {
+      if (!item.roles) return true; // If no roles specified, visible to all
+      return item.roles.includes(user.role); // Explicitly check user.role
+    });
+  }, [user, navigation]);
 
   const handleSignOut = async () => {
     await signOut({ redirect: false });

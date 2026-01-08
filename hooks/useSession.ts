@@ -23,36 +23,18 @@ type RoleCheck = {
 };
 
 export function useSession(required = false) {
-  const { data: session } = useNextAuthSession();
+  const { data: session, status } = useNextAuthSession();
   const router = useRouter();
-  const [user, setUser] = useState<UserSession | null>(null);
-  const [loading, setLoading] = useState(true);
+  const user = session?.user as UserSession | null; // Cast to UserSession type
+  const loading = status === 'loading';
+  const isAuthenticated = status === 'authenticated';
 
   useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const response = await fetch('/api/auth/session');
-        const data = await response.json();
-        
-        if (data.authenticated) {
-          setUser(data.user);
-        } else if (required) {
-          const callbackUrl = encodeURIComponent(window.location.href);
-          router.push(`/login?callbackUrl=${callbackUrl}`);
-        }
-      } catch (error) {
-        console.error('Session check failed:', error);
-        if (required) {
-          const callbackUrl = encodeURIComponent(window.location.href);
-          router.push(`/login?callbackUrl=${callbackUrl}`);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkSession();
-  }, [required, router]);
+    if (required && status === 'unauthenticated') {
+      const callbackUrl = encodeURIComponent(window.location.href);
+      router.push(`/login?callbackUrl=${callbackUrl}`);
+    }
+  }, [required, status, router]);
 
   // Role check functions
   const roleChecks: RoleCheck = {
@@ -81,9 +63,9 @@ export function useSession(required = false) {
   return {
     // User data
     user,
-    status: session?.user.status,
+    status, // Use status from useNextAuthSession
     loading,
-    isAuthenticated: !!user,
+    isAuthenticated, // Use derived isAuthenticated
     
     // Role checks
     ...roleChecks,

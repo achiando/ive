@@ -1,17 +1,13 @@
 "use server";
 
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
 
-export async function hasUserTakenAnyAssessment(): Promise<boolean> {
-  const session = await getServerSession(authOptions);
-  if (!session) {
-    // If no session, user is not logged in, so they haven't taken an assessment
+export async function hasUserTakenAnyAssessment(userId: string): Promise<boolean> {
+  // The userId is now passed directly, no need for getServerSession here.
+  // If userId is not provided, it implies no user is logged in or an error.
+  if (!userId) {
     return false;
   }
-
-  const userId = session.user.id;
 
   try {
     const attemptCount = await prisma.safetyTestAttempt.count({

@@ -33,7 +33,7 @@ const formSchema = z.object({
   manualUrl: z.string().url({ message: "Invalid URL format." }).optional().or(z.literal('')),
   manualType: z.nativeEnum(ManualType).optional(),
   requiredForRoles: z.array(z.nativeEnum(UserRole)).min(1, { message: "At least one role is required." }),
-  associatedEquipmentTypes: z.array(z.string()).optional(),
+  associatedEquipmentType: z.array(z.string()).optional(),
   frequency: z.nativeEnum(SafetyTestFrequency),
 });
 

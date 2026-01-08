@@ -20,7 +20,7 @@ interface SopPageClientProps {
 }
 
 export function SopPageClient({ initialSafetyTests, equipmentId }: SopPageClientProps) {
-  console.log("SopPageClient: initialSafetyTests", initialSafetyTests);
+
   const router = useRouter();
   const { data: session } = useSession();
   const [safetyTests, setSafetyTests] = useState(initialSafetyTests);
@@ -139,7 +139,7 @@ export function SopPageClient({ initialSafetyTests, equipmentId }: SopPageClient
         filterColumnPlaceholder="Filter by name..."
         meta={{
           onEdit: (safetyTest: SafetyTestWithRelations) => {
-            router.push(`/sop/${safetyTest.id}/edit`);
+            router.push(`/sop/${safetyTest.id}`);
           },
           onDelete: handleDelete
         }}
