@@ -1,9 +1,9 @@
 
+import { AssessmentChecker } from "@/components/AssessmentChecker";
 import { Sidebar } from "@/components/main/Sidebar";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import { AssessmentChecker } from "@/components/AssessmentChecker";
 
 export default async function DashboardLayout({
   children,
@@ -16,10 +16,10 @@ export default async function DashboardLayout({
     redirect("/login");
   }
   return (
-    <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
+    <div className="flex h-screen w-full">
       <Sidebar />
-      <div className="flex flex-col">
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           {children}
           <AssessmentChecker />
         </main>

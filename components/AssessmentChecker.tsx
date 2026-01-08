@@ -1,17 +1,38 @@
 "use client";
 
 import { hasUserTakenAnyAssessment } from "@/lib/actions/user-assessment";
-import { UserRole } from "@prisma/client";
+import { RegistrationStatus, UserRole } from "@prisma/client";
 import { useSession } from "next-auth/react";
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export function AssessmentChecker() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [isChecking, setIsChecking] = useState(false);
 
   useEffect(() => {
-    async function checkAssessmentStatus() {
+    async function handleSession() {
+      // Don't proceed if we're already checking or session isn't ready
+      if (isChecking || status === 'loading' || !session?.user) {
+        return;
+      }
+
+      console.log("Session status:", status);
+      console.log("Session data:", session.user);
+
+      // Handle PENDING status first
+      if (session.user.status === RegistrationStatus.PENDING) {
+        console.log("Redirecting to pending page from AssessmentChecker");
+        router.push('/pending');
+        return;
+      }
+
+      // Only proceed with assessment check if user is APPROVED
+      if (session.user.status !== RegistrationStatus.APPROVED) {
+        return;
+      }
+
       const allowedRoles: UserRole[] = [
         UserRole.STUDENT,
         UserRole.LECTURER,
@@ -20,34 +41,24 @@ export function AssessmentChecker() {
         UserRole.FACULTY,
       ];
 
-      if (
-        status === "authenticated" &&
-        session?.user?.id &&
-        session.user.role &&
-        allowedRoles.includes(session.user.role)
-      ) {
+      if (allowedRoles.includes(session.user.role)) {
         try {
+          setIsChecking(true);
           const hasTakenAssessment = await hasUserTakenAnyAssessment();
           if (!hasTakenAssessment) {
-            // If no assessment has been taken, redirect to the specific SOP page.
+            console.log("Redirecting to SOP page - no assessment taken");
             router.push('/sop/sop-1756819829791/view');
           }
         } catch (error) {
-          console.error(
-            "Failed to check assessment status:",
-            error
-          );
+          console.error("Failed to check assessment status:", error);
+        } finally {
+          setIsChecking(false);
         }
       }
     }
 
-    // Only run the check if the session is authenticated.
-    if (status === "authenticated") {
-      checkAssessmentStatus();
-    }
-  }, [status, session?.user?.id, session?.user?.role, router]);
+    handleSession();
+  }, [status, session, router, isChecking]);
 
-  // This component does not render anything itself. It only handles the redirect logic.
   return null;
 }
-

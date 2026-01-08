@@ -1,5 +1,4 @@
 
-import { Card, CardContent } from '@/components/ui/card';
 import Image from 'next/image';
 import Link from 'next/link';
 import { NewRegistrationForm } from './_components/NewRegistrationForm';
@@ -32,11 +31,8 @@ export default function RegisterPage() {
       </div>
       {/* Registration Form: 2/3 width */}
       <div className="lg:col-span-2 flex flex-col justify-center lg:p-8">
-        <Card className="mx-auto max-w-md w-full">
-          <CardContent>
+  
             <NewRegistrationForm />
-          </CardContent>
-        </Card>
         <div className="mt-6 flex justify-center">
           <Link href="/" className="text-sm text-primary hover:underline">&larr; Back Home</Link>
         </div>

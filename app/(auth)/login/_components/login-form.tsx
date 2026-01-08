@@ -36,64 +36,64 @@ export default function LoginForm() {
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true);
+const onSubmit = async (data: LoginFormData) => {
+  setIsLoading(true);
 
-    try {
-      const result = await signIn("credentials", {
-        email: data.email,
-        password: data.password,
-        redirect: false,
+  try {
+    const result = await signIn("credentials", {
+      email: data.email,
+      password: data.password,
+      redirect: false,
+    });
+
+    if (result?.error) {
+      toast('Login Failed', {
+        description: "Invalid email or password",
       });
-
-      if (result?.error) {
-        toast('Login Failed', {
-          description: "Invalid email or password",
-        });
-        return;
-      }
-
-      if (result?.ok) {
-        const response = await fetch('/api/auth/session');
-        const session = await response.json();
-        const userStatus = session?.user?.status;
-
-        // Get the appropriate redirect path based on role
-        toast("Login Successful", {
-          description: "Welcome back!",
-        });
-
-        setTimeout(() => {
-          // Redirect based on user status
-          switch (userStatus) {
-            case 'PENDING':
-              router.push('/pending');
-              break;
-            case 'REJECTED':
-              router.push('/rejected');
-              break;
-            case 'SUSPENDED':
-              router.push('/suspended');
-              break;
-            case 'APPROVED':
-              // For approved users, you can still use role-based redirection if needed
-              router.push('/dashboard');
-              break;
-            default:
-              // Fallback to dashboard for any unexpected status
-              router.push('/dashboard');
-          }
-          router.refresh();
-        }, 1000);
-      }
-    } catch (error) {
-      toast("Login Failed", {
-        description: "Something went wrong. Please try again.",
-      });
-    } finally {
-      setIsLoading(false);
+      return;
     }
-  };
+
+    if (result?.ok) {
+      const response = await fetch('/api/auth/session');
+      const session = await response.json();
+      const userStatus = session?.user?.status;
+
+      // Show success toast
+      toast("Login Successful", {
+        description: "Welcome back!",
+      });
+
+      // Redirect based on user status
+      switch (userStatus) {
+        case 'PENDING':
+          router.push('/pending');
+          break;
+        case 'REJECTED':
+          router.push('/rejected');
+          break;
+        case 'SUSPENDED':
+          router.push('/suspended');
+          break;
+        case 'APPROVED':
+          // For approved users, you can still use role-based redirection if needed
+          router.push('/dashboard');
+          break;
+        default:
+          // Fallback to dashboard for any unexpected status
+          console.warn('Unexpected user status:', userStatus);
+          router.push('/dashboard');
+      }
+      router.refresh();
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    toast("Login Failed", {
+      description: "Something went wrong. Please try again.",
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <Card className="w-full max-w-sm">

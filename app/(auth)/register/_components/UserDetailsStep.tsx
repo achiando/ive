@@ -187,12 +187,12 @@ export function UserDetailsStep({ formData, updateFormData, errors, isSubmitting
             value={formData.program || ''}
             onValueChange={(value: string) => updateFormData({ program: value })}
           >
-            <SelectTrigger className={errors.program ? 'border-red-500' : ''}>
-              <SelectValue placeholder="Select your program" />
+            <SelectTrigger className={`w-full max-w-full ${errors.program ? 'border-red-500' : ''}`}>
+              <SelectValue placeholder="Select your program" className="truncate" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-60 overflow-y-auto">
               {programs.map((program) => (
-                <SelectItem key={program} value={program}>
+                <SelectItem key={program} value={program} className="truncate">
                   {program}
                 </SelectItem>
               ))}
