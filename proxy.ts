@@ -42,6 +42,16 @@ function matchesRoute(pathname: string, routes: string[]): boolean {
 
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Immediately allow requests to auth-related pages to prevent redirect loops.
+  if (
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/register') ||
+    pathname.startsWith('/forgot-password') ||
+    pathname.startsWith('/reset-password')
+  ) {
+    return NextResponse.next();
+  }
   
 
 
@@ -94,10 +104,9 @@ const isPublicRoute =
 
   // If not authenticated, redirect to login
   if (!isAuthenticated) {
-    
-    const url = new URL('/login', request.url);
-    url.searchParams.set('callbackUrl', encodeURI(request.url));
-    return NextResponse.redirect(url);
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('callbackUrl', pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   const userStatus = token!.status as RegistrationStatus;

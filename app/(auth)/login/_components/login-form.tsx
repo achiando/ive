@@ -45,6 +45,7 @@ const onSubmit = async (data: LoginFormData) => {
       password: data.password,
       redirect: false,
     });
+    console.log("Result",result);
 
     if (result?.error) {
       toast('Login Failed', {
@@ -87,6 +88,7 @@ const onSubmit = async (data: LoginFormData) => {
     }
   } catch (error) {
     console.error('Login error:', error);
+    console.log("Error",error);
     toast("Login Failed", {
       description: "Something went wrong. Please try again.",
     });
