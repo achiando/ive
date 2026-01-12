@@ -1,3 +1,4 @@
+// import { sendVerificationCodeEmail } from '@/lib/email';
 import { sendRegistrationEmail } from '@/lib/email';
 import { prisma } from '@/lib/prisma';
 import { RegistrationStatus, UserRole } from '@prisma/client';
@@ -53,6 +54,26 @@ export async function POST(request: Request) {
     });
 
     if (existingUser) {
+      /*
+      // If user exists but is not verified, we can resend the code
+      if (!existingUser.emailVerified) {
+        const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
+        const verificationExpiry = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+
+        const updatedUser = await prisma.user.update({
+          where: { email },
+          data: { verificationToken, verificationExpiry },
+        });
+
+        await sendVerificationCodeEmail(updatedUser.email, `${updatedUser.firstName} ${updatedUser.lastName}`, verificationToken);
+
+        return NextResponse.json(
+          { message: 'User already exists. A new verification code has been sent.' },
+          { status: 200 }
+        );
+      }
+      */
+      
       return NextResponse.json(
         { error: 'User with this email already exists' },
         { status: 400 }
@@ -61,6 +82,12 @@ export async function POST(request: Request) {
 
     // Hash password
     const hashedPassword = await hash(password, 12);
+
+    /*
+    // Generate verification token and expiry
+    const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
+    const verificationExpiry = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+    */
 
     // Create user
     const newUser = await prisma.user.create({
@@ -71,6 +98,8 @@ export async function POST(request: Request) {
         password: hashedPassword,
         role,
         status: RegistrationStatus.PENDING,
+        // verificationToken,
+        // verificationExpiry,
         ...(studentId && { studentId }),
         ...(yearOfStudy && { yearOfStudy: parseInt(yearOfStudy) }),
         ...(program && { program }),
@@ -82,9 +111,19 @@ export async function POST(request: Request) {
 
     // Send registration email (don't await to speed up response)
     sendRegistrationEmail(email, `${firstName} ${lastName}`).catch(console.error);
+    /*
+    // Send verification email
+    await sendVerificationCodeEmail(email, `${firstName} ${lastName}`, verificationToken);
+    */
 
     // Return success response without sensitive data
     const { password: _, ...userWithoutPassword } = newUser;
+    /*
+    return NextResponse.json(
+      { message: 'Registration successful. Please check your email for a verification code.' },
+      { status: 201 }
+    );
+    */
     return NextResponse.json(
       { user: userWithoutPassword, message: 'Registration successful. Please wait for approval.' },
       { status: 201 }

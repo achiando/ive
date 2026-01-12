@@ -52,6 +52,32 @@ export default async function middleware(request: NextRequest) {
   ) {
     return NextResponse.next();
   }
+
+  /*
+  // Intercept the login request to check for email verification
+  if (pathname === '/api/auth/callback/credentials' && request.method === 'POST') {
+    // Clone the request to read the body without consuming it for the NextAuth handler
+    const requestClone = request.clone();
+    const formData = await requestClone.formData();
+    const email = formData.get('email') as string | null;
+
+    if (email) {
+      const user = await db.user.findUnique({
+        where: { email: email },
+      });
+
+      // If the user exists but their email is not verified, block the login
+      if (user && !user.emailVerified) {
+        // Redirect to the verification page, passing the email as a query param
+        const verifyUrl = new URL('/verify-email', request.url);
+        verifyUrl.searchParams.set('email', email);
+        // Adding a message for the UI to display
+        verifyUrl.searchParams.set('error', 'Please verify your email before logging in.');
+        return NextResponse.redirect(verifyUrl);
+      }
+    }
+  }
+  */
   
 
 

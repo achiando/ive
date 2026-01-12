@@ -59,6 +59,32 @@ export async function sendRegistrationEmail(email: string, name: string) {
   });
 }
 
+export async function sendVerificationCodeEmail(email: string, name:string, code: string) {
+  const subject = 'Your Verification Code';
+  const text = `Hello ${name},\n\nYour verification code is: ${code}\n\nThis code will expire in 30 minutes.\n\nBest regards,\nThe Team`;
+  
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 10px;">
+      <h2 style="text-align: center; color: #333;">Email Verification</h2>
+      <p>Hello ${name},</p>
+      <p>Thank you for registering. Please use the following verification code to complete your registration:</p>
+      <div style="text-align: center; margin: 30px 0; font-size: 24px; font-weight: bold; letter-spacing: 5px; background-color: #f5f5f5; padding: 15px; border-radius: 5px;">
+        ${code}
+      </div>
+      <p>This code will expire in 30 minutes.</p>
+      <p>If you did not request this, please ignore this email.</p>
+      <p>Best regards,<br>The Team</p>
+    </div>
+  `;
+
+  return sendEmail({
+    to: email,
+    subject,
+    text,
+    html,
+  });
+}
+
 export async function sendPasswordResetEmail(email: string, name: string, resetUrl: string) {
   const subject = 'Password Reset Request';
   const text = `Hello ${name},\n\nYou requested a password reset. Please click the following link to reset your password:\n\n${resetUrl}\n\nThis link will expire in 1 hour.\n\nIf you didn't request this, please ignore this email.`;
