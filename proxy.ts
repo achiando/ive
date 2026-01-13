@@ -104,13 +104,18 @@ export default async function middleware(request: NextRequest) {
 
   // Check if this is a public route
  // In proxy.ts, update the public route check:
-const isPublicRoute = 
+const isPublicRoute =
   // Skip middleware for auth-related API routes
   (pathname.startsWith('/api/auth/') && !pathname.endsWith('/session')) || // Exclude /session from this specific check
   pathname === '/api/auth/session' || // Explicitly make /api/auth/session public
   // Other public routes
-  (publicRoutes.some(route => pathname.startsWith(route)) || 
-   pathname.startsWith('/invite/'));
+  publicRoutes.some(route => {
+    if (route === '/') {
+      return pathname === '/'; // Only match the exact root path
+    }
+    return pathname.startsWith(route); // For other routes, startsWith is fine
+  }) ||
+  pathname.startsWith('/invite/');
   
   if (isPublicRoute) {
     
@@ -193,11 +198,14 @@ const isPublicRoute =
       UserRole.FACULTY,
     ];
 
+    console.log(`[Middleware] User Role: ${userRole}, Pathname: ${pathname}`);
   
     if (allowedRolesForAssessment.includes(userRole) && pathname !== '/sop/sop-1756819829791/view') {
       try {
         const hasTakenAssessment = await hasUserTakenAnyAssessment(token!.sub as string); // Pass userId
+        console.log(`[Middleware] User ${token!.sub} has taken assessment: ${hasTakenAssessment}`);
         if (!hasTakenAssessment) {
+          console.log(`[Middleware] Redirecting to SOP page for user ${token!.sub}`);
           return NextResponse.redirect(new URL('/sop/sop-1756819829791/view', request.url));
         }
       } catch (error) {

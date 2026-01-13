@@ -26,6 +26,8 @@ export default function SopViewPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isManualInteracted, setIsManualInteracted] = useState(false); // New state for user interaction
+  const [isTimerExpired, setIsTimerExpired] = useState(false); // New state for timer
+  const [remainingTime, setRemainingTime] = useState(120); // 2 minutes in seconds
 
   const isFirstLogin = searchParams.get('firstLogin') === 'true';
   const isStudent = session?.user?.role === UserRole.STUDENT;
@@ -49,6 +51,25 @@ export default function SopViewPage() {
     };
     fetchSafetyTest();
   }, [safetyTestId]);
+
+  // Timer effect
+  useEffect(() => {
+    console.log("[Timer Effect] useEffect is running."); // New log
+    const timer = setInterval(() => {
+      setRemainingTime((prevTime) => {
+        if (prevTime <= 1) {
+          clearInterval(timer);
+          setIsTimerExpired(true);
+          console.log("[Timer Effect] Timer expired, setIsTimerExpired(true)");
+          return 0;
+        }
+        console.log(`[Timer Effect] Remaining time: ${prevTime - 1}`);
+        return prevTime - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []); // Timer now runs for all users, once on mount 
 
   if (loading) {
     return (
@@ -91,6 +112,11 @@ export default function SopViewPage() {
     }
     router.push(`/assessment?${queryParams.toString()}`);
   };
+
+  const isButtonDisabled = !isTimerExpired || !isManualInteracted;
+  const timerMessage = !isTimerExpired
+    ? `Please read the manual. You can take the test in ${Math.floor(remainingTime / 60)}:${(remainingTime % 60).toString().padStart(2, '0')} minutes.`
+    : '';
 
   return (
     <div className="container mx-auto px-4">
@@ -170,15 +196,18 @@ export default function SopViewPage() {
 
       <DocumentPreview url={safetyTest.manualUrl || ''} onUserInteraction={() => setIsManualInteracted(true)} />
 
-      <div className="mt-10 flex justify-center">
+      <div className="mt-10 flex flex-col items-center">
         <Button
           onClick={handleTakeAssessment}
           size="lg"
           className="bg-blue-600 hover:bg-blue-700 text-white"
-          disabled={!isManualInteracted && !isFirstLoginSafetyFlow} // Disable if no interaction and not first login flow
+          // disabled={isButtonDisabled}
         >
           Take Safety Assessment
         </Button>
+        {timerMessage && (
+          <p className="mt-2 text-sm text-gray-600">{timerMessage}</p>
+        )}
       </div>
     </div>
   );
