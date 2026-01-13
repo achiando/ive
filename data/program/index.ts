@@ -9,6 +9,5 @@ export const programs = [
   "IvE/CDIE Event",
   "Biomedical Engineering",
   "Aerospace Engineering",
-  "Msc. Medical Device Innovation",
   "Other"
 ];
