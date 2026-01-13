@@ -1,6 +1,8 @@
 "use client";
 
+import { ExternalLink } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
+import { Button } from './button';
 
 interface DocumentPreviewProps {
   url: string;
@@ -29,6 +31,7 @@ export function DocumentPreview({ url, onUserInteraction }: DocumentPreviewProps
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const linkRef = useRef<HTMLAnchorElement>(null);
   const [youTubeApiReady, setYouTubeApiReady] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     // Load YouTube IFrame Player API script
@@ -53,6 +56,23 @@ export function DocumentPreview({ url, onUserInteraction }: DocumentPreviewProps
       }
     };
   }, [url]);
+
+  useEffect(() => {
+    // Check if mobile on mount and on resize
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768); // Tailwind's md breakpoint
+    };
+    // Initial check
+    checkMobile();
+    // Add event listener for window resize
+    window.addEventListener('resize', checkMobile);
+    // Cleanup
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const openInNewTab = () => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
 
   // Effect for handling iframe scroll and direct link clicks
   useEffect(() => {
@@ -134,20 +154,35 @@ export function DocumentPreview({ url, onUserInteraction }: DocumentPreviewProps
 
   if (url.includes("docs.google.com")) {
     return (
-      <div className="w-full h-[80vh] bg-gray-100 rounded-lg overflow-hidden">
-        <iframe
-          ref={iframeRef}
-          src={url}
-          className="w-full h-full"
-          frameBorder="0"
-          title="Google Document Preview"
-        >
-          Loading document...
-        </iframe>
+      <div className="relative w-full h-full">
+        <div className="w-full h-[calc(100vh-200px)] sm:h-[70vh] md:h-[80vh] rounded-lg overflow-hidden">
+          <iframe
+            ref={iframeRef}
+            src={url}
+            className="w-full h-full"
+            frameBorder="0"
+            title="Document Preview"
+            allowFullScreen
+          >
+            Loading document...
+          </iframe>
+        </div>
+        {/* Floating button for mobile */}
+        {isMobile && (
+          <Button
+            onClick={openInNewTab}
+            size="lg"
+            className="fixed bottom-6 right-6 z-50 rounded-full shadow-lg p-3 h-14 w-14 md:hidden"
+            aria-label="Open in new tab"
+          >
+            <ExternalLink className="h-6 w-6" />
+          </Button>
+        )}
       </div>
+
     );
   }
-  
+
   if (url.toLowerCase().endsWith('.pdf')) {
     return (
       <div className="w-full h-[80vh] bg-gray-100 rounded-lg overflow-hidden">

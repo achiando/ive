@@ -113,7 +113,7 @@ export default function SopViewPage() {
     router.push(`/assessment?${queryParams.toString()}`);
   };
 
-  const isButtonDisabled = !isTimerExpired || !isManualInteracted;
+  const isButtonDisabled = !isTimerExpired;
   const timerMessage = !isTimerExpired
     ? `Please read the manual. You can take the test in ${Math.floor(remainingTime / 60)}:${(remainingTime % 60).toString().padStart(2, '0')} minutes.`
     : '';
@@ -201,7 +201,7 @@ export default function SopViewPage() {
           onClick={handleTakeAssessment}
           size="lg"
           className="bg-blue-600 hover:bg-blue-700 text-white"
-          // disabled={isButtonDisabled}
+          disabled={isButtonDisabled}
         >
           Take Safety Assessment
         </Button>
