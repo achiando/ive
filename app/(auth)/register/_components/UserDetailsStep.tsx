@@ -154,6 +154,16 @@ export function UserDetailsStep({ formData, updateFormData, errors, isSubmitting
               onChange={handleEmailChange}
               onBlur={(e) => checkCredentials('email', e.target.value)}
               placeholder="Enter your email"
+              pattern="[^@\s]+@[^@\s]+\.[^@\s]+\.?"
+              title="Please enter a valid email address (e.g., user@example.com or user@example.com.)"
+              onInvalid={(e) => {
+                const input = e.target as HTMLInputElement;
+                if (input.validity.patternMismatch) {
+                  input.setCustomValidity('Please enter a valid email address (e.g., user@example.com or user@example.com.)');
+                } else {
+                  input.setCustomValidity('');
+                }
+              }}
               className={`${errors.email ? 'border-red-500' : ''} pr-10`}
               required
             />

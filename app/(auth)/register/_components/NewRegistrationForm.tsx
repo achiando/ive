@@ -61,7 +61,7 @@ export function NewRegistrationForm() {
     
     if (!email) {
       newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+\.?$/.test(email)) {
       newErrors.email = 'Please enter a valid email address';
     }
     
