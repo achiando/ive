@@ -61,9 +61,13 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"file" | "link">(showLinkTab ? "file" : "file"); // Default to file tab
+  const [activeTab, setActiveTab] = useState<"file" | "link">(showLinkTab ? "link" : "link"); // Default to link tab
   const [linkInput, setLinkInput] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    setCurrentUrls(value || []);
+  }, [value]);
 
   const onDrop = useCallback(
     async (acceptedFiles: File[], fileRejections: any[]) => {
@@ -167,11 +171,11 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
       {showLinkTab ? (
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "file" | "link")}>
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="file">
-              <UploadCloudIcon className="mr-2 h-4 w-4" /> File Upload
-            </TabsTrigger>
             <TabsTrigger value="link">
               <LinkIcon className="mr-2 h-4 w-4" /> Add Link
+            </TabsTrigger>
+             <TabsTrigger value="file">
+              <UploadCloudIcon className="mr-2 h-4 w-4" /> File Upload
             </TabsTrigger>
           </TabsList>
           <TabsContent value="file" className="mt-4">

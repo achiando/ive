@@ -200,7 +200,7 @@ const isPublicRoute =
 
     console.log(`[Middleware] User Role: ${userRole}, Pathname: ${pathname}`);
   
-    if (allowedRolesForAssessment.includes(userRole) && pathname !== '/sop/sop-1756819829791/view') {
+    if (allowedRolesForAssessment.includes(userRole) && pathname !== '/sop/cmkcmgeoq0001hisbsow5qhp7/view') {
       try {
         const hasTakenAssessment = await hasUserTakenAnyAssessment(token!.sub as string); // Pass userId
         console.log(`[Middleware] User ${token!.sub} has taken assessment: ${hasTakenAssessment}`);

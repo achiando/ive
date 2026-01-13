@@ -225,6 +225,9 @@ export async function updateSafetyTest(
     revalidatePath(`/dashboard/sop/${id}`);
     return result;
   } catch (error: any) {
+    if (error.code === 'P2002' && error.meta?.target?.includes('name')) {
+      throw new Error("A safety test with this name already exists.");
+    }
     console.error(`Error updating safety test with ID ${id}:`, error);
     throw new Error(`Failed to update safety test: ${error.message}`);
   }

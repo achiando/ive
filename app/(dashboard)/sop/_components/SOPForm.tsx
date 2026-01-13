@@ -46,20 +46,19 @@ interface SOPFormProps {
 
 export function SOPForm({ initialData, onSubmitAction, onFormSuccess, onFormCancel }: SOPFormProps) {
   const [loading, setLoading] = useState(false);
-  const [uploadedFileUrl, setUploadedFileUrl] = useState<string | undefined>(initialData?.manualUrl || undefined);
 
-const form = useForm<SafetyTestFormValues>({
-  resolver: zodResolver(formSchema),
-  defaultValues: initialData
-    ? {
+  const form = useForm<SafetyTestFormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: initialData
+      ? {
         ...initialData,
-        description: initialData.description || undefined,  // Convert null to undefined
-        manualUrl: initialData.manualUrl || undefined,      // Convert null to undefined
-        manualType: initialData.manualType || undefined,    // Convert null to undefined
+        description: initialData.description || undefined,
+        manualUrl: initialData.manualUrl || "",
+        manualType: initialData.manualType || undefined,
         requiredForRoles: initialData.requiredForRoles,
         associatedEquipmentType: initialData.associatedEquipmentTypes || [],
       }
-    : {
+      : {
         name: "",
         description: "",
         manualUrl: "",
@@ -68,42 +67,38 @@ const form = useForm<SafetyTestFormValues>({
         associatedEquipmentType: [],
         frequency: SafetyTestFrequency.ONE_TIME,
       },
-});
+  });
 
-useEffect(() => {
-  if (initialData) {
-    form.reset({
-      ...initialData,
-      description: initialData.description || undefined,  // Convert null to undefined
-      manualUrl: initialData.manualUrl || '',            // Convert null to empty string
-      manualType: initialData.manualType || undefined,   // Convert null to undefined
-      requiredForRoles: initialData.requiredForRoles,
-      associatedEquipmentType: initialData.associatedEquipmentTypes || [],
-    });
-    setUploadedFileUrl(initialData.manualUrl || undefined);
-  } else {
-    form.reset({
-      name: "",
-      description: "",
-      manualUrl: "",
-      manualType: undefined,
-      requiredForRoles: [],
-      associatedEquipmentType: [],
-      frequency: SafetyTestFrequency.ONE_TIME,
-    });
-    setUploadedFileUrl(undefined);
-  }
-}, [initialData, form]);
+  const watchedManualUrl = form.watch("manualUrl");
 
-  const handleUploadComplete = (urls: string[]) => {
-    if (urls.length > 0) {
-      setUploadedFileUrl(urls[0]);
-      form.setValue("manualUrl", urls[0]);
-      form.trigger("manualUrl"); // Trigger validation for manualUrl
+  useEffect(() => {
+    if (initialData) {
+      form.reset({
+        ...initialData,
+        description: initialData.description || undefined,
+        manualUrl: initialData.manualUrl || '',
+        manualType: initialData.manualType || undefined,
+        requiredForRoles: initialData.requiredForRoles,
+        associatedEquipmentType: initialData.associatedEquipmentTypes || [],
+      });
     } else {
-      setUploadedFileUrl(undefined);
-      form.setValue("manualUrl", "");
-      form.trigger("manualUrl");
+      form.reset({
+        name: "",
+        description: "",
+        manualUrl: "",
+        manualType: undefined,
+        requiredForRoles: [],
+        associatedEquipmentType: [],
+        frequency: SafetyTestFrequency.ONE_TIME,
+      });
+    }
+  }, [initialData, form.reset]);
+
+  const handleUrlsChange = (urls: string[]) => {
+    if (urls.length > 0) {
+      form.setValue("manualUrl", urls[0], { shouldValidate: true, shouldDirty: true });
+    } else {
+      form.setValue("manualUrl", "", { shouldValidate: true, shouldDirty: true });
     }
   };
 
@@ -111,12 +106,10 @@ useEffect(() => {
     setLoading(true);
     try {
       let response;
-      const dataToSubmit = { ...values, manualUrl: uploadedFileUrl || '' };
-
       if (initialData) {
-        response = await onSubmitAction({ id: initialData.id, ...dataToSubmit });
+        response = await onSubmitAction({ id: initialData.id, ...values });
       } else {
-        response = await onSubmitAction(dataToSubmit);
+        response = await onSubmitAction(values);
       }
       onFormSuccess(response);
     } catch (error: any) {
@@ -164,10 +157,14 @@ useEffect(() => {
         />
         <FormItem>
           <FormLabel>Manual/Video Upload</FormLabel>
-          <MultiFileUpload onUploadComplete={handleUploadComplete} maxFiles={1} />
-          {uploadedFileUrl && (
+          <MultiFileUpload
+            value={watchedManualUrl ? [watchedManualUrl] : []}
+            onChange={handleUrlsChange}
+            maxFiles={1}
+          />
+          {watchedManualUrl && (
             <p className="text-sm text-muted-foreground">
-              Current Manual: <a href={uploadedFileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{uploadedFileUrl}</a>
+              Current Manual: <a href={watchedManualUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{watchedManualUrl}</a>
             </p>
           )}
           <FormMessage>{form.formState.errors.manualUrl?.message}</FormMessage>
@@ -196,59 +193,59 @@ useEffect(() => {
             </FormItem>
           )}
         />
-<FormField
-  control={form.control}
-  name="requiredForRoles"
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel>Required For Roles</FormLabel>
-      <Select
-        disabled={loading}
-        onValueChange={(value) => {
-  const currentValues = field.value || [];
-  const role = value as UserRole;
-  if (currentValues.includes(role)) {
-    field.onChange(currentValues.filter((v) => v !== role));
-  } else {
-    field.onChange([...currentValues, role]);
-  }
-}}
-        value=""
-      >
-        <FormControl>
-          <SelectTrigger>
-            <SelectValue placeholder="Select roles" />
-          </SelectTrigger>
-        </FormControl>
-        <SelectContent>
-          {Object.values(UserRole).map((role) => (
-            <SelectItem key={role} value={role}>
-              {role.replace(/_/g, ' ')}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <div className="mt-2">
-        {field.value?.map((role) => (
-          <span key={role} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary mr-2">
-            {role.replace(/_/g, ' ')}
-            <button
-              type="button"
-              className="ml-1.5 inline-flex items-center justify-center h-4 w-4 rounded-full text-primary hover:bg-primary/20"
-              onClick={(e) => {
-                e.preventDefault();
-                field.onChange(field.value.filter((r) => r !== role));
-              }}
-            >
-              ×
-            </button>
-          </span>
-        ))}
-      </div>
-      <FormMessage />
-    </FormItem>
-  )}
-/>
+        <FormField
+          control={form.control}
+          name="requiredForRoles"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Required For Roles</FormLabel>
+              <Select
+                disabled={loading}
+                onValueChange={(value) => {
+                  const currentValues = field.value || [];
+                  const role = value as UserRole;
+                  if (currentValues.includes(role)) {
+                    field.onChange(currentValues.filter((v) => v !== role));
+                  } else {
+                    field.onChange([...currentValues, role]);
+                  }
+                }}
+                value=""
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select roles" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {Object.values(UserRole).map((role) => (
+                    <SelectItem key={role} value={role}>
+                      {role.replace(/_/g, ' ')}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="mt-2">
+                {field.value?.map((role) => (
+                  <span key={role} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary mr-2">
+                    {role.replace(/_/g, ' ')}
+                    <button
+                      type="button"
+                      className="ml-1.5 inline-flex items-center justify-center h-4 w-4 rounded-full text-primary hover:bg-primary/20"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        field.onChange(field.value.filter((r) => r !== role));
+                      }}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="associatedEquipmentType"
