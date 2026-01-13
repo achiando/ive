@@ -48,23 +48,30 @@ const onSubmit = async (data: LoginFormData) => {
     console.log("Result",result);
 
     if (result?.error) {
+      console.log("Result",result);
       toast('Login Failed', {
-        description: "Invalid email or password",
+        description: result.error === "CredentialsSignin" ? "Invalid email or password" : result.error,
       });
       return;
     }
 
     if (result?.ok) {
-      const response = await fetch('/api/auth/session');
-      const session = await response.json();
-      const userStatus = session?.user?.status;
-
       // Show success toast
       toast("Login Successful", {
         description: "Welcome back!",
       });
 
-      // Redirect based on user status
+      // The custom fetch to /api/auth/session was causing a JSON parsing error.
+      // NextAuth.js handles session management automatically after a successful signIn.
+      // The session data will be available via useSession or getServerSession on subsequent requests.
+      // The status-based redirection logic will need to be handled in a middleware or a layout component
+      // that reads the session. For now, redirect to dashboard.
+
+      /*
+      const response = await fetch('/api/auth/session');
+      const session = await response.json();
+      const userStatus = session?.user?.status;
+
       switch (userStatus) {
         case 'PENDING':
           router.push('/pending');
@@ -76,15 +83,15 @@ const onSubmit = async (data: LoginFormData) => {
           router.push('/suspended');
           break;
         case 'APPROVED':
-          // For approved users, you can still use role-based redirection if needed
           router.push('/dashboard');
           break;
         default:
-          // Fallback to dashboard for any unexpected status
           console.warn('Unexpected user status:', userStatus);
           router.push('/dashboard');
       }
-      router.refresh();
+      */
+      router.push('/dashboard'); // Default redirect after successful login
+      router.refresh(); // Refresh to get the updated session
     }
   } catch (error) {
     console.error('Login error:', error);

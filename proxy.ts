@@ -11,6 +11,8 @@ const publicRoutes = [
   '/auth/register',
   '/auth/forgot-password',
   '/auth/reset-password',
+  '/auth/verify-email',
+  '/auth/session',
   '/api/auth',
   '/pending',
   '/rejected',
@@ -48,7 +50,9 @@ export default async function middleware(request: NextRequest) {
     pathname.startsWith('/login') ||
     pathname.startsWith('/register') ||
     pathname.startsWith('/forgot-password') ||
-    pathname.startsWith('/reset-password')
+    pathname.startsWith('/reset-password') ||
+    pathname.startsWith('/verify-email') ||
+    pathname.startsWith('/session')
   ) {
     return NextResponse.next();
   }
@@ -102,8 +106,8 @@ export default async function middleware(request: NextRequest) {
  // In proxy.ts, update the public route check:
 const isPublicRoute = 
   // Skip middleware for auth-related API routes
-  pathname.startsWith('/api/auth/') && 
-  !pathname.endsWith('/session') &&  // But still process /session
+  (pathname.startsWith('/api/auth/') && !pathname.endsWith('/session')) || // Exclude /session from this specific check
+  pathname === '/api/auth/session' || // Explicitly make /api/auth/session public
   // Other public routes
   (publicRoutes.some(route => pathname.startsWith(route)) || 
    pathname.startsWith('/invite/'));

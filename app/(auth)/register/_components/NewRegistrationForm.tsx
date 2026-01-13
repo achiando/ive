@@ -116,6 +116,9 @@ export function NewRegistrationForm() {
       console.log('Registration response:', { status: response.status, data: responseData });
       
       if (!response.ok) {
+        if (response.status === 409) {
+          throw new Error('An account with this email already exists. Please try logging in.');
+        }
         if (response.status === 400 && responseData.errors) {
           // Handle validation errors
           const errorMessages = Object.entries(responseData.errors)

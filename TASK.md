@@ -120,5 +120,79 @@
 - **Implemented Role-Based Equipment Visibility and Column Hiding**:
     - Modified `app/(dashboard)/equipments/_components/columns.tsx` to accept `userRole` and conditionally display `serialNumber`, `dailyCapacity`, `createdAt`, and `actions` columns only for `ADMIN` or `TECHNICIAN` roles.
     - Modified `app/(dashboard)/equipments/page.tsx` to fetch `userRole` from the session and filter out equipment with `IN_USE`, `OUT_OF_SERVICE`, and `MAINTENANCE` statuses for non-admin/technician users.
-    - Modified `app/(dashboard)/equipments/_components/EquipmentsPageClient.tsx` to accept and pass the `userRole` prop to `getColumns` and `EquipmentCard`.## [Task Completed] - Asterisks removed from question text in AssessmentBot.tsx
+    - Modified `app/(dashboard)/equipments/_components/EquipmentsPageClient.tsx` to accept and pass the `userRole` prop to `getColumns` and `EquipmentCard`.- **Implemented specific error handling for existing user registration:**
+    - Modified `app/api/auth/register/route.ts` to return `409 Conflict` status when a user with the provided email already exists.
+    - Modified `app/(auth)/register/_components/NewRegistrationForm.tsx` to specifically check for `409 Conflict` and display a user-friendly message.
+- **Added `console.log` to `SopPageClient.tsx`:** Added a `console.log("SopPageClient: initialSafetyTests", initialSafetyTests);` to `app/(dashboard)/sop/_components/SopPageClient.tsx` to debug why `LINK` type safety tests are not being displayed.
+- **Fixed type error in `app/(dashboard)/users/_components/UsersPageClient.tsx`**: Updated `UsersPageClientProps` to use `UserWithCounts[]` for the `users` prop and added the corresponding import.
+- **Fixed type error in `app/(public)/invite/[projectId]/_components/InviteClient.tsx`**: Replaced `sessionStatus === 'loading'` with `sessionLoading` in the disabled prop of the join project button.
+- **Fixed type error in `lib/actions/booking.ts`**: Imported `BookingAnalyticsData` from `types/booking.ts`.
+- **Fixed type error in `lib/actions/equipment.ts`**: Updated the `select` statement in `getProjectsForEquipment` to include all fields required by the `Project` type.
+- **Fixed type error in `lib/email.ts`**: Removed duplicate `title` property from the `PENDING` object in `statusMap`.
+- **Implemented User Profile Image Upload:**
+    - Integrated `MultiFileUpload` component into `app/(dashboard)/me/_components/ProfileForm.tsx` for `profileImage` field, with `/logo.png` as default.
+    - Updated `app/(dashboard)/me/page.tsx` to display the `profileImage` or fallback to `/logo.png`, and moved the profile image display into the "Personal Information" card.
+- **Implemented Program Selection in Profile Edit:**
+    - Added a "Program" selection field to `app/(dashboard)/me/_components/ProfileForm.tsx` using `programs` data from `@/data/program` and the `Select` component.
+    - Replaced the "Department" input field with a `Select` component using the `programs` data in `app/(dashboard)/me/_components/ProfileForm.tsx`.
+- **Implemented SOP (Safety Test) Feature:**
+    - **Schema:** Added `SafetyTestFrequency` enum, `SafetyTest` model (with `manualUrl`, `manualType`), and `SafetyTestAttempt` model to `prisma/schema.prisma`.
+    - **Types:** Created `types/safety-test.ts` with `SafetyTestFormValues`, `GetSafetyTestsParams`, `SafetyTestWithRelations`, `SafetyTestAttemptWithRelations`.
+    - **Server Actions:** Created `lib/actions/safety-test.ts` with CRUD operations for `SafetyTest` and `recordSafetyTestAttempt`. Implemented explicit null handling for `safetyTestId` and `equipmentId`, and added validation for `userId` to prevent null constraint violations.
+    - **UI Structure:**
+        - Created `app/(dashboard)/sop/page.tsx` (SOP List Page).
+        - Created `app/(dashboard)/sop/[id]/page.tsx` (SOP Create/Edit Page).
+        - Created `app/(dashboard)/sop/[id]/view/page.tsx` (SOP View Page).
+        - Created `app/(dashboard)/sop/_components/columns.tsx` for DataTable.
+        - Created `app/(dashboard)/sop/_components/cell-action.tsx` for row actions.
+        - Created `app/(dashboard)/sop/_components/SopPageClient.tsx` for client-side list logic.
+        - Created `app/(dashboard)/sop/_components/SOPForm.tsx` for create/edit form.
+    - **Routing:** Adjusted links and navigation to match the new routing structure (`/new`, `/[id]`, `/[id]/view`).
+- **Implemented AI Assessment Bot Integration:**
+    - **AI Assessment Server Action:** Created `lib/actions/ai-assessment.ts` with `generateAssessmentFromEquipment` to generate assessment content from equipment details.
+    - **AI Assessment API Route:** Created `app/api/gemini-assessment/route.ts` to serve as the endpoint for the `AssessmentBot`, dynamically generating questions from `manualUrl` or falling back to `equipmentId` and `safetyTestId`.
+    - **`AssessmentBot` Component:**
+        - Created `components/AssessmentBot.tsx`.
+        - Updated `AssessmentBotProps` to accept `safetyTestId`, `equipmentId`, `manualUrl`, `documentTitle`.
+        - Modified `startQuizInternal` to call the new `/api/gemini-assessment` endpoint with appropriate parameters.
+        - Integrated `recordSafetyTestAttempt` server action upon successful assessment completion.
+    - **Test Page:** Created `app/(dashboard)/assessment-test-page/page.tsx` for testing the `AssessmentBot` with various inputs.
+- **Updated SOP View Page and List Client:**
+    - **`app/(dashboard)/sop/[id]/view/page.tsx`**: Simplified `renderManualContent` to display a link to the manual, removed direct `AssessmentBot` import, and updated the "Take Safety Assessment" button to navigate to a dedicated assessment page (`/dashboard/assessment`).
+    - **`app/(dashboard)/sop/_components/SopPageClient.tsx`**: Added optional `equipmentId` prop and modified `filteredSafetyTests` to filter by `associatedEquipmentTypes` of the provided `equipmentId`.
+    - **`app/(dashboard)/sop/[id]/page.tsx`**: Refactored to be a Server Component, fetching data and passing it to `SopFormClient`.
+    - **`app/(dashboard)/sop/_components/SopFormClient.tsx`**: Created as a new Client Component to handle form logic.
+    - **`app/(dashboard)/sop/_components/SOPForm.tsx`**: Modified to be a purely presentational component, accepting `onSubmitAction` and callbacks as props.
+    - **`components/AssessmentBot.tsx`**: Modified `parseQuestions` function to remove all occurrences of asterisks from the question text.
+- **Implemented Cloudinary Multi-File Upload Component:**
+    -   Created API route `app/api/cloudinary-upload/route.ts` for secure multi-file uploads to Cloudinary.
+    -   Developed reusable `components/ui/multi-file-upload.tsx` component for file selection, preview, upload progress, and returning Cloudinary URLs.
+- - Integrated `MultiFileUpload` into `EquipmentForm.tsx`: Replaced the image and manual URL input fields with the `MultiFileUpload` component, configured for single file uploads.
+- Enhanced `MultiFileUpload.tsx`: Implemented automatic upload on file selection and refined file size/count restriction messages.
+- Integrated `MultiFileUpload` into `SOPForm.tsx`: Replaced the manual URL input with the `MultiFileUpload` component, adapting it to handle a single uploaded file URL.
+- Enhanced `app/(dashboard)/consumables/allocations/[id]/page.tsx` to allow pre-selection of `bookingId` or `maintenanceId` from URL parameters for new consumable allocations.
+- Implemented robust authorization checks in `lib/actions/booking.ts` and `lib/actions/consumable-allocation.ts` to ensure non-admin users can only access/manage their own bookings and consumable allocations, including analytics.
+- Fixed column definition and date formatting in `app/(dashboard)/consumables/allocations/_components/columns.tsx` to resolve 'Column with id' error and 'Invalid time value' error.
+- Enhanced `lib/actions/user.ts` to allow `getUsers` to filter by `UserRole`s, and updated `app/(dashboard)/technicians/page.tsx` to fetch only technician-related roles.
+- Implemented interactive failed items table with editing and re-upload functionality in `app/(dashboard)/equipments/bulk-upload/_components/BulkUploadClient.tsx`, and fixed related type errors.
+- **Modified `app/(dashboard)/projects/[id]/view/_components/ProjectView.tsx`**:
+    - Removed the tab/select functionality, making all project details scrollable.
+    - Added a "Create New Booking" button to the Project Bookings section, which navigates to `/booking/new?projectId=<project.id>`.
+- **Implemented Event View Page**:
+    - Created `app/(dashboard)/events/[id]/view/page.tsx` to display event details and participants.
+    - Created `app/(dashboard)/events/[id]/view/_components/EventDetails.tsx` to render event information.
+    - Created `app/(dashboard)/events/[id]/view/_components/ParticipantsDataTable.tsx` to display event participants in a table.
+    - Created `app/(dashboard)/events/[id]/view/_components/columns.tsx` to define the columns for the participants data table.
+- **Implemented Role-Based Equipment Visibility and Column Hiding**:
+    - Modified `app/(dashboard)/equipments/_components/columns.tsx` to accept `userRole` and conditionally display `serialNumber`, `dailyCapacity`, `createdAt`, and `actions` columns only for `ADMIN` or `TECHNICIAN` roles.
+    - Modified `app/(dashboard)/equipments/page.tsx` to fetch `userRole` from the session and filter out equipment with `IN_USE`, `OUT_OF_SERVICE`, and `MAINTENANCE` statuses for non-admin/technician users.
+    - Modified `app/(dashboard)/equipments/_components/EquipmentsPageClient.tsx` to accept and pass the `userRole` prop to `getColumns` and `EquipmentCard`.
+- **Resolved `CLIENT_FETCH_ERROR` during login:**
+    - Commented out redundant `fetch('/api/auth/session')` call in `app/(auth)/login/_components/login-form.tsx` to prevent JSON parsing errors.
+    - Removed custom API route `app/api/auth/session/route.ts` as NextAuth.js handles session management internally.
+    - Implemented a default redirect to `/dashboard` after successful login, with `router.refresh()` to update the session.
+- **Enhanced login error feedback:**
+    - Modified `app/(auth)/login/_components/login-form.tsx` to display more specific error messages from the `signIn` function, falling back to a generic message for `CredentialsSignin` errors.
+## [Task Completed] - Asterisks removed from question text in AssessmentBot.tsx
 ## [Task Completed] - Null constraint violation in recordSafetyTestAttempt fixed and TASK.md updated
+

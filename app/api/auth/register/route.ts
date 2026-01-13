@@ -76,7 +76,7 @@ export async function POST(request: Request) {
       
       return NextResponse.json(
         { error: 'User with this email already exists' },
-        { status: 400 }
+        { status: 409 }
       );
     }
 
