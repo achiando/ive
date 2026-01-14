@@ -12,7 +12,7 @@ export default async function PendingPage() {
   const session = await getServerSession(authOptions);
 
   if (!session?.user || !session.user.id) {
-    redirect("/auth/login");
+    redirect("/login");
   }
 
   if (session.user.status === RegistrationStatus.APPROVED) {

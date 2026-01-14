@@ -53,10 +53,6 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuItem onClick={() => navigator.clipboard.writeText(data.id)}>
-          Copy ID
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
         {
           canAddEvent && (
             <DropdownMenuItem onClick={() => router.push(`/events/${data.id}`)}>
@@ -67,7 +63,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
         <DropdownMenuItem onClick={() => router.push(`/events/${data.id}/view`)}>
           View
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => router.push(`/events/${data.id}/register`)}>
+        <DropdownMenuItem onClick={() => router.push(`/events-join/${data.id}/register`)}>
           Register
         </DropdownMenuItem>
         <DropdownMenuSeparator />
