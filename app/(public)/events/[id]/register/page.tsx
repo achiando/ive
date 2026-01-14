@@ -13,7 +13,8 @@ export default async function EventRegisterPage({
   params: { id: string };
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
-  const { id } = params;
+  const res = await params;
+  const id = res.id;
   const asGuest = searchParams?.asGuest === 'true';
 
   if (!id) {
