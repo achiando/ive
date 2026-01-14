@@ -101,7 +101,6 @@ export function ProjectForm({ initialData, projectId }: ProjectFormProps) {
       router.refresh(); // Refresh the router to reflect changes and trigger re-fetch if needed
       
     } catch (error: any) {
-      console.error('Error creating/updating project:', error);
       const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
       
       // Handle specific error messages
@@ -112,15 +111,15 @@ export function ProjectForm({ initialData, projectId }: ProjectFormProps) {
         });
       }
 
-      toast.error('Failed to save project', {
-        description: errorMessage.includes('\n') ? (
-          <div className="whitespace-pre-line text-sm">{errorMessage}</div>
-        ) : (
-          <span className="text-sm">{errorMessage}</span>
-        ),
-        duration: errorMessage.includes('\n') ? 15000 : 8000,
-        className: 'bg-red-50 border-red-200 text-red-800',
-      });
+      // toast.error('Failed to save project', {
+      //   description: errorMessage.includes('\n') ? (
+      //     <div className="whitespace-pre-line text-sm">{errorMessage}</div>
+      //   ) : (
+      //     <span className="text-sm">{errorMessage}</span>
+      //   ),
+      //   duration: errorMessage.includes('\n') ? 15000 : 8000,
+      //   className: 'bg-red-50 border-red-200 text-red-800',
+      // });
     } finally {
       setIsSubmitting(false);
     }
