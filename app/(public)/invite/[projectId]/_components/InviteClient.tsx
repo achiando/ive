@@ -31,8 +31,7 @@ export function InviteClient({ project, token }: InviteClientProps) {
     }
 
     if (sessionStatus === 'unauthenticated') {
-      // Redirect to login page, then back to this invite page
-      router.push(`/api/auth/signin?callbackUrl=/invite/${project.id}?token=${token}`);
+      router.push(`/login?callbackUrl=/invite/${project.id}?token=${token}`);
       return;
     }
 
