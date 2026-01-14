@@ -1,16 +1,17 @@
 import { getEventById } from "@/lib/actions/event";
 import { getEventParticipants } from "@/lib/actions/event-participation";
 import { notFound } from "next/navigation";
-import { ParticipantsDataTable } from "./_components/ParticipantsDataTable";
 import { EventDetails } from "./_components/EventDetails";
+import { ParticipantsDataTable } from "./_components/ParticipantsDataTable";
 
 export default async function EventViewPage({
   params,
 }: {
   params: { id: string };
 }) {
-  const event = await getEventById(params.id);
-  const participants = await getEventParticipants(params.id);
+  const res = await params;
+  const event = await getEventById(res.id);
+  const participants = await getEventParticipants(res.id);
 
   if (!event) {
     notFound();
