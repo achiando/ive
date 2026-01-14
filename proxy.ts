@@ -198,19 +198,13 @@ const isPublicRoute =
       UserRole.FACULTY,
     ];
 
-    console.log(`[Middleware] User Role: ${userRole}, Pathname: ${pathname}`);
-  
     if (allowedRolesForAssessment.includes(userRole) && pathname !== '/sop/cmkcmgeoq0001hisbsow5qhp7/view') {
       try {
         const hasTakenAssessment = await hasUserTakenAnyAssessment(token!.sub as string); // Pass userId
-        console.log(`[Middleware] User ${token!.sub} has taken assessment: ${hasTakenAssessment}`);
         if (!hasTakenAssessment) {
-          console.log(`[Middleware] Redirecting to SOP page for user ${token!.sub}`);
-          return NextResponse.redirect(new URL('/sop/sop-1756819829791/view', request.url));
+          return NextResponse.redirect(new URL('/sop/cmkcmgeoq0001hisbsow5qhp7/view', request.url));
         }
       } catch (error) {
-        console.error("Failed to check assessment status in middleware:", error);
-        // If checking assessment status fails, redirect to login to prevent unauthorized access.
         return NextResponse.redirect(new URL('/login', request.url));
       }
     }
