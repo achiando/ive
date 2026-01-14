@@ -71,6 +71,21 @@ export default function SopViewPage() {
     return () => clearInterval(timer);
   }, []); // Timer now runs for all users, once on mount 
 
+
+  const handleTakeAssessment = () => {
+    if (!safetyTest?.id) return;
+    const queryParams = new URLSearchParams();
+    queryParams.set('safetyTestId', safetyTest.id);
+    const url = `/assessment?safetyTestId=${safetyTest.id}&manualType=${safetyTest.manualType}`;
+
+    router.push(url);
+  };
+
+  const isButtonDisabled = !isTimerExpired;
+  const timerMessage = !isTimerExpired
+    ? `Please read the manual. You can take the test in ${Math.floor(remainingTime / 60)}:${(remainingTime % 60).toString().padStart(2, '0')} minutes.`
+    : '';
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
@@ -100,23 +115,6 @@ export default function SopViewPage() {
     );
   }
 
-  const handleTakeAssessment = () => {
-    const queryParams = new URLSearchParams();
-    queryParams.set('safetyTestId', safetyTest.id);
-    const equipmentIdFromQuery = searchParams.get('equipmentId');
-    if (equipmentIdFromQuery) {
-      queryParams.set('equipmentId', equipmentIdFromQuery);
-    }
-    if (isFirstLogin) {
-      queryParams.set('firstLogin', 'true');
-    }
-    router.push(`/assessment?${queryParams.toString()}`);
-  };
-
-  const isButtonDisabled = !isTimerExpired;
-  const timerMessage = !isTimerExpired
-    ? `Please read the manual. You can take the test in ${Math.floor(remainingTime / 60)}:${(remainingTime % 60).toString().padStart(2, '0')} minutes.`
-    : '';
 
   return (
     <div className="container mx-auto px-4">

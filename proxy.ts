@@ -198,7 +198,13 @@ const isPublicRoute =
       UserRole.FACULTY,
     ];
 
-    if (allowedRolesForAssessment.includes(userRole) && pathname !== '/sop/cmkcmgeoq0001hisbsow5qhp7/view') {
+    if (
+      allowedRolesForAssessment.includes(userRole) &&
+      pathname !== '/sop/cmkcmgeoq0001hisbsow5qhp7/view' &&
+      !pathname.startsWith('/assessment') &&
+      !pathname.startsWith('/api/extract-text') &&
+      !pathname.startsWith('/api/openai-assessment')
+    ) {
       try {
         const hasTakenAssessment = await hasUserTakenAnyAssessment(token!.sub as string); // Pass userId
         if (!hasTakenAssessment) {

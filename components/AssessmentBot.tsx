@@ -23,6 +23,8 @@ type QuizState = 'idle' | 'loading' | 'quiz' | 'finished' | 'error';
 
 type QuizQA = { question: string; options: string[]; answer: string; explanation: string };
 
+
+
 export function AssessmentBot({
   safetyTestId,
   equipmentId,
@@ -44,6 +46,11 @@ export function AssessmentBot({
   const [clarifyResponse, setClarifyResponse] = useState('');
   const [loadingClarify, setLoadingClarify] = useState(false);
   const [error, setError] = useState('');
+  console.log("Manual URL:", manualUrl);
+  console.log("Manual Type:", manualType);
+  console.log("Document Title:", documentTitle);
+  console.log("Safety Test ID:", safetyTestId);
+  console.log("Equipment ID:", equipmentId);
 
   useEffect(() => {
     if (open && state === 'idle') {
@@ -106,7 +113,9 @@ export function AssessmentBot({
     try {
       let manualText = '';
       if (manualUrl && manualType && (manualType === ManualType.LINK || manualType === ManualType.PDF)) {
+        // manualText = await fetchManualText(manualUrl);
         manualText = await extractTextFromDocument(manualUrl);
+        console.log("Manual text:", manualText);
       } else if (manualType === ManualType.VIDEO) {
         // For videos, we don't extract text. The API should rely on documentTitle/equipmentId.
         manualText = `Video manual for: ${documentTitle}`;
@@ -125,16 +134,19 @@ export function AssessmentBot({
           documentTitle,
         }),
       });
+      console.log("API response:", res);
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({ error: "An unknown error occurred." }));
+        console.log("Error data:", errorData);
         setError(errorData.error || `Server error: ${res.status}`);
-        setState('error');
         return;
       }
 
       const data = await res.json();
+      console.log("API response:", data);
       const content = data.result?.choices?.[0]?.message?.content;
+      console.log("Content:", content);
 
       if (!content) {
         setError('Unable to generate assessment. The response was empty.');
@@ -199,7 +211,7 @@ export function AssessmentBot({
   };
 
   const askClarification = async () => {
-    if (!clarification.trim() || !manualUrl) return;
+    if (!clarification.trim()) return;
     setLoadingClarify(true);
     setClarifyResponse('');
     setError('');
@@ -459,10 +471,7 @@ export function AssessmentBot({
 
           <div className="pt-4">
             <Button
-              onClick={() => {
-                if (onComplete) onComplete(equipmentId);
-                // setOpen(false); // This would close the modal, which is handled by the parent
-              }}
+              onClick={() => window.location.reload()}
               className="w-full"
             >
               Finish Assessment

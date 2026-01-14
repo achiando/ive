@@ -138,6 +138,7 @@ export async function getSafetyTestById(id: string): Promise<SafetyTestWithRelat
           include: {
             user: { select: { id: true, firstName: true, lastName: true, email: true } },
             equipment: { select: { id: true, name: true, serialNumber: true } },
+            safetyTest: true,
           },
         },
       },
@@ -149,21 +150,6 @@ export async function getSafetyTestById(id: string): Promise<SafetyTestWithRelat
     return {
       ...safetyTest,
       associatedEquipmentTypes: safetyTest.associatedEquipmentType ? safetyTest.associatedEquipmentType.split(',') : [],
-      attempts: safetyTest.attempts.map(attempt => ({
-        ...attempt,
-        safetyTest: {
-          id: safetyTest.id,
-          name: safetyTest.name,
-          description: safetyTest.description,
-          manualUrl: safetyTest.manualUrl,
-          manualType: safetyTest.manualType,
-          requiredForRoles: safetyTest.requiredForRoles,
-          frequency: safetyTest.frequency,
-          createdAt: safetyTest.createdAt,
-          updatedAt: safetyTest.updatedAt,
-          associatedEquipmentTypes: safetyTest.associatedEquipmentType ? safetyTest.associatedEquipmentType.split(',') : []
-        }
-      }))
     };
   } catch (error: any) {
     console.error(`Error fetching safety test with ID ${id}:`, error);

@@ -14,6 +14,8 @@ interface AssessmentTestPageProps {
 export default async function AssessmentTestPage({ searchParams }: AssessmentTestPageProps) {
 
   const { safetyTestId, equipmentId } = await searchParams;
+  // console.log("Safety Test ID:", safetyTestId);
+  // console.log("Equipment ID:", equipmentId);
 
 
   let safetyTest;
