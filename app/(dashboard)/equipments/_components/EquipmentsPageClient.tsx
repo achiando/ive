@@ -51,18 +51,54 @@ export function EquipmentsPageClient({ equipments, userRole }: EquipmentsPageCli
     }
 
     if (selectedCategory !== "all") {
-      currentEquipments = currentEquipments.filter((equipment) => equipment.category === selectedCategory);
+      currentEquipments = currentEquipments.filter((equipment) => {
+        if (selectedCategory === "Textile and Upholstery") {
+          return equipment.category === selectedCategory || 
+                 equipment.name.toLowerCase().includes("sewing machine");
+        }
+        return equipment.category === selectedCategory;
+      });
     }
 
     return currentEquipments;
   }, [equipments, searchTerm, selectedStatus, selectedCategory]);
 
   const availableCategories = useMemo(() => {
-    const categories = new Set<string>();
-    equipments.forEach(eq => categories.add(eq.category));
-    return Array.from(categories);
+    const desiredOrder = [
+      "3D Printing",
+      "Computer Aided Design",
+      "Laser Engraving",
+      "Electricals and Electronics",
+      "Wood Work",
+      "Metal Work",
+      "Textile and Upholstery",
+      "General Toolset",
+      "Casting and Moulding",
+    ];
+
+    const existingCategories = new Set<string>();
+    equipments.forEach(eq => existingCategories.add(eq.category));
+
+    const allCategories = new Set([...desiredOrder, ...existingCategories]);
+
+    const sortedCategories = Array.from(allCategories).sort((a, b) => {
+      const indexA = desiredOrder.indexOf(a);
+      const indexB = desiredOrder.indexOf(b);
+
+      if (indexA !== -1 && indexB !== -1) {
+        return indexA - indexB;
+      }
+      if (indexA !== -1) {
+        return -1;
+      }
+      if (indexB !== -1) {
+        return 1;
+      }
+      return a.localeCompare(b);
+    });
+
+    return sortedCategories;
   }, [equipments]);
-  console.log(availableCategories);
 
   const handleCreateEquipment = async (values: any) => {
     const result = await createEquipment(values);
