@@ -8,6 +8,7 @@ import { ArrowUpDown } from "lucide-react"
 import { EquipmentWithRelations } from "@/types/equipment"
 import { UserRole } from "@prisma/client"; // Import UserRole
 import { CellAction } from "./cell-action"
+import { SafetyTestStatusCell } from "./SafetyTestStatusCell";
 
 export const getColumns = (userRole: UserRole): ColumnDef<EquipmentWithRelations>[] => {
   const baseColumns: ColumnDef<EquipmentWithRelations>[] = [
@@ -68,6 +69,19 @@ export const getColumns = (userRole: UserRole): ColumnDef<EquipmentWithRelations
     {
       accessorKey: "location",
       header: "Location",
+    },
+    {
+      id: 'safetyTest',
+      header: "Safety Test",
+      cell: ({ row }) => {
+        const equipment = row.original;
+        return (
+          <SafetyTestStatusCell 
+            equipmentId={equipment.id} 
+            requiresTest={equipment.requiresSafetyTest} 
+          />
+        );
+      },
     },
     {
       id: 'currentBookings',

@@ -16,7 +16,8 @@ interface BookingPageProps {
 }
 
 export default async function BookingPage({ params, searchParams }: BookingPageProps) {
-  const { id } = await params;
+  const resolveParam = await params;
+  const id = resolveParam.id
   const { projectId: searchProjectId } = await searchParams; // Get projectId from search params
 
   const session = await getServerSession(authOptions);
@@ -55,32 +56,33 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
     }
   };
 
-  const handleFormSubmit = async (formData: BookingFormData) => {
-    "use server"; // Mark as server action
-    console.log("handleFormSubmit called with:", { formData, isNewBooking, initialData, userId, searchProjectId });
-    try {
-      if (isNewBooking) {
-        const newBooking = await createBooking({
-          ...formData,
-          userId,
-          projectId: formData.projectId || searchProjectId, // Use projectId from formData or search params
-        });
-        // Pass the new booking ID to the success handler
-        await handleSubmitSuccess(newBooking.id);
-        return;
-      } else {
-        if (!initialData?.id) {
-          throw new Error("Booking ID is missing for update.");
-        }
-        await updateBooking(initialData.id, {
-          ...formData,
-        });
-      }
-    } catch (error: any) {
-      console.error("Error processing booking in page.tsx:", error);
-      throw error; // Re-throw to be caught by the client component
+const handleFormSubmit = async (formData: BookingFormData) => {
+  "use server";
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    throw new Error("User not authenticated");
+  }
+
+  try {
+    if (isNewBooking) {
+      const newBooking = await createBooking({
+        ...formData,
+        userId,
+      });
+      return { bookingId: newBooking.id };
+    } else {
+      await updateBooking(id, {
+        ...formData,
+      });
+      return { success: true };
     }
-  };
+  } catch (error) {
+    console.error('Error saving booking:', error);
+    throw error;
+  }
+};
 
 
   return (

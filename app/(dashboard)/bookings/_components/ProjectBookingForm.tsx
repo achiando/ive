@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -14,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { checkUserSafetyTest } from "@/lib/actions/safety-test";
 import { cn } from "@/lib/utils";
 import { BookingDetails } from "@/types/booking";
 import { toast } from "sonner";
@@ -62,15 +64,18 @@ export default function ProjectBookingForm({
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false); // Renamed to isSubmitting
   const [error, setError] = useState<string | null>(null);
-  
+
   const [availableEquipment, setAvailableEquipment] = useState<Equipment[]>([]);
+  const [showSafetyTestAlert, setShowSafetyTestAlert] = useState(false);
+  const [selectedEquipment, setSelectedEquipment] = useState<{ id: string, name: string } | null>(null);
+
 
   // Filter available equipment (not in maintenance or out of service)
   useEffect(() => {
     if (equipmentList) {
       const available = equipmentList.filter(
-        (item: Equipment) => 
-          item.status !== 'MAINTENANCE' && 
+        (item: Equipment) =>
+          item.status !== 'MAINTENANCE' &&
           item.status !== 'OUT_OF_SERVICE' &&
           item.status !== 'DECOMMISSIONED'
       );
@@ -88,7 +93,7 @@ export default function ProjectBookingForm({
     notes: initialData?.notes || '',
     projectId: initialData?.projectId || projectId, // Initialize projectId from initialData or prop
   });
-  
+
   // Generate time slots from 9:00 AM to 5:30 PM in 30-minute intervals
   const generateTimeSlots = () => {
     const slots = [];
@@ -101,7 +106,7 @@ export default function ProjectBookingForm({
     slots.push('17:00');
     return slots;
   };
-  
+
   const handleChange = (field: keyof BookingFormData, value: any) => {
     setFormData(prev => ({
       ...prev,
@@ -111,43 +116,43 @@ export default function ProjectBookingForm({
 
   const handleFormSubmit = async (e: React.FormEvent) => { // Renamed to handleFormSubmit
     e.preventDefault();
-    
+
     // Basic validation
     if (!formData.equipmentId) {
       setError('Please select equipment');
       return;
     }
-    
+
     if (!formData.startDate || !formData.endDate) {
       setError('Please select both start and end dates');
       return;
     }
-    
+
     // Validate booking hours (max 2 hours)
     if (formData.bookingHours < 1 || formData.bookingHours > 2) {
       setError('Booking duration must be between 1 and 2 hours');
       return;
     }
-    
+
     const now = new Date();
     const startDate = new Date(formData.startDate);
     const endDate = new Date(formData.endDate);
-    
+
     // Reset seconds and milliseconds for accurate comparison
     now.setSeconds(0, 0);
     startDate.setSeconds(0, 0);
     endDate.setSeconds(0, 0);
-    
+
     if (startDate < now && !bookingId) { // Only check for past dates if creating a new booking
       setError('Start date cannot be in the past');
       return;
     }
-    
+
     if (startDate >= endDate) {
       setError('End date must be after start date');
       return;
     }
-    
+
     if (!formData.purpose) {
       setError('Please enter a purpose for the booking');
       return;
@@ -158,11 +163,11 @@ export default function ProjectBookingForm({
 
     try {
       const result = await onSubmit(formData); // Call the onSubmit prop
-      
+
       toast("Success!", {
         description: `Booking ${bookingId ? 'updated' : 'created'} successfully.`,
       });
-      
+
       if (onSuccess) {
         const response = await onSuccess();
         if (response?.navigateBack) {
@@ -180,7 +185,24 @@ export default function ProjectBookingForm({
       setIsSubmitting(false);
     }
   };
+  const handleEquipmentSelect = async (value: string) => {
+    const equipment = availableEquipment.find(eq => eq.id === value);
+    if (!equipment) return;
+    try {
+      const { hasPassed, requiresTest } = await checkUserSafetyTest(value);
 
+      if (requiresTest && !hasPassed) {
+        setSelectedEquipment({ id: value, name: equipment.name });
+        setShowSafetyTestAlert(true);
+      } else {
+        // If no test required or already passed, proceed with selection
+        handleChange('equipmentId', value);
+      }
+    } catch (error) {
+      console.error('Error checking safety test status:', error);
+      // Optionally show error toast
+    }
+  };
   const formTitle = bookingId ? "Edit Equipment Booking" : "New Equipment Booking";
   const formDescription = bookingId ? "Modify details of this booking." : "Book equipment for your project.";
   const submitButtonText = bookingId ? (isSubmitting ? 'Updating...' : 'Update Booking') : (isSubmitting ? 'Creating...' : 'Create Booking');
@@ -206,8 +228,10 @@ export default function ProjectBookingForm({
             <Label htmlFor="equipmentId">Select Equipment</Label>
             <Select
               value={formData.equipmentId}
-              onValueChange={(value) => handleChange('equipmentId', value)}
+              onValueChange={handleEquipmentSelect}
               disabled={isSubmitting}
+              // onValueChange={(value) => handleChange('equipmentId', value)}
+              // disabled={isSubmitting}
               required
             >
               <SelectTrigger className="w-full">
@@ -289,7 +313,7 @@ export default function ProjectBookingForm({
                 <option value="2">2 hours</option>
               </select>
             </div>
-            
+
             <div>
               <Label htmlFor="bookingTime">Start Time</Label>
               <select
@@ -307,7 +331,7 @@ export default function ProjectBookingForm({
               </select>
             </div>
           </div>
-          
+
           <div>
             <Label htmlFor="purpose">Purpose</Label>
             <Textarea
@@ -348,6 +372,28 @@ export default function ProjectBookingForm({
           </Button>
         </div>
       </form>
+      <AlertDialog open={showSafetyTestAlert} onOpenChange={setShowSafetyTestAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Safety Test Required</AlertDialogTitle>
+            <AlertDialogDescription>
+              You need to complete a safety test before booking {selectedEquipment?.name}.
+              Would you like to take the test now?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                router.push(`/assessment?equipmentId=${selectedEquipment?.id}`);
+                setShowSafetyTestAlert(false);
+              }}
+            >
+              Take Safety Test
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

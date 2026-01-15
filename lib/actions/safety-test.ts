@@ -286,3 +286,45 @@ export async function recordSafetyTestAttempt(
     return { success: false, message: `Failed to record safety test attempt: ${error.message}` };
   }
 }
+
+/**
+ * Checks if a user has passed the safety test for a specific piece of equipment.
+ * @param equipmentId The ID of the equipment to check.
+ * @returns An object indicating if a test is required and if the user has passed it.
+ */
+export async function checkUserSafetyTest(equipmentId: string) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    // This should ideally not be hit if the user is on the booking page,
+    // but it's a necessary safeguard.
+    throw new Error("User not authenticated");
+  }
+  const userId = session.user.id;
+
+  const equipment = await prisma.equipment.findUnique({
+    where: { id: equipmentId },
+    select: { requiresSafetyTest: true }
+  });
+
+  // If the equipment doesn't require a test, the user is clear to book.
+  if (!equipment?.requiresSafetyTest) {
+    return { hasPassed: true, requiresTest: false };
+  }
+
+  // Check for a successful safety test attempt for this user and equipment.
+  const testAttempt = await prisma.safetyTestAttempt.findFirst({
+    where: {
+      userId: userId,
+      equipmentId: equipmentId,
+      // In the future, you might add a status or score check here, e.g., status: 'PASSED'
+    },
+  });
+
+  // If an attempt exists, we consider the test passed.
+  if (testAttempt) {
+    return { hasPassed: true, requiresTest: true };
+  }
+
+  // If no attempt is found, the user needs to take the test.
+  return { hasPassed: false, requiresTest: true };
+}
