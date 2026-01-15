@@ -272,20 +272,83 @@ export async function updateMyProfile(
 }
 
 /**
- * Deletes a user by their ID.
+ * Deletes a user by their ID, ensuring all associated data is handled.
+ * This is a destructive action and can only be performed by an ADMIN.
  */
 export async function deleteUser(id: string) {
-  try {
-    await prisma.user.delete({
-      where: { id },
-    });
-    revalidateTag("users", "default");
-    return { success: true };
-  } catch (error) {
-    console.error('Error deleting user:', error);
+  const session = await getServerSession(authOptions);
+  if (session?.user?.role !== UserRole.ADMIN) {
     return {
       success: false,
-      message: 'Failed to delete user',
+      message: "Unauthorized: Only admins can delete users.",
+    };
+  }
+
+  // Prevent admin from deleting themselves
+  if (session.user.id === id) {
+    return {
+      success: false,
+      message: "Action forbidden: Admins cannot delete their own accounts.",
+    };
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Step 1: Nullify optional foreign keys pointing to the user to avoid constraint violations.
+      await tx.projectMember.updateMany({
+        where: { invitedById: id },
+        data: { invitedById: null },
+      });
+      await tx.maintenance.updateMany({
+        where: { assignedToId: id },
+        data: { assignedToId: null },
+      });
+
+      // Step 2: Handle projects created by the user.
+      const projectsToDelete = await tx.project.findMany({
+        where: { creatorId: id },
+        select: { id: true },
+      });
+      const projectIdsToDelete = projectsToDelete.map((p) => p.id);
+
+      if (projectIdsToDelete.length > 0) {
+        // Nullify `projectId` in `EquipmentBooking` before deleting projects.
+        await tx.equipmentBooking.updateMany({
+          where: { projectId: { in: projectIdsToDelete } },
+          data: { projectId: null },
+        });
+
+        // Delete projects. `onDelete: Cascade` in the schema will handle related
+        // ProjectMember and ProjectDocument records.
+        await tx.project.deleteMany({
+          where: { id: { in: projectIdsToDelete } },
+        });
+      }
+
+      // Step 3: Delete direct dependencies that don't have `onDelete: Cascade`.
+      await tx.equipmentBooking.deleteMany({ where: { userId: id } });
+      await tx.consumableAllocation.deleteMany({ where: { userId: id } });
+      await tx.safetyTestAttempt.deleteMany({ where: { userId: id } });
+      await tx.maintenance.deleteMany({ where: { createdById: id } });
+
+      // Step 4: Finally, delete the user. Prisma will automatically handle relations
+      // with `onDelete: Cascade` (e.g., Account, Session, EventParticipation, createdEvents).
+      await tx.user.delete({ where: { id } });
+    });
+
+    revalidateTag("users", "default");
+    return { success: true, message: "User and all associated data deleted successfully." };
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      return {
+        success: false,
+        message: `Failed to delete user due to a database error: ${error.message}`,
+      };
+    }
+    return {
+      success: false,
+      message: "An unexpected error occurred while deleting the user.",
     };
   }
 }

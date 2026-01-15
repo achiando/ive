@@ -51,7 +51,7 @@ export function ProjectForm({ initialData, projectId }: ProjectFormProps) {
       startDate: initialData.startDate ? format(new Date(initialData.startDate), 'yyyy-MM-dd') : '',
       endDate: initialData.endDate ? format(new Date(initialData.endDate), 'yyyy-MM-dd') : '',
       status: initialData.status,
-      userEmail: initialData.creator.email, // Assuming creator email is the assigned user email
+      userEmail: initialData.creator.email, 
     } : {
       title: '',
       description: '',
@@ -96,9 +96,7 @@ export function ProjectForm({ initialData, projectId }: ProjectFormProps) {
         await handleCreateProject(data); // Call server action
         toast.success('Project created successfully');
       }
-      
-      // Redirection is now handled by the server actions
-      router.refresh(); // Refresh the router to reflect changes and trigger re-fetch if needed
+      router.refresh(); 
       
     } catch (error: any) {
       const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';

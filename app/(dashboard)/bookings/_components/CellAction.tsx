@@ -117,12 +117,6 @@ export const CellAction: React.FC<CellActionProps> = ({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => navigator.clipboard.writeText(data.id)}>
-            <span className="flex items-center">
-              <span className="mr-2">📋</span> Copy ID
-            </span>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
           {canEdit && (
             <DropdownMenuItem onClick={() => router.push(`/bookings/${data.id}`)}>
               <span className="flex items-center">

@@ -28,8 +28,8 @@ import {
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
-  filterColumnId: string
-  filterColumnPlaceholder: string
+  filterColumnId?: string
+  filterColumnPlaceholder?: string
   onRowSelectionChange?: (selectedRows: string[]) => void
   children?: React.ReactNode
   meta?: any // Add meta prop for table actions
@@ -97,14 +97,18 @@ export function DataTable<TData, TValue>({
   return (
     <div className="w-full">
       <div className="flex items-center py-4">
-        <Input
-          placeholder={filterColumnPlaceholder}
-          value={(table.getColumn(filterColumnId)?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn(filterColumnId)?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
+        {filterColumnId && (
+          <Input
+            placeholder={filterColumnPlaceholder}
+            value={
+              (table.getColumn(filterColumnId)?.getFilterValue() as string) ?? ""
+            }
+            onChange={(event) =>
+              table.getColumn(filterColumnId)?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm"
+          />
+        )}
         <div className="ml-auto flex items-center space-x-2">
           {children} {/* Render children here */}
         </div>

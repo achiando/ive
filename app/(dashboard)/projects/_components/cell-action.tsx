@@ -89,12 +89,6 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => navigator.clipboard.writeText(data.id)}>
-            <span className="flex items-center">
-              <span className="mr-2">📋</span> Copy ID
-            </span>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => router.push(`/projects/${data.id}/view`)}>
             <span className="flex items-center">
               <Eye className="h-4 w-4 mr-2" /> View

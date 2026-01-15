@@ -20,8 +20,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { deleteUser, updateUserStatus } from "@/lib/actions/user";
-import type { RegistrationStatus, User } from "@prisma/client";
+import { UserRole, type RegistrationStatus, type User } from "@prisma/client";
 import { Check, MoreHorizontal, Trash2, X } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -34,9 +35,14 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+    const { data: session } = useSession();
+    const userRole = session?.user?.role;
+    const isManagerOrAdmin = userRole === UserRole.ADMIN;
+
   const handleDelete = async () => {
     setIsLoading(true);
     const result = await deleteUser(data.id);
+    console.log("Delete result:", result);
     setIsLoading(false);
     
     if (result.success) {
@@ -121,14 +127,18 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
           )}
           
           <DropdownMenuSeparator />
-          <DropdownMenuItem 
-            onClick={() => setShowDeleteDialog(true)}
-            className="text-red-600 hover:!text-red-600"
-          >
-            <span className="flex items-center">
-              <Trash2 className="h-4 w-4 mr-2" /> Delete
-            </span>
-          </DropdownMenuItem>
+          {
+            isManagerOrAdmin && (
+              <DropdownMenuItem 
+                onClick={() => setShowDeleteDialog(true)}
+                className="text-red-600 hover:!text-red-600"
+              >
+                <span className="flex items-center">
+                  <Trash2 className="h-4 w-4 mr-2" /> Delete
+                </span>
+              </DropdownMenuItem>
+            )
+          }
         </DropdownMenuContent>
       </DropdownMenu>
 

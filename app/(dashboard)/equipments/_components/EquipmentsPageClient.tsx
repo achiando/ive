@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createEquipment } from "@/lib/actions/equipment";
 import { EquipmentWithRelations } from "@/types/equipment";
@@ -61,6 +62,7 @@ export function EquipmentsPageClient({ equipments, userRole }: EquipmentsPageCli
     equipments.forEach(eq => categories.add(eq.category));
     return Array.from(categories);
   }, [equipments]);
+  console.log(availableCategories);
 
   const handleCreateEquipment = async (values: any) => {
     const result = await createEquipment(values);
@@ -82,16 +84,16 @@ export function EquipmentsPageClient({ equipments, userRole }: EquipmentsPageCli
   ].includes(session?.user?.role || '');
 
   const renderFilters = (showSearchInput: boolean) => (
-    <div className="w-full flex flex-col space-y-2">
-      {/* {showSearchInput && (
-        <Input
-          placeholder="Search by name, model, serial..."
-          value={searchTerm}
-          onChange={(event) => setSearchTerm(event.target.value)}
-          className="w-full md:max-w-sm"
-        />
-      )} */}
+    <div className="flex justify-between items-center w-full">
       <div className="flex space-x-2">
+           {showSearchInput && (
+          <Input
+            placeholder="Search by name, model, serial..."
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            className="w-full md:max-w-sm"
+          />
+        )}
         {/* Status Filter */}
         <Select value={selectedStatus} onValueChange={(value: string | "all") => setSelectedStatus(value)}>
           <SelectTrigger className="w-[180px]">
@@ -197,10 +199,8 @@ export function EquipmentsPageClient({ equipments, userRole }: EquipmentsPageCli
       {/* Main Content Area */}
       {view === 'table' ? (
         <DataTable
-          columns={getColumns(userRole as UserRole)} // Pass userRole to getColumns
+          columns={getColumns(userRole as UserRole)}
           data={filteredEquipments}
-          filterColumnId="name"
-          filterColumnPlaceholder="Filter by name..."
           children={renderFilters(true)}
         />
       ) : (
@@ -210,7 +210,7 @@ export function EquipmentsPageClient({ equipments, userRole }: EquipmentsPageCli
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredEquipments.map((equipment) => (
-              <EquipmentCard key={equipment.id} equipment={equipment} userRole={userRole as UserRole} /> 
+              <EquipmentCard key={equipment.id} equipment={equipment} userRole={userRole as UserRole} />
             ))}
           </div>
         </div>
