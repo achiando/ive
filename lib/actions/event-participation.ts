@@ -13,22 +13,28 @@ export async function registerForEvent(
   guestName?: string
 ) {
   try {
-    // Check if user or guest is already registered
-    const existingParticipation = await prisma.eventParticipation.findFirst({
-      where: {
-        eventId,
-        OR: [
-          { userId: userId || '' },
-          { guestEmail: guestEmail || '' }
-        ].filter(condition => Object.values(condition)[0]) // Only include conditions with values
-      },
-    });
+    const orConditions = [];
+    if (userId) {
+      orConditions.push({ userId });
+    }
+    if (guestEmail) {
+      orConditions.push({ guestEmail });
+    }
 
-    if (existingParticipation) {
-      const message = existingParticipation.userId 
-        ? "You are already registered for this event."
-        : "This email is already registered for this event.";
-      return { success: false, message };
+    if (orConditions.length > 0) {
+        const existingParticipation = await prisma.eventParticipation.findFirst({
+          where: {
+            eventId,
+            OR: orConditions,
+          },
+        });
+
+        if (existingParticipation) {
+          const message = existingParticipation.userId 
+            ? "You are already registered for this event."
+            : "This email is already registered for this event.";
+          return { success: false, message };
+        }
     }
 
     await prisma.eventParticipation.create({
@@ -77,18 +83,28 @@ export async function isRegisteredForEvent(
 ) {
   "use server";
   try {
+    const orConditions = [];
+    if (userId) {
+      orConditions.push({ userId });
+    }
+    if (guestEmail) {
+      orConditions.push({ guestEmail });
+    }
+
+    if (orConditions.length === 0) {
+      return { isRegistered: false, asGuest: false };
+    }
+
     const participation = await prisma.eventParticipation.findFirst({
       where: {
         eventId,
-        OR: [
-          { userId: userId || '' },
-          { guestEmail: guestEmail || '' }
-        ].filter(condition => Object.values(condition)[0]) // Only include conditions with values
+        OR: orConditions,
       },
     });
+    
     return {
       isRegistered: !!participation,
-      asGuest: participation?.guestEmail === guestEmail
+      asGuest: !!(participation?.guestEmail && guestEmail && participation.guestEmail === guestEmail)
     };
   } catch (error) {
     console.error("Error checking event registration:", error);

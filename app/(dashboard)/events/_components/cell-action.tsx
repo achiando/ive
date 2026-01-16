@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -35,13 +34,43 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
       }
     }
   };
-     const { data: session } = useSession();
-      const canAddEvent = [
-        'TECHNICIAN',
-        'ADMIN_TECHNICIAN',
-        'LAB_MANAGER',
-        'ADMIN'
-      ].includes(session?.user?.role || '');
+
+  const onInvite = async () => {
+    const shareUrl = `${window.location.origin}/events-join/${data.id}/register`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Join event: ${data.name}`,
+          text: `Register for the event: ${data.name}`,
+          url: shareUrl,
+        });
+        toast.success("Event link shared!");
+      } catch (error) {
+        // Don't show error toast if user cancels share dialog
+        if ((error as Error).name !== 'AbortError') {
+          console.error("Error sharing:", error);
+          toast.error("Could not share the event link.");
+        }
+      }
+    } else {
+      // Fallback for browsers that don't support the Share API
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success("Event link copied to clipboard!");
+      } catch (err) {
+        toast.error("Failed to copy link. Please copy it manually.");
+        console.error("Fallback failed:", err);
+      }
+    }
+  };
+
+  const { data: session } = useSession();
+  const canAddEvent = [
+    'TECHNICIAN',
+    'ADMIN_TECHNICIAN',
+    'LAB_MANAGER',
+    'ADMIN'
+  ].includes(session?.user?.role || '');
 
   return (
     <DropdownMenu>
@@ -65,6 +94,9 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => router.push(`/events-join/${data.id}/register`)}>
           Register
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onInvite}>
+          Invite
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         {
