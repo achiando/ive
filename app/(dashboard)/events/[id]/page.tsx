@@ -28,13 +28,13 @@ export default async function EventPage({ params }: EventPageProps) {
     return <div>Event not found.</div>;
   }
 
-  // Explicitly pick fields and convert Date objects to string for initialData if eventData exists
+  // Format event data for the form, ensuring dates are properly handled
   const formattedEventData = eventData ? {
-    id: eventData.id, // Include id if needed for updates
+    id: eventData.id,
     name: eventData.name,
-    description: eventData.description || undefined, // Ensure optional fields are handled
-    startDate: eventData.startDate.toISOString(),
-    endDate: eventData.endDate.toISOString(),
+    description: eventData.description || undefined,
+    startDate: new Date(eventData.startDate).toISOString(),
+    endDate: new Date(eventData.endDate).toISOString(),
     venue: eventData.venue || undefined,
     maxParticipants: eventData.maxParticipants || undefined,
     imageUrl: eventData.imageUrl || undefined,

@@ -18,7 +18,8 @@ export const columns: ColumnDef<
     },
   },
   {
-    accessorKey: "user.email",
+    id: "email",
+    accessorFn: (row) => row.user?.email || row.guestEmail,
     header: "Email",
     cell: ({ row }) => {
       const participant = row.original;

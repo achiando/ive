@@ -66,8 +66,11 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
-    setCurrentUrls(value || []);
-  }, [value]);
+    // Only update if the value has actually changed
+    if (JSON.stringify(value || []) !== JSON.stringify(currentUrls)) {
+      setCurrentUrls(value || []);
+    }
+  }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onDrop = useCallback(
     async (acceptedFiles: File[], fileRejections: any[]) => {
