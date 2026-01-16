@@ -1,13 +1,14 @@
-
 "use client";
 
 import { getEventParticipants } from "@/lib/actions/event-participation";
+import { UserRole } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 
-export const columns: ColumnDef<
-  Awaited<ReturnType<typeof getEventParticipants>>[number]
->[] = [
+type Participant = Awaited<ReturnType<typeof getEventParticipants>>[number];
+
+const allColumns: ColumnDef<Participant>[] = [
   {
+    id: "name",
     accessorKey: "user.name",
     header: "Name",
     cell: ({ row }) => {
@@ -27,6 +28,7 @@ export const columns: ColumnDef<
     },
   },
   {
+    id: "joinedAt",
     accessorKey: "joinedAt",
     header: "Registered At",
     cell: ({ row }) => {
@@ -34,9 +36,25 @@ export const columns: ColumnDef<
     },
   },
   {
+    id: "type",
     header: "Type",
     cell: ({ row }) => {
       return row.original.userId ? "User" : "Guest";
     },
   },
 ];
+
+export const getColumns = (userRole: UserRole): ColumnDef<Participant>[] => {
+  const isAdmin =
+    userRole === UserRole.ADMIN ||
+    userRole === UserRole.TECHNICIAN ||
+    userRole === UserRole.LAB_MANAGER ||
+    userRole === UserRole.ADMIN_TECHNICIAN;
+
+  if (isAdmin) {
+    return allColumns;
+  }
+
+  // For non-admins, only show the name column
+  return allColumns.filter(column => column.id === 'name');
+};
