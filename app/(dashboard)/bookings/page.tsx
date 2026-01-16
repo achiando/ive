@@ -29,12 +29,12 @@ export default async function BookingsPage({ searchParams }: BookingsPageProps) 
   const searchQuery = searchPage.search || undefined;
 
   const { data: bookings, total } = await getBookings({
-    userId: session.user.id, // Fetch bookings for the current user
     status,
     searchQuery,
     page,
     pageSize,
   });
+
 
   const analyticsData: BookingAnalyticsData = await getBookingAnalytics();
 

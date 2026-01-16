@@ -416,7 +416,7 @@ export async function getBookings(params: GetBookingsParams = {}): Promise<{ dat
     throw new Error('Unauthorized');
   }
 
-  const { userId, projectId, status, isPast, isUpcoming, searchQuery, page = 1, pageSize = 10, equipmentId } = params;
+  const { projectId, status, isPast, isUpcoming, searchQuery, page = 1, pageSize = 10, equipmentId } = params;
   const skip = (page - 1) * pageSize;
 
   const user = session.user as { id: string; role: UserRole };
@@ -425,7 +425,7 @@ export async function getBookings(params: GetBookingsParams = {}): Promise<{ dat
 
   // Type guard to check if a role is an admin role
   const isAdminRole = (role: UserRole): boolean => {
-    return role === UserRole.ADMIN || role === UserRole.LAB_MANAGER || role === UserRole.ADMIN_TECHNICIAN;
+    return role === UserRole.ADMIN || role === UserRole.LAB_MANAGER || role === UserRole.ADMIN_TECHNICIAN || role === UserRole.TECHNICIAN;
   };
 
   // Filter by current user's bookings or projects they are involved in
@@ -441,9 +441,6 @@ export async function getBookings(params: GetBookingsParams = {}): Promise<{ dat
         },
       },
     ];
-  } else if (userId) {
-    // If an admin/manager explicitly filters by userId
-    where.userId = userId;
   }
 
   if (projectId) {

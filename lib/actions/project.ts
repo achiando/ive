@@ -625,3 +625,43 @@ export async function removeProjectMember(memberId: string): Promise<void> {
     where: { id: memberId },
   });
 }
+
+export async function checkProjectStatus(projectId: string): Promise<{ status: ProjectStatus | null }> {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+  const userRole = session?.user?.role;
+
+  if (!userId) {
+    throw new Error("User not authenticated.");
+  }
+
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    select: { 
+        status: true,
+        creatorId: true,
+        members: {
+            select: {
+                userId: true
+            }
+        }
+    },
+  });
+
+  if (!project) {
+    return { status: null };
+  }
+
+  // Check if the user is authorized to view this project status
+  const isCreator = project.creatorId === userId;
+  const isMember = project.members.some(member => member.userId === userId);
+  const isPrivileged = userRole === UserRole.ADMIN || userRole === UserRole.LAB_MANAGER || userRole === UserRole.TECHNICIAN || userRole === UserRole.ADMIN_TECHNICIAN;
+
+  if (!isCreator && !isMember && !isPrivileged) {
+    throw new Error("Not authorized to view this project's status.");
+  }
+
+  return {
+    status: project.status,
+  };
+}

@@ -1,10 +1,12 @@
 import { createBooking, getBookingById, updateBooking } from "@/lib/actions/booking";
 import { getEquipments } from "@/lib/actions/equipment";
+import { checkProjectStatus } from "@/lib/actions/project";
 import { authOptions } from "@/lib/auth";
 import { BookingDetails } from "@/types/booking";
+import { ProjectStatus } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import ProjectBookingForm, { BookingFormData } from "../_components/ProjectBookingForm"; // Import BookingFormData
+import ProjectBookingForm, { BookingFormData } from "../_components/ProjectBookingForm";
 
 interface BookingPageProps {
   params: {
@@ -16,20 +18,12 @@ interface BookingPageProps {
 }
 
 export default async function BookingPage({ params, searchParams }: BookingPageProps) {
-  const resolveParam = await params;
-  const id = resolveParam.id
-  const { projectId: searchProjectId } = await searchParams; // Get projectId from search params
-
-  const session = await getServerSession(authOptions);
-
-  if (!session) {
-    redirect("/login");
-  }
-
-  const userId = session.user.id;
+  const { id } = params;
+  const { projectId: searchProjectId } = searchParams;
 
   const isNewBooking = id === 'new';
   let initialData: BookingDetails | undefined = undefined;
+  let projectId: string | null | undefined = searchProjectId;
 
   if (!isNewBooking) {
     const booking = await getBookingById(id);
@@ -42,7 +36,33 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
       );
     }
     initialData = booking;
+    projectId = booking.projectId;
   }
+
+  if (projectId) {
+    const projectStatus = await checkProjectStatus(projectId);
+    if (projectStatus.status !== ProjectStatus.APPROVED) {
+      return (
+        <div className="text-center py-8">
+          <h1 className="text-2xl font-bold">Project Not Approved</h1>
+          <p className="text-muted-foreground">
+            This project is currently not approved. Bookings can only be made for approved projects.
+          </p>
+          <p className="text-muted-foreground">
+            Current project status: <strong>{projectStatus.status}</strong>
+          </p>
+        </div>
+      );
+    }
+  }
+
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    redirect("/login");
+  }
+
+  const userId = session.user.id;
 
   const equipmentList = await getEquipments();
 
@@ -56,34 +76,33 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
     }
   };
 
-const handleFormSubmit = async (formData: BookingFormData) => {
-  "use server";
-  const session = await getServerSession(authOptions);
-  const userId = session?.user?.id;
+  const handleFormSubmit = async (formData: BookingFormData) => {
+    "use server";
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
 
-  if (!userId) {
-    throw new Error("User not authenticated");
-  }
-
-  try {
-    if (isNewBooking) {
-      const newBooking = await createBooking({
-        ...formData,
-        userId,
-      });
-      return { bookingId: newBooking.id };
-    } else {
-      await updateBooking(id, {
-        ...formData,
-      });
-      return { success: true };
+    if (!userId) {
+      throw new Error("User not authenticated");
     }
-  } catch (error) {
-    console.error('Error saving booking:', error);
-    throw error;
-  }
-};
 
+    try {
+      if (isNewBooking) {
+        const newBooking = await createBooking({
+          ...formData,
+          userId,
+        });
+        return { bookingId: newBooking.id };
+      } else {
+        await updateBooking(id, {
+          ...formData,
+        });
+        return { success: true };
+      }
+    } catch (error) {
+      console.error('Error saving booking:', error);
+      throw error;
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -93,8 +112,8 @@ const handleFormSubmit = async (formData: BookingFormData) => {
         onSuccess={handleSubmitSuccess}
         equipmentList={equipmentList}
         userId={userId}
-        onSubmit={handleFormSubmit} // Pass the server action
-        projectId={searchProjectId} // Pass projectId from search params to the form
+        onSubmit={handleFormSubmit}
+        projectId={searchProjectId} 
       />
     </div>
   );

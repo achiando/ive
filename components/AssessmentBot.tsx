@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { extractTextFromDocument } from "@/lib/utils/document-text-extractor";
 import { ManualType } from "@prisma/client";
 import { AlertCircle, Bot, Loader2, Send } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -35,6 +36,7 @@ export function AssessmentBot({
   onRecordAttempt,
   open,
 }: AssessmentBotProps) {
+  const router = useRouter();
   const [state, setState] = useState<QuizState>('idle');
   const [questions, setQuestions] = useState<QuizQA[]>([]);
   const [answers, setAnswers] = useState<{ user: string; correct: boolean }[]>([]);
@@ -109,6 +111,12 @@ export function AssessmentBot({
     setQuestions([]);
     setCurrent(0);
     setError('');
+    setAnswers([]);
+    setScore(null);
+    setShowExplanation(false);
+    setUserAnswer('');
+    setClarifyResponse('');
+    setClarification('');
 
     try {
       let manualText = '';
@@ -194,17 +202,20 @@ export function AssessmentBot({
       const finalScore = answers.filter(a => a.correct).length;
       setScore(finalScore);
       setState('finished');
-      if (safetyTestId || equipmentId) {
-        try {
-          const result = await onRecordAttempt(safetyTestId, equipmentId, finalScore, questions.length);
-          if (result.success) {
-            toast.success(result.message);
-          } else {
-            toast.error(result.message);
+
+      if ((finalScore / questions.length) * 100 >= 70) {
+        if (safetyTestId || equipmentId) {
+          try {
+            const result = await onRecordAttempt(safetyTestId, equipmentId, finalScore, questions.length);
+            if (result.success) {
+              toast.success(result.message);
+            } else {
+              toast.error(result.message);
+            }
+          } catch (error) {
+            console.error("Failed to record safety test attempt:", error);
+            toast.error("Failed to record safety test attempt.");
           }
-        } catch (error) {
-          console.error("Failed to record safety test attempt:", error);
-          toast.error("Failed to record safety test attempt.");
         }
       }
     }
@@ -359,126 +370,137 @@ export function AssessmentBot({
         </div>
       )}
 
-      {state === 'finished' && (
-        <div className="space-y-6">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg
-                className="w-8 h-8 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Assessment Complete!</h2>
-            <p className="text-gray-600 mb-6">
-              You scored {score} out of {questions.length} questions correctly.
-            </p>
+      {state === 'finished' && (() => {
+        const passed = score !== null && (score / questions.length) * 100 >= 70;
+        const percentage = score !== null ? Math.round((score / questions.length) * 100) : 0;
 
-            <div className="mb-8">
-              <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-green-500 transition-all duration-500"
-                  style={{
-                    width: `${(score! / questions.length) * 100}%`
-                  }}
-                />
+        return (
+          <div className="space-y-6">
+            <div className="text-center">
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${passed ? 'bg-green-100' : 'bg-red-100'}`}>
+                {passed ? (
+                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <AlertCircle className="w-8 h-8 text-red-600" />
+                )}
               </div>
-              <div className="flex justify-between text-sm text-gray-600 mt-2">
-                <span>0%</span>
-                <span>
-                  {Math.round((score! / questions.length) * 100)}%
-                </span>
-                <span>100%</span>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                {passed ? 'Assessment Complete!' : 'Assessment Failed'}
+              </h2>
+              <p className="text-gray-600 mb-6">
+                You scored {score} out of {questions.length} questions correctly.
+              </p>
+              {!passed && (
+                <p className="text-red-600 font-semibold mb-4">
+                  You need a score of 70% or higher to pass. Please review the material and try again.
+                </p>
+              )}
+
+              <div className="mb-8">
+                <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full ${passed ? 'bg-green-500' : 'bg-red-500'} transition-all duration-500`}
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+                <div className="flex justify-between text-sm text-gray-600 mt-2">
+                  <span>0%</span>
+                  <span>{percentage}%</span>
+                  <span>100%</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="space-y-4">
-            <h3 className="font-semibold text-gray-900">Question Review</h3>
-            <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-              {questions.map((q, i) => (
-                <div
-                  key={i}
-                  className={`p-3 rounded-lg border ${answers[i]?.correct
-                      ? 'bg-green-50 border-green-200'
-                      : 'bg-red-50 border-red-200'
-                    }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className={`flex-shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center ${answers[i]?.correct ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                      }`}>
-                      {answers[i]?.correct ? '✓' : '✗'}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-900">{q.question}</p>
-                      <div className="mt-2 text-sm text-gray-600">
-                        <p className={answers[i]?.correct ? 'text-green-700' : 'text-red-700'}>
-                          {answers[i]?.correct
-                            ? 'You answered correctly'
-                            : `Your answer: ${answers[i]?.user} | Correct: ${q.answer}`
-                          }
-                        </p>
-                        {!answers[i]?.correct && (
-                          <p className="mt-1 text-gray-700">{q.explanation}</p>
-                        )}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-gray-900">Question Review</h3>
+              <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                {questions.map((q, i) => (
+                  <div
+                    key={i}
+                    className={`p-3 rounded-lg border ${answers[i]?.correct
+                        ? 'bg-green-50 border-green-200'
+                        : 'bg-red-50 border-red-200'
+                      }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`flex-shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center ${answers[i]?.correct ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        }`}>
+                        {answers[i]?.correct ? '✓' : '✗'}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900">{q.question}</p>
+                        <div className="mt-2 text-sm text-gray-600">
+                          <p className={answers[i]?.correct ? 'text-green-700' : 'text-red-700'}>
+                            {answers[i]?.correct
+                              ? 'You answered correctly'
+                              : `Your answer: ${answers[i]?.user} | Correct: ${q.answer}`
+                            }
+                          </p>
+                          {!answers[i]?.correct && (
+                            <p className="mt-1 text-gray-700">{q.explanation}</p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="pt-4 border-t">
-            <h3 className="font-semibold text-gray-900 mb-3">Need clarification?</h3>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                className="flex-1 border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Ask a question about the SOP..."
-                value={clarification}
-                onChange={(e) => setClarification(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && askClarification()}
-                disabled={loadingClarify}
-              />
-              <Button
-                onClick={askClarification}
-                disabled={!clarification.trim() || loadingClarify}
-                variant="outline"
-              >
-                {loadingClarify ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-
-            {clarifyResponse && (
-              <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                <div className="prose prose-sm max-w-none text-gray-800" dangerouslySetInnerHTML={{ __html: formatClarificationResponse(clarifyResponse) }} />
+                ))}
               </div>
-            )}
-          </div>
+            </div>
 
-          <div className="pt-4">
-            <Button
-              onClick={() => window.location.reload()}
-              className="w-full"
-            >
-              Finish Assessment
-            </Button>
+            <div className="pt-4 border-t">
+              <h3 className="font-semibold text-gray-900 mb-3">Need clarification?</h3>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  className="flex-1 border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Ask a question about the SOP..."
+                  value={clarification}
+                  onChange={(e) => setClarification(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && askClarification()}
+                  disabled={loadingClarify}
+                />
+                <Button
+                  onClick={askClarification}
+                  disabled={!clarification.trim() || loadingClarify}
+                  variant="outline"
+                >
+                  {loadingClarify ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+
+              {clarifyResponse && (
+                <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                  <div className="prose prose-sm max-w-none text-gray-800" dangerouslySetInnerHTML={{ __html: formatClarificationResponse(clarifyResponse) }} />
+                </div>
+              )}
+            </div>
+
+            <div className="pt-4">
+              {passed ? (
+                <Button
+                  onClick={() => onComplete ? onComplete(equipmentId) : router.push(`/dashboard`)}
+                  className="w-full"
+                >
+                  Finish Assessment
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => startQuizInternal()}
+                  className="w-full"
+                >
+                  Retry Assessment
+                </Button>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
     </div>
   );
 }

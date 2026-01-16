@@ -58,8 +58,7 @@ export default function ProjectBookingForm({
   onSuccess,
   className,
   equipmentList,
-  userId,
-  onSubmit, // Destructure onSubmit
+  onSubmit,
 }: ProjectBookingFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false); // Renamed to isSubmitting
