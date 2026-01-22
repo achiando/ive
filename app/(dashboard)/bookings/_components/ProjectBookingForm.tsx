@@ -134,6 +134,7 @@ export default function ProjectBookingForm({
     }
 
     const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // Get today's date at 00:00:00
     const startDate = new Date(formData.startDate);
     const endDate = new Date(formData.endDate);
 
@@ -142,7 +143,8 @@ export default function ProjectBookingForm({
     startDate.setSeconds(0, 0);
     endDate.setSeconds(0, 0);
 
-    if (startDate < now && !bookingId) { // Only check for past dates if creating a new booking
+    // Allow same-day bookings for future times
+    if (startDate < today && !bookingId) { // Compare startDate with the beginning of today
       setError('Start date cannot be in the past');
       return;
     }

@@ -187,6 +187,20 @@
     - Modified `app/(dashboard)/equipments/_components/columns.tsx` to accept `userRole` and conditionally display `serialNumber`, `dailyCapacity`, `createdAt`, and `actions` columns only for `ADMIN` or `TECHNICIAN` roles.
     - Modified `app/(dashboard)/equipments/page.tsx` to fetch `userRole` from the session and filter out equipment with `IN_USE`, `OUT_OF_SERVICE`, and `MAINTENANCE` statuses for non-admin/technician users.
     - Modified `app/(dashboard)/equipments/_components/EquipmentsPageClient.tsx` to accept and pass the `userRole` prop to `getColumns` and `EquipmentCard`.
+- **Fixed "Invalid or expired reset token" issue in password reset flow:**
+    - Modified `app/api/auth/forgot-password/route.ts` to correctly save the `resetExpiry` timestamp along with the hashed `resetToken` to the database. This ensures the expiry check in the reset process functions as intended.
+- **Implemented correct `reset-password` flow:**
+    - Modified `app/api/auth/forgot-password/route.ts` to correctly construct the `resetUrl` using a dynamic segment for the token.
+    - Restructured `app/(auth)/reset-password/[token]/page.tsx` into a server component that passes `token` and `email` to a client component.
+    - Modified `app/(auth)/reset-password/_components/ResetPasswordForm.tsx` to be a client component that handles its own token validation and password reset via direct API calls to `/api/auth/reset-password`.
+    - Modified `app/api/auth/reset-password/route.ts` to correctly validate the reset token using `bcrypt.compare` against the hashed token stored in the database.
+- **Fixed same-day booking issue in `app/(dashboard)/bookings/_components/ProjectBookingForm.tsx`:**
+    - Modified the date comparison logic in `handleFormSubmit` to allow same-day bookings for future times.
+    - Changed `startDate < now` to `startDate < today` (where `today` is the current date at 00:00:00) to prevent valid same-day bookings from being incorrectly flagged as being in the past.
+- **Modified `joinProjectWithToken` function in `lib/actions/project.ts`:**
+    - Removed the check that prevented an invite link from being used multiple times.
+    - Implemented logic to return existing membership if the user is already a project member, allowing the invite token to remain active for other users.
+    - Ensured the invite token is not invalidated after a user joins, allowing multiple users to join with the same link.
 - **Resolved `CLIENT_FETCH_ERROR` during login:**
     - Commented out redundant `fetch('/api/auth/session')` call in `app/(auth)/login/_components/login-form.tsx` to prevent JSON parsing errors.
     - Removed custom API route `app/api/auth/session/route.ts` as NextAuth.js handles session management internally.

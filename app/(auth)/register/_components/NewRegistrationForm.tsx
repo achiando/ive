@@ -134,8 +134,8 @@ export function NewRegistrationForm() {
       
       // Redirect to verification page after successful registration
       toast.success(responseData.message || 'Registration successful! Please check your email for a verification code.');
-      // router.push(`/verify-email?email=${formData.email}`);
-      router.push('/login');
+      router.push(`/verify-email?email=${formData.email}`);
+      // router.push('/login');
     } catch (error) {
       console.error('Registration error:', error);
       toast.error(error instanceof Error ? error.message : 'Registration failed. Please try again.');

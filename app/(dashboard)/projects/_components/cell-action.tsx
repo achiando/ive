@@ -64,7 +64,6 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
       toast.success("Project status updated successfully.");
       router.refresh();
     } catch (error) {
-      console.error("Failed to update project status:", error);
       toast.error("Failed to update project status.");
     } finally {
       setIsLoading(false);

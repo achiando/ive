@@ -50,7 +50,7 @@ export function InviteClient({ project, token }: InviteClientProps) {
       // Redirection is handled by the server action
     } catch (err: any) {
       setError(err.message || 'Failed to join project.');
-      toast.error('Failed to join project.', { description: err.message });
+      toast.error('Failed to join project.');
     } finally {
       setJoining(false);
     }

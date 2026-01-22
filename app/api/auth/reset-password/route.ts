@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { hash } from 'bcryptjs';
+import { compare, hash } from 'bcryptjs';
 import { NextResponse } from 'next/server';
 
 export const runtime = 'nodejs'; // Use Node.js runtime for bcrypt
@@ -17,14 +17,24 @@ export async function POST(request: Request) {
     }
 
     // Find user by reset token and check if it's not expired
-    const user = await prisma.user.findFirst({
+    const usersWithResetTokens = await prisma.user.findMany({
       where: {
-        resetToken: token,
+        resetToken: {
+          not: null,
+        },
         resetExpiry: {
           gt: new Date(),
         },
       },
     });
+
+    let user = null;
+    for (const u of usersWithResetTokens) {
+      if (u.resetToken && await compare(token, u.resetToken)) {
+        user = u;
+        break;
+      }
+    }
 
     if (!user) {
       return NextResponse.json(

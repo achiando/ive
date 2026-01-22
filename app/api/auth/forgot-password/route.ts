@@ -53,11 +53,12 @@ export async function POST(request: Request) {
       where: { id: user.id },
       data: {
         resetToken: hashedToken,
+        resetExpiry: resetTokenExpiry,
       },
     });
 
     // Create reset URL with unhashed token
-    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}&email=${encodeURIComponent(user.email)}`;
+    const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password/${resetToken}?email=${encodeURIComponent(user.email)}`;
 
     // Send email with the unhashed token
     await sendPasswordResetEmail(
