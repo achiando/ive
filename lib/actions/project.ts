@@ -482,24 +482,6 @@ export async function joinProjectWithToken(token: string, userId: string): Promi
     throw new Error("Invite token has expired.");
   }
 
-  if (projectMember.userId) {
-    throw new Error("This invite link has already been used.");
-  }
-
-  // Check the joining user's registration status
-  const joiningUser = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { status: true },
-  });
-
-  if (!joiningUser) {
-    throw new Error("Joining user not found.");
-  }
-
-  if (joiningUser.status !== RegistrationStatus.APPROVED && joiningUser.status !== RegistrationStatus.PENDING) {
-    throw new Error(`Your account status is '${joiningUser.status}'. Please contact support for assistance.`);
-  }
-
   // Check if the user is already a member of this project
   const existingMembership = await prisma.projectMember.findUnique({
     where: {
@@ -511,7 +493,8 @@ export async function joinProjectWithToken(token: string, userId: string): Promi
   });
 
   if (existingMembership) {
-    throw new Error("You are already a member of this project.");
+    // If the user is already a member, return their existing membership
+    return existingMembership;
   }
 
   const updatedProjectMember = await prisma.projectMember.update({
@@ -520,8 +503,9 @@ export async function joinProjectWithToken(token: string, userId: string): Promi
       userId: userId,
       status: 'PENDING_APPROVAL', // User joins, but needs approval
       joinedAt: new Date(),
-      token: null, // Invalidate token after use
-      expiresAt: null,
+      // Do not invalidate token here, as it can be used by multiple people
+      // token: null, 
+      // expiresAt: null,
     },
   });
 
