@@ -18,8 +18,8 @@ interface BookingPageProps {
 }
 
 export default async function BookingPage({ params, searchParams }: BookingPageProps) {
-  const { id } = params;
-  const { projectId: searchProjectId } = searchParams;
+  const { id } = await params;
+  const { projectId: searchProjectId } = await searchParams;
 
   const isNewBooking = id === 'new';
   let initialData: BookingDetails | undefined = undefined;
