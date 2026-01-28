@@ -10,7 +10,7 @@ cloudinary.config({
 
 export async function POST(req: Request) {
   try {
-    const { url: cloudinaryUrl } = await req.json();
+    const { url: cloudinaryUrl, fileName } = await req.json();
 
     if (!cloudinaryUrl) {
       return NextResponse.json({ error: "URL is required" }, { status: 400 });
@@ -18,8 +18,8 @@ export async function POST(req: Request) {
 
     const publicId = extractPublicId(cloudinaryUrl);
     if (!publicId) {
-      return NextResponse.json({ 
-        error: "Invalid Cloudinary URL or public ID not found" 
+      return NextResponse.json({
+        error: "Invalid Cloudinary URL or public ID not found"
       }, { status: 400 });
     }
 
@@ -42,22 +42,29 @@ export async function POST(req: Request) {
     }
 
     if (!resourceDetails) {
-      return NextResponse.json({ 
-        error: `Resource not found in Cloudinary with public_id: ${publicId}` 
+      return NextResponse.json({
+        error: `Resource not found in Cloudinary with public_id: ${publicId}`
       }, { status: 404 });
     }
 
     const format = resourceDetails.format;
 
+    // Extract the base filename from the publicId
+    const baseFilename = publicId.split('/').pop();
+    const fileNameWithExtension = `${baseFilename}.${format}`;
+
     // Generate download URL with fl_attachment to force download
     const downloadUrl = cloudinary.url(`${publicId}.${format}`, {
       resource_type: actualResourceType,
       type: resourceDetails.type,
-      flags: "attachment",
+      flags: fileName
+        ? `attachment:${fileName}`
+        : "attachment",
       secure: true,
     });
 
-    return NextResponse.json({ 
+
+    return NextResponse.json({
       url: downloadUrl,
       metadata: {
         resource_type: actualResourceType,
@@ -69,7 +76,7 @@ export async function POST(req: Request) {
 
   } catch (err: any) {
     console.error("Download URL error:", err);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: err.message || "Failed to generate download URL",
       details: err.error || {}
     }, { status: 500 });

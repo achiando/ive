@@ -52,7 +52,9 @@ export function DocumentCard({ document, canManageDocuments, onDeleteSuccess }: 
       const res = await fetch("/api/cloudinary/signed-url", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: docUrl }),
+        body: JSON.stringify({ 
+          url: docUrl,
+          fileName }),
       });
 
       if (!res.ok) throw new Error("Failed to get signed URL");
