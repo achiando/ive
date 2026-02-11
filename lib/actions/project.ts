@@ -1,5 +1,6 @@
 'use server';
 
+import { sendEmail } from '../email';
 import { ProjectWithDetails } from '@/types/project';
 import { ManualType, ProjectDocument, ProjectMember, ProjectStatus, RegistrationStatus, UserRole } from '@prisma/client';
 import { getServerSession } from 'next-auth';
@@ -7,6 +8,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { z } from 'zod';
 import { authOptions } from '../auth';
 import { prisma } from '../prisma';
+
+const ADMIN_APPROVAL_EMAIL = 'awinja.stacy+CDIE@ku.ac.ke';
 
 // Form schema for validation (re-using from the UI component for consistency)
 const projectFormSchema = z.object({
@@ -184,6 +187,20 @@ export async function createProject(data: ProjectFormValues): Promise<ProjectWit
       },
       documents: true,
     },
+  });
+
+  // Send email to admin for approval
+  await sendEmail({
+    to: ADMIN_APPROVAL_EMAIL,
+    subject: 'New Project Approval Required',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>New Project Waiting for Approval</h2>
+        <p>A new project titled "<strong>${newProject.title}</strong>" has been created and is awaiting your approval.</p>
+        <p>Please log in to the system to review and approve the project.</p>
+        <p>Best regards,<br>The Team</p>
+      </div>
+    `,
   });
 
   return newProject;
@@ -461,6 +478,28 @@ export async function generateProjectInviteToken(projectId: string): Promise<str
     }
   });
 
+  const projectMember = await prisma.projectMember.findUnique({
+    where: { token },
+    include: { project: true },
+  });
+
+  if (!projectMember) {
+    throw new Error("Invalid or expired invite token.");
+  }
+
+  await sendEmail({
+    to: ADMIN_APPROVAL_EMAIL,
+    subject: 'New Project Member Awaiting Approval',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>New Project Member Awaiting Approval</h2>
+        <p>User "<strong>${session.user.name}</strong>" has joined project "<strong>${projectMember.project.title}</strong>" and is awaiting your approval.</p>
+        <p>Please log in to the system to review and approve the new member.</p>
+        <p>Best regards,<br>The Team</p>
+      </div>
+    `,
+  });
+
   return token;
 }
 
@@ -509,9 +548,21 @@ export async function joinProjectWithToken(token: string, userId: string): Promi
     },
   });
 
+    await sendEmail({
+    to: ADMIN_APPROVAL_EMAIL,
+    subject: 'New Project Member Awaiting Approval',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>New Project Member Awaiting Approval</h2>
+        <p>User "<strong>Check for review</strong>" has joined project "<strong>${projectMember.project.title}</strong>" and is awaiting your approval.</p>
+        <p>Please log in to the system to review and approve the new member.</p>
+        <p>Best regards,<br>The Team</p>
+      </div>
+    `,
+  });
+
   return updatedProjectMember;
 }
-
 export async function updateProjectMemberStatus(memberId: string, status: 'ACCEPTED' | 'REJECTED' | 'REVOKED'): Promise<ProjectMember> {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
