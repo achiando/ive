@@ -8,7 +8,7 @@ import { Badge } from '../ui/badge';
 import { useSession } from '@/hooks/useSession';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@prisma/client';
-import { Calendar, FileText, FolderGit2, LayoutDashboard, LogOut, Package, SearchCode, Settings, Users, Wrench } from 'lucide-react';
+import { Calendar, FileText, FolderGit2, LayoutDashboard, LogOut, Package, QuoteIcon, SearchCode, Settings, Users, Wrench } from 'lucide-react';
 
 interface NavigationItem {
   name: string;
@@ -110,6 +110,12 @@ export function Sidebar() {
       href: '/sop',
       icon: FileText,
       roles: [UserRole.STUDENT, UserRole.FACULTY, UserRole.TECHNICIAN, UserRole.ADMIN_TECHNICIAN, UserRole.LAB_MANAGER, UserRole.ADMIN, UserRole.OTHER, UserRole.LECTURER]
+    },
+     {
+      name: 'User Attempts',
+      href: '/attempts',
+      icon: QuoteIcon,
+      roles: [UserRole.ADMIN, UserRole.LAB_MANAGER, UserRole.ADMIN_TECHNICIAN, UserRole.TECHNICIAN]
     },
     {
       name: 'Settings',

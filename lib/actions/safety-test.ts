@@ -5,7 +5,8 @@ import { prisma } from "@/lib/prisma";
 import {
   GetSafetyTestsParams,
   SafetyTestFormValues,
-  SafetyTestWithRelations
+  SafetyTestWithRelations,
+  SafetyTestAttemptWithRelations
 } from "@/types/safety-test";
 import { UserRole } from "@prisma/client";
 import { getServerSession } from "next-auth";
@@ -327,4 +328,47 @@ export async function checkUserSafetyTest(equipmentId: string) {
 
   // If no attempt is found, the user needs to take the test.
   return { hasPassed: false, requiresTest: true };
+}
+
+export async function getSafetyTestAttempts(): Promise<SafetyTestAttemptWithRelations[]> {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    throw new Error("Unauthorized");
+  }
+
+  try {
+    const attempts = await prisma.safetyTestAttempt.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+        equipment: {
+          select: {
+            id: true,
+            name: true,
+            serialNumber: true,
+          },
+        },
+        safetyTest: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        completedAt: "desc",
+      },
+    });
+
+    return attempts as SafetyTestAttemptWithRelations[];
+  } catch (error: any) {
+    console.error("Error fetching safety test attempts:", error);
+    throw new Error(`Failed to fetch safety test attempts: ${error.message}`);
+  }
 }
