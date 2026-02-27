@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Mail, MapPin } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import EventsCarousel from "./UpcomingEvents";
 
 
 
@@ -37,13 +38,91 @@ export default function Home() {
             <Link href="#contact" className="text-sm font-medium transition-colors hover:text-blue-600">
               Contact
             </Link>
+            <Link 
+              href="/login" 
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            >
+              Access System
+            </Link>
           </nav>
+          
+          {/* Mobile Access Button */}
+          <div className="md:hidden">
+            <Link 
+              href="/login" 
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors text-sm"
+            >
+              Access
+            </Link>
+          </div>
 
         </div>
       </header>
 
       {/* Main Content */}
       <main className="flex-1">
+        <section id="home" className="w-full py-12 md:py-24 lg:py-32 bg-gray-50 dark:bg-gray-900">
+          <div className="max-w-7xl mx-auto px-4 md:px-6">
+            {/* Hero Section */}
+            <div className="text-center mb-12">
+              <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+                Centre for Design, Innovation & Engineering
+                <span className="block text-blue-600 dark:text-blue-400 mt-2">
+                  CDIE Kenyatta University
+                </span>
+              </h1>
+              <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
+                Cutting-edge innovation hub for medical device design, engineering, and prototyping. 
+                Transform healthcare through technology and innovation.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <Link 
+                  href="/login" 
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-lg"
+                >
+                  Access System
+                </Link>
+                <Link 
+                  href="https://cdie.co.ke" 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="border border-gray-300 hover:border-gray-400 text-gray-700 dark:text-gray-300 px-8 py-4 rounded-lg font-semibold transition-all hover:bg-gray-100 dark:hover:bg-gray-800 text-lg"
+                >
+                  Visit CDIE.co.ke
+                </Link>
+              </div>
+            </div>
+
+            {/* Events Section */}
+            <div className="mb-12">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+                  Upcoming Medical Device Innovation Events
+                </h2>
+                <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                  Join our workshops, design challenges, and programs focused on medical device prototyping and healthcare innovation.
+                </p>
+              </div>
+              <EventsCarousel />
+            </div>
+
+            {/* Focus Areas */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
+              <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm">
+                <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">Design</div>
+                <div className="text-gray-600 dark:text-gray-300">Medical Device Design</div>
+              </div>
+              <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm">
+                <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">Engineering</div>
+                <div className="text-gray-600 dark:text-gray-300">Prototyping & Testing</div>
+              </div>
+              <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm">
+                <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">Innovation</div>
+                <div className="text-gray-600 dark:text-gray-300">Healthcare Solutions</div>
+              </div>
+            </div>
+          </div>
+        </section>
         {/* About Section */}
         <section id="about" className="w-full py-12 md:py-24 lg:py-32 bg-gray-50 dark:bg-gray-900">
           <div className="max-w-7xl mx-auto px-4 md:px-6">
@@ -219,11 +298,11 @@ export default function Home() {
             
             <div className="space-y-3">
               <h4 className="text-sm font-medium">Resources</h4>
-              <ul className="space-y-2">
+              {/* <ul className="space-y-2">
                 <li><Link href="#" className="text-sm text-gray-400 hover:text-white">Documentation</Link></li>
                 <li><Link href="#" className="text-sm text-gray-400 hover:text-white">Help Center</Link></li>
                 <li><Link href="#" className="text-sm text-gray-400 hover:text-white">Support</Link></li>
-              </ul>
+              </ul> */}
             </div>
             
             <div className="space-y-3">
