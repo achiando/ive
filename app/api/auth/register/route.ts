@@ -1,5 +1,5 @@
 // import { sendVerificationCodeEmail } from '@/lib/email';
-import { sendRegistrationEmail, sendVerificationCodeEmail } from '@/lib/email';
+import { sendRegistrationEmail, sendVerificationCodeEmail, sendEmail } from '@/lib/email';
 import { prisma } from '@/lib/prisma';
 import { RegistrationStatus, UserRole } from '@prisma/client';
 import { hash } from 'bcryptjs';
@@ -14,6 +14,8 @@ const ALLOWED_ROLES = [
   UserRole.TECHNICIAN,
   UserRole.OTHER,
 ];
+
+const ADMIN_APPROVAL_EMAIL = 'awinja.stacy+CDIE@ku.ac.ke';
 
 export async function POST(request: Request) {
   try {
@@ -114,6 +116,26 @@ export async function POST(request: Request) {
 
     // Send verification email
     await sendVerificationCodeEmail(email, `${firstName} ${lastName}`, verificationToken);
+
+    // Send admin approval email
+    await sendEmail({
+      to: ADMIN_APPROVAL_EMAIL,
+      subject: `New User Registration Approval Required: ${firstName} ${lastName}`,
+      html: `
+        <h2>New User Registration</h2>
+        <p>A new user has registered and requires approval:</p>
+        <ul>
+          <li><strong>Name:</strong> ${firstName} ${lastName}</li>
+          <li><strong>Email:</strong> ${email}</li>
+          <li><strong>Role:</strong> ${role}</li>
+          ${studentId ? `<li><strong>Student ID:</strong> ${studentId}</li>` : ''}
+          ${program ? `<li><strong>Program:</strong> ${program}</li>` : ''}
+          ${affiliatedInstitution ? `<li><strong>Affiliated Institution:</strong> ${affiliatedInstitution}</li>` : ''}
+          <li><strong>Registration Date:</strong> ${new Date().toLocaleDateString()}</li>
+        </ul>
+        <p>Please review and approve this registration in the admin dashboard.</p>
+      `
+    });
    
 
     // Return success response without sensitive data
