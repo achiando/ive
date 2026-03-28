@@ -12,15 +12,23 @@ const getToday = () => {
   return now;
 };
 
+// Helper to get date one month from now
+const getOneMonthFromNow = () => {
+  const date = new Date();
+  date.setMonth(date.getMonth() + 1);
+  date.setHours(23, 59, 59, 999);
+  return date;
+};
+
 // ============================================================================
 // Admin/Lab Manager Dashboard Data
 // ============================================================================
 
 interface AdminDashboardData {
   totalEquipment: number;
-  availableEquipment: number;
-  pendingBookings: number;
-  activeMaintenance: number;
+  totalProjects: number;
+  totalUsers: number;
+  totalEvents: number;
   recentBookings: any[]; // TODO: Define a more specific type
   upcomingEvents: EventWithVenue[];
   pendingMaintenance: any[]; // TODO: Define a more specific type
@@ -68,12 +76,13 @@ export const getFullyBookedEquipment = async () => {
 export const getAdminDashboardData = cache(
   async (): Promise<AdminDashboardData> => {
     const today = getToday();
+    const oneMonthFromNow = getOneMonthFromNow();
 
     const [
       totalEquipment,
-      availableEquipment,
-      pendingBookings,
-      activeMaintenance,
+      totalProjects,
+      totalUsers,
+      totalEvents,
       recentBookings,
       upcomingEvents,
       pendingMaintenance,
@@ -81,13 +90,9 @@ export const getAdminDashboardData = cache(
       fullyBookedEquipment, // New data point
     ] = await Promise.all([
       prisma.equipment.count(),
-      prisma.equipment.count({ where: { status: "AVAILABLE" } }),
-      prisma.equipmentBooking.count({ where: { status: BookingStatus.PENDING } }),
-      prisma.maintenance.count({
-        where: {
-          status: { in: [MaintenanceStatus.SCHEDULED, MaintenanceStatus.IN_PROGRESS, MaintenanceStatus.PENDING] },
-        },
-      }),
+      prisma.project.count(),
+      prisma.user.count(),
+      prisma.event.count(),
       prisma.equipmentBooking.findMany({
         where: {
           status: { in: [BookingStatus.APPROVED, BookingStatus.IN_PROGRESS, BookingStatus.CHECKED_OUT] },
@@ -101,12 +106,25 @@ export const getAdminDashboardData = cache(
       }),
       prisma.event.findMany({
         where: {
-          startDate: { gte: today },
+          OR: [
+            { startDate: { gte: today } }, // future events
+            {
+              startDate: { lte: today },
+              endDate: { gte: today }, // currently ongoing
+            },
+          ],
         },
         orderBy: { startDate: "asc" },
-        take: 5,
+        take: 20, // Increased from 5 to show more upcoming events
         include: {
           _count: { select: { participants: true } },
+          createdBy: {
+            select: {
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
         },
       }),
       prisma.maintenance.findMany({
@@ -130,11 +148,14 @@ export const getAdminDashboardData = cache(
       getFullyBookedEquipment(), // Call the new function
     ]);
 
+    console.log("Upcoming events found:", upcomingEvents.length);
+    console.log("Date range:", today.toISOString(), "to", oneMonthFromNow.toISOString());
+
     return {
       totalEquipment,
-      availableEquipment,
-      pendingBookings,
-      activeMaintenance,
+      totalProjects,
+      totalUsers,
+      totalEvents,
       recentBookings,
       upcomingEvents: upcomingEvents as EventWithVenue[], // Cast to EventWithVenue
       pendingMaintenance,
@@ -143,7 +164,7 @@ export const getAdminDashboardData = cache(
     };
   },
   ["admin-dashboard-data"],
-  { revalidate: 3600 } // Revalidate every hour
+  { revalidate: 60 } // Revalidate every minute instead of hour
 );
 
 // ============================================================================

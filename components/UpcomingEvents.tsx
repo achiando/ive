@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import { useUpcomingEvents, Event } from "@/hooks/useUpcomingEvents";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 type TagColor = "red" | "green";
@@ -14,59 +15,13 @@ interface EventCTA {
   href: string;
 }
 
-interface Event {
-  id: number;
-  tag: string;
-  title: string;
-  subtitle: string;
-  body: string;
-  dates: EventDate[];
-  cta: EventCTA;
-  contact: string;
-  poster: string | null;
-  tagColor: TagColor;
-}
+// ─── DATA ─────────────────────────────────────────────────────────────────────
 
 interface TagStyle {
   tag: string;
   btn: string;
   pip: string;
 }
-
-// ─── DATA ─────────────────────────────────────────────────────────────────────
-const EVENTS: Event[] = [
-  {
-    id: 1,
-    tag: "Design Challenge",
-    title: "Invention Education Program",
-    subtitle: "Assistive Device Design Challenge",
-    body: "Design affordable, practical assistive devices addressing challenges for caregivers of persons living with disabilities and chronic illnesses. Build a functional prototype at our Design Studio.",
-    dates: [
-      { label: "Info Session", value: "2nd March 2026" },
-      { label: "Design Challenge", value: "23rd – 27th March 2026" },
-    ],
-    cta: { label: "Submit Expression of Interest", href: "https://forms.gle/xHQR1k13c4CkT5GdA" },
-    contact: "ive@ku.ac.ke",
-    poster: "/disability.jpeg", // replace with e.g. "/posters/ive-challenge.jpg"
-    tagColor: "red",
-  },
-  {
-    id: 2,
-    tag: "Poster Presentation",
-    title: "IvE Poster Presentation",
-    subtitle: "Next-Gen Biomedical Solutions Showcase",
-    body: "A showcase of the next generation of biomedical solutions — a launchpad for careers in Medical Device Innovation. Meet past participants and learn how you can get involved.",
-    dates: [
-      { label: "Date", value: "6th March 2026" },
-      { label: "Time", value: "2:00 PM – 4:00 PM" },
-      { label: "Venue", value: "CDIE, Graduate School, KU" },
-    ],
-    cta: { label: "Register for Info Session", href: "https://forms.gle/whmtvyj6CHTGThZs8" },
-    contact: "ive@ku.ac.ke",
-    poster: "/poster.jpeg", // replace with e.g. "/posters/ive-poster.jpg"
-    tagColor: "green",
-  },
-];
 
 const TAG_STYLES: Record<TagColor, TagStyle> = {
   red: {
@@ -162,9 +117,10 @@ function NavBtn({ onClick, disabled, dir }: NavBtnProps) {
 const CARD_WIDTH = 352;
 
 export default function EventsCarousel() {
+  const { events, loading, error } = useUpcomingEvents();
   const trackRef = useRef<HTMLDivElement>(null);
   const [canLeft, setCanLeft] = useState<boolean>(false);
-  const [canRight, setCanRight] = useState<boolean>(EVENTS.length > 1);
+  const [canRight, setCanRight] = useState<boolean>(events.length > 1);
   const [activeIdx, setActiveIdx] = useState<number>(0);
 
   const updateState = () => {
@@ -172,7 +128,7 @@ export default function EventsCarousel() {
     if (!el) return;
     setCanLeft(el.scrollLeft > 10);
     setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
-    setActiveIdx(Math.min(Math.round(el.scrollLeft / CARD_WIDTH), EVENTS.length - 1));
+    setActiveIdx(Math.min(Math.round(el.scrollLeft / CARD_WIDTH), events.length - 1));
   };
 
   const scrollBy = (dir: "left" | "right") => {
@@ -192,7 +148,80 @@ export default function EventsCarousel() {
     el.addEventListener("scroll", updateState, { passive: true });
     updateState();
     return () => el.removeEventListener("scroll", updateState);
-  }, []);
+  }, [events]);
+
+  // Loading state
+  if (loading) {
+    return (
+      <section className="bg-white py-16 overflow-hidden">
+        <div className="max-w-6xl mx-auto px-6 sm:px-10">
+          <div className="flex items-end justify-between gap-4 mb-10">
+            <div>
+              <p className="flex items-center gap-2 text-xs font-semibold tracking-widest text-emerald-700 uppercase mb-2">
+                <span className="inline-block w-5 h-0.5 bg-emerald-700 rounded" />
+                CDIE · Chandaria Innovation Hub
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight leading-tight">
+                Upcoming <span className="text-red-700">Events</span>
+              </h2>
+            </div>
+          </div>
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-700 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Loading events...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <section className="bg-white py-16 overflow-hidden">
+        <div className="max-w-6xl mx-auto px-6 sm:px-10">
+          <div className="flex items-end justify-between gap-4 mb-10">
+            <div>
+              <p className="flex items-center gap-2 text-xs font-semibold tracking-widest text-emerald-700 uppercase mb-2">
+                <span className="inline-block w-5 h-0.5 bg-emerald-700 rounded" />
+                CDIE · Chandaria Innovation Hub
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight leading-tight">
+                Upcoming <span className="text-red-700">Events</span>
+              </h2>
+            </div>
+          </div>
+          <div className="text-center py-8">
+            <p className="text-red-600">Error loading events: {error}</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // No events state
+  if (events.length === 0) {
+    return (
+      <section className="bg-white py-16 overflow-hidden">
+        <div className="max-w-6xl mx-auto px-6 sm:px-10">
+          <div className="flex items-end justify-between gap-4 mb-10">
+            <div>
+              <p className="flex items-center gap-2 text-xs font-semibold tracking-widest text-emerald-700 uppercase mb-2">
+                <span className="inline-block w-5 h-0.5 bg-emerald-700 rounded" />
+                CDIE · Chandaria Innovation Hub
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight leading-tight">
+                Upcoming <span className="text-red-700">Events</span>
+              </h2>
+            </div>
+          </div>
+          <div className="text-center py-8">
+            <p className="text-gray-600">No upcoming events found.</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="bg-white py-16 overflow-hidden">
@@ -226,7 +255,7 @@ export default function EventsCarousel() {
           className="flex gap-5 overflow-x-auto pb-6 px-6 sm:px-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           style={{ scrollSnapType: "x mandatory" }}
         >
-          {EVENTS.map((ev) => {
+          {events.map((ev) => {
             const s = TAG_STYLES[ev.tagColor];
             return (
               <article
@@ -304,7 +333,7 @@ export default function EventsCarousel() {
 
       {/* Dot indicators */}
       <div className="flex items-center justify-center gap-2 mt-2">
-        {EVENTS.map((_, i) => (
+        {events.map((_, i) => (
           <button
             key={i}
             onClick={() => goTo(i)}

@@ -22,15 +22,29 @@ export type EventWithVenue = {
   startDate: Date;
   endDate: Date;
   location: string | null;
+  venue: string | null;
   createdById: string;
-  venue?: string | null;
   maxParticipants: number | null;
   imageUrl?: string | null;
-  imageId?: string | null; // Assuming imageId might be used for image management
+  imageId?: string | null;
   createdAt: Date;
   updatedAt: Date;
+  tag?: string | null;
+  subtitle?: string | null;
+  body?: string | null;
+  dates?: any;
+  cta?: any;
+  contact?: string | null;
+  poster?: string | null;
+  tagColor?: string | null;
+  meetingLink?: string | null;
   _count?: {
     participants: number;
+  };
+  createdBy?: {
+    firstName: string;
+    lastName: string;
+    email: string;
   };
 };
 

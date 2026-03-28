@@ -1,4 +1,4 @@
-import { Clock, Package, HardDrive as Tool, Wrench } from 'lucide-react';
+import { HardDrive as Tool, Users, Briefcase, Calendar } from 'lucide-react';
 import { DashboardStats } from './DashboardStats';
 import { FullyBookedEquipment } from './FullyBookedEquipment'; // New import
 import { LowStockAlerts } from './LowStockAlerts';
@@ -9,14 +9,14 @@ import { UpcomingEvents } from './UpcomingEvents';
 interface AdminDashboardProps {
   dashboardData: {
     totalEquipment: number;
-    availableEquipment: number;
-    pendingBookings: number;
-    activeMaintenance: number;
+    totalProjects: number;
+    totalUsers: number;
+    totalEvents: number;
     recentBookings: any[];
     upcomingEvents: any[];
     pendingMaintenance: any[];
     lowStockItems: any[];
-    fullyBookedEquipment: any[]; // New field
+    fullyBookedEquipment: any[];
   };
   isLoading: boolean;
 }
@@ -34,24 +34,24 @@ export function AdminDashboard({ dashboardData, isLoading }: AdminDashboardProps
           isLoading={isLoading}
         />
         <DashboardStats 
-          title="Available Equipment" 
-          value={dashboardData?.availableEquipment?.toString() || '0'} 
-          description="Currently available for booking" 
-          icon={<Package className="h-4 w-4 text-muted-foreground" />}
+          title="Total Projects" 
+          value={dashboardData?.totalProjects?.toString() || '0'} 
+          description="Active projects" 
+          icon={<Briefcase className="h-4 w-4 text-muted-foreground" />}
           isLoading={isLoading}
         />
         <DashboardStats 
-          title="Pending Bookings" 
-          value={dashboardData?.pendingBookings?.toString() || '0'} 
-          description="Awaiting approval" 
-          icon={<Clock className="h-4 w-4 text-muted-foreground" />}
+          title="Total Users" 
+          value={dashboardData?.totalUsers?.toString() || '0'} 
+          description="Registered users" 
+          icon={<Users className="h-4 w-4 text-muted-foreground" />}
           isLoading={isLoading}
         />
         <DashboardStats 
-          title="Active Maintenance" 
-          value={dashboardData?.activeMaintenance?.toString() || '0'} 
-          description="In progress or pending" 
-          icon={<Wrench className="h-4 w-4 text-muted-foreground" />}
+          title="Total Events" 
+          value={dashboardData?.totalEvents?.toString() || '0'} 
+          description="Scheduled events" 
+          icon={<Calendar className="h-4 w-4 text-muted-foreground" />}
           isLoading={isLoading}
         />
       </div>
@@ -72,10 +72,10 @@ export function AdminDashboard({ dashboardData, isLoading }: AdminDashboardProps
 
         {/* Right Column */}
         <div className="space-y-4 lg:col-span-3">
-          <FullyBookedEquipment
+          {/* <FullyBookedEquipment
             equipment={dashboardData?.fullyBookedEquipment || []}
             isLoading={isLoading}
-          />
+          /> */}
           <UpcomingEvents 
             events={dashboardData?.upcomingEvents || []} 
             isLoading={isLoading} 

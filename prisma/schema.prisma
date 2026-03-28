@@ -198,6 +198,17 @@ model Event {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
+  // Additional fields to match the enhanced event structure
+  tag             String?
+  subtitle        String?
+  body            String?   @db.Text
+  dates           Json?     // Array of {label, value} objects
+  cta             Json?     // Object with {label, href}
+  contact         String?
+  poster          String?   @db.Text
+  tagColor        String?
+  meetingLink     String?
+
   // Relations
   participants EventParticipation[] @relation("EventParticipations")
   users        User[]               @relation("UserEvents")

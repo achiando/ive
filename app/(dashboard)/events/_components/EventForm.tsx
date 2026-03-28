@@ -6,6 +6,7 @@ import { Calendar } from "@/components/ui/calendar";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -32,6 +33,21 @@ const formSchema = z.object({
   maxParticipants: z.number().int().min(0).optional(),
   imageUrl: z.string().optional(),
   createdById: z.string().min(1, "Creator ID is required."),
+  // Additional fields to match data structure
+  tag: z.string().optional(),
+  subtitle: z.string().optional(),
+  body: z.string().optional(),
+  dates: z.array(z.object({
+    label: z.string().min(1, "Date label is required."),
+    value: z.string().min(1, "Date value is required."),
+  })).optional(),
+  cta: z.object({
+    label: z.string().optional(),
+    href: z.string().optional(),
+  }).optional(),
+  contact: z.string().optional(),
+  tagColor: z.string().optional(),
+  meetingLink: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -58,6 +74,15 @@ export function EventForm({ initialData, onSubmit, createdById }: EventFormProps
       maxParticipants: initialData?.maxParticipants,
       imageUrl: initialData?.imageUrl || "",
       createdById: initialData?.createdById || createdById,
+      // New fields with default values
+      tag: initialData?.tag || "",
+      subtitle: initialData?.subtitle || "",
+      body: initialData?.body || "",
+      dates: initialData?.dates || [],
+      cta: initialData?.cta || { label: "", href: "" },
+      contact: initialData?.contact || "",
+      tagColor: initialData?.tagColor || "blue",
+      meetingLink: initialData?.meetingLink || "",
     },
   });
 
@@ -66,10 +91,14 @@ export function EventForm({ initialData, onSubmit, createdById }: EventFormProps
     form.trigger("imageUrl");
   }, [uploadedImageUrl, form]);
 
+  
   const handleSubmit = (data: FormValues) => {
     const formattedData: FormValues = {
       ...data,
       createdById: data.createdById || createdById,
+      // Set both description and body to the same value
+      description: data.description,
+      body: data.description,
     };
     onSubmit(formattedData);
   };
@@ -225,6 +254,193 @@ export function EventForm({ initialData, onSubmit, createdById }: EventFormProps
                   }}
                 />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        {/* New fields for the enhanced event structure */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="tag"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Event Tag</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., Design Challenge" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="tagColor"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tag Color</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., red, blue, green" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        
+        <FormField
+          control={form.control}
+          name="subtitle"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Subtitle</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter event subtitle" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="body"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Event Details</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder="Enter detailed event information" 
+                  className="min-h-[120px]"
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        {/* Dates Management */}
+        <FormField
+          control={form.control}
+          name="dates"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Important Dates</FormLabel>
+              <FormControl>
+                <div className="space-y-2">
+                  {field.value?.map((date, index) => (
+                    <div key={index} className="flex gap-2 items-center">
+                      <Input
+                        placeholder="Date label (e.g., Application Deadline)"
+                        value={date.label}
+                        onChange={(e) => {
+                          const newDates = [...(field.value || [])];
+                          newDates[index] = { ...date, label: e.target.value };
+                          field.onChange(newDates);
+                        }}
+                        className="flex-1"
+                      />
+                      <Input
+                        placeholder="Date value (e.g., May 15, 2024)"
+                        value={date.value}
+                        onChange={(e) => {
+                          const newDates = [...(field.value || [])];
+                          newDates[index] = { ...date, value: e.target.value };
+                          field.onChange(newDates);
+                        }}
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const newDates = (field.value || []).filter((_, i) => i !== index);
+                          field.onChange(newDates);
+                        }}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      const newDates = [...(field.value || []), { label: "", value: "" }];
+                      field.onChange(newDates);
+                    }}
+                  >
+                    Add Date
+                  </Button>
+                </div>
+              </FormControl>
+              <FormDescription className="text-xs text-muted-foreground">
+                Add important dates like application deadline, start date, etc.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="contact"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Contact Information</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g., ive@ku.ac.ke" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="cta.label"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>CTA Button Label</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., Submit Expression of Interest" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        
+        <FormField
+          control={form.control}
+          name="cta.href"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>CTA Button URL</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g., https://forms.gle/xHQR1k13c4CkT5GdA" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="meetingLink"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Meeting Link</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g., https://meet.google.com/xxx-xxxx-xxx or https://forms.gle/xxx" {...field} />
+              </FormControl>
+              <FormDescription className="text-xs text-muted-foreground">
+                Add Google Meet link, Zoom link, or registration form URL
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
