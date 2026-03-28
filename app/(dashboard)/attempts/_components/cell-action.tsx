@@ -20,6 +20,10 @@ interface CellActionProps {
 export function CellAction({ data }: CellActionProps) {
   const router = useRouter();
 
+  const onViewDetails = () => {
+    router.push(`/attempts/${data.id}/view`);
+  };
+
   const onViewUser = () => {
     router.push(`/users/${data.userId}/view`);
   };
@@ -48,6 +52,11 @@ export function CellAction({ data }: CellActionProps) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
+        <DropdownMenuItem onClick={onViewDetails}>
+          <Eye className="mr-2 h-4 w-4" />
+          View Details
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onViewUser}>
           <User className="mr-2 h-4 w-4" />
           View User

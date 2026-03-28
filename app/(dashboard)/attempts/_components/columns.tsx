@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import type { SafetyTestAttemptWithRelations } from "@/types/safety-test"
 import { ColumnDef } from "@tanstack/react-table"
 import { format } from "date-fns"
-import { ArrowUpDown, MoreHorizontal } from "lucide-react"
+import { ArrowUpDown, MoreHorizontal, CheckCircle, XCircle } from "lucide-react"
 import { CellAction } from "./cell-action"
 
 export const columns: ColumnDef<SafetyTestAttemptWithRelations>[] = [
@@ -75,6 +75,45 @@ export const columns: ColumnDef<SafetyTestAttemptWithRelations>[] = [
           {equipment.serialNumber && (
             <div className="text-sm text-muted-foreground">SN: {equipment.serialNumber}</div>
           )}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "percentage",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Score
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
+    cell: ({ row }) => {
+      const attempt = row.original;
+      if (attempt.percentage === null) {
+        return <Badge variant="secondary">No Score</Badge>;
+      }
+      
+      const isPassed = attempt.percentage >= 70;
+      const scoreColor = isPassed ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
+      
+      return (
+        <div className="flex items-center gap-2">
+          <Badge className={scoreColor}>
+            {attempt.percentage.toFixed(1)}%
+          </Badge>
+          {isPassed ? (
+            <CheckCircle className="h-4 w-4 text-green-600" />
+          ) : (
+            <XCircle className="h-4 w-4 text-red-600" />
+          )}
+          <span className="text-sm text-muted-foreground">
+            {attempt.score}/{attempt.totalQuestions}
+          </span>
         </div>
       );
     },

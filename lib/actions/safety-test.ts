@@ -33,12 +33,32 @@ export async function createSafetyTest(
           ? associatedEquipmentType.join(',')
           : associatedEquipmentType
       },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        manualUrl: true,
+        manualType: true,
+        requiredForRoles: true,
+        associatedEquipmentType: true,
+        frequency: true,
+        createdAt: true,
+        updatedAt: true,
         attempts: {
-          include: {
+          select: {
+            id: true,
+            safetyTestId: true,
+            userId: true,
+            equipmentId: true,
+            score: true,
+            totalQuestions: true,
+            percentage: true,
+            completedAt: true,
+            createdAt: true,
+            updatedAt: true,
             user: { select: { id: true, firstName: true, lastName: true, email: true } },
-            equipment: { select: { id: true, name: true, serialNumber: true } },
-            safetyTest: { select: { id: true, name: true } },
+            equipment: { select: { id: true, name: true, serialNumber: true, description: true, category: true, location: true } },
+            safetyTest: { select: { id: true, name: true, description: true, manualUrl: true, manualType: true, frequency: true } },
           },
         },
       },
@@ -47,7 +67,8 @@ export async function createSafetyTest(
       ...newSafetyTest,
       associatedEquipmentTypes: newSafetyTest.associatedEquipmentType
         ? newSafetyTest.associatedEquipmentType.split(',')
-        : []
+        : [],
+      attempts: (newSafetyTest as any).attempts || []
     };
     revalidatePath("/dashboard/sop");
     return transformedSafetyTest;
@@ -98,10 +119,20 @@ export async function getSafetyTests(
       where,
       include: {
         attempts: {
-          include: {
+          select: {
+            id: true,
+            safetyTestId: true,
+            userId: true,
+            equipmentId: true,
+            score: true,
+            totalQuestions: true,
+            percentage: true,
+            completedAt: true,
+            createdAt: true,
+            updatedAt: true,
             user: { select: { id: true, firstName: true, lastName: true, email: true } },
-            equipment: { select: { id: true, name: true, serialNumber: true } },
-            safetyTest: { select: { id: true, name: true } },
+            equipment: { select: { id: true, name: true, serialNumber: true, description: true, category: true, location: true } },
+            safetyTest: { select: { id: true, name: true, description: true, manualUrl: true, manualType: true, frequency: true } },
           },
         },
         
@@ -115,7 +146,8 @@ export async function getSafetyTests(
     // Map the results to match the SafetyTestWithRelations type
     const safetyTestsWithRelations = safetyTests.map(test => ({
       ...test,
-      associatedEquipmentTypes: test.associatedEquipmentType ? test.associatedEquipmentType.split(',') : []
+      associatedEquipmentTypes: test.associatedEquipmentType ? test.associatedEquipmentType.split(',') : [],
+      attempts: test.attempts || []
     }));
 
     return safetyTestsWithRelations;
@@ -136,10 +168,20 @@ export async function getSafetyTestById(id: string): Promise<SafetyTestWithRelat
       where: { id },
       include: {
         attempts: {
-          include: {
+          select: {
+            id: true,
+            safetyTestId: true,
+            userId: true,
+            equipmentId: true,
+            score: true,
+            totalQuestions: true,
+            percentage: true,
+            completedAt: true,
+            createdAt: true,
+            updatedAt: true,
             user: { select: { id: true, firstName: true, lastName: true, email: true } },
-            equipment: { select: { id: true, name: true, serialNumber: true } },
-            safetyTest: true,
+            equipment: { select: { id: true, name: true, serialNumber: true, description: true, category: true, location: true } },
+            safetyTest: { select: { id: true, name: true, description: true, manualUrl: true, manualType: true, frequency: true } },
           },
         },
       },
@@ -151,6 +193,7 @@ export async function getSafetyTestById(id: string): Promise<SafetyTestWithRelat
     return {
       ...safetyTest,
       associatedEquipmentTypes: safetyTest.associatedEquipmentType ? safetyTest.associatedEquipmentType.split(',') : [],
+      attempts: safetyTest.attempts || []
     };
   } catch (error: any) {
     console.error(`Error fetching safety test with ID ${id}:`, error);
@@ -180,7 +223,17 @@ export async function updateSafetyTest(
       },
       include: {
         attempts: {
-          include: {
+          select: {
+            id: true,
+            safetyTestId: true,
+            userId: true,
+            equipmentId: true,
+            score: true,
+            totalQuestions: true,
+            percentage: true,
+            completedAt: true,
+            createdAt: true,
+            updatedAt: true,
             user: {
               select: {
                 id: true,
@@ -194,9 +247,21 @@ export async function updateSafetyTest(
                 id: true,
                 name: true,
                 serialNumber: true,
+                description: true,
+                category: true,
+                location: true,
               },
             },
-            safetyTest: true, // Add this line to include the safetyTest relation
+            safetyTest: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                manualUrl: true,
+                manualType: true,
+                frequency: true,
+              },
+            },
           },
         },
       },
@@ -241,8 +306,8 @@ export async function deleteSafetyTest(id: string): Promise<{ success: boolean; 
 export async function recordSafetyTestAttempt(
   safetyTestId: string | undefined,
   equipmentId: string | undefined,
-  score: number, // score is handled locally, not persisted
-  totalQuestions: number // totalQuestions is handled locally, not persisted
+  score: number,
+  totalQuestions: number
 ): Promise<{ success: boolean; message: string }> {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -270,12 +335,18 @@ export async function recordSafetyTestAttempt(
     return { success: false, message: "Cannot record safety test attempt: Either safetyTestId or equipmentId must be provided and cannot be empty." };
   }
 
+  // Calculate percentage
+  const percentage = totalQuestions > 0 ? (score / totalQuestions) * 100 : 0;
+
   try {
     await prisma.safetyTestAttempt.create({
       data: {
         safetyTestId: hasValidSafetyTestId ? safetyTestId : null,
         userId,
         equipmentId: hasValidEquipmentId ? equipmentId : null,
+        score,
+        totalQuestions,
+        percentage,
         completedAt: new Date(),
       },
     });
@@ -330,7 +401,68 @@ export async function checkUserSafetyTest(equipmentId: string) {
   return { hasPassed: false, requiresTest: true };
 }
 
-export async function getSafetyTestAttempts(): Promise<SafetyTestAttemptWithRelations[]> {
+export async function getSafetyTestAttemptById(id: string): Promise<SafetyTestAttemptWithRelations | null> {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    throw new Error("Unauthorized");
+  }
+
+  try {
+    const attempt = await prisma.safetyTestAttempt.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        safetyTestId: true,
+        userId: true,
+        equipmentId: true,
+        score: true,
+        totalQuestions: true,
+        percentage: true,
+        completedAt: true,
+        createdAt: true,
+        updatedAt: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+            department: true,
+            position: true,
+          },
+        },
+        equipment: {
+          select: {
+            id: true,
+            name: true,
+            serialNumber: true,
+            description: true,
+            category: true,
+            location: true,
+          },
+        },
+        safetyTest: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            manualUrl: true,
+            manualType: true,
+            frequency: true,
+          },
+        },
+      },
+    });
+
+    return attempt as SafetyTestAttemptWithRelations | null;
+  } catch (error: any) {
+    console.error(`Error fetching safety test attempt with ID ${id}:`, error);
+    throw new Error(`Failed to fetch safety test attempt: ${error.message}`);
+  }
+}
+
+export async function getSafetyTestAttemptsByUserId(userId: string): Promise<SafetyTestAttemptWithRelations[]> {
   const session = await getServerSession(authOptions);
   if (!session) {
     throw new Error("Unauthorized");
@@ -338,6 +470,9 @@ export async function getSafetyTestAttempts(): Promise<SafetyTestAttemptWithRela
 
   try {
     const attempts = await prisma.safetyTestAttempt.findMany({
+      where: {
+        userId: userId
+      },
       include: {
         user: {
           select: {
@@ -352,6 +487,9 @@ export async function getSafetyTestAttempts(): Promise<SafetyTestAttemptWithRela
             id: true,
             name: true,
             serialNumber: true,
+            description: true,
+            category: true,
+            location: true,
           },
         },
         safetyTest: {
@@ -360,6 +498,31 @@ export async function getSafetyTestAttempts(): Promise<SafetyTestAttemptWithRela
             name: true,
           },
         },
+      },
+      orderBy: {
+        completedAt: "desc",
+      },
+    });
+
+    return attempts as SafetyTestAttemptWithRelations[];
+  } catch (error: any) {
+    console.error("Error fetching safety test attempts by user:", error);
+    throw new Error(`Failed to fetch safety test attempts: ${error.message}`);
+  }
+}
+
+export async function getSafetyTestAttempts(): Promise<SafetyTestAttemptWithRelations[]> {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    throw new Error("Unauthorized");
+  }
+
+  try {
+    const attempts = await prisma.safetyTestAttempt.findMany({
+      include: {
+        user: { select: { id: true, firstName: true, lastName: true, email: true } },
+        equipment: { select: { id: true, name: true, serialNumber: true, description: true, category: true, location: true } },
+        safetyTest: { select: { id: true, name: true, description: true, manualUrl: true, manualType: true, frequency: true } },
       },
       orderBy: {
         completedAt: "desc",

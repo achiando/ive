@@ -42,6 +42,9 @@ export interface SafetyTestAttemptWithRelations {
   safetyTestId: string | null;
   userId: string;
   equipmentId: string | null;
+  score: number | null;
+  totalQuestions: number | null;
+  percentage: number | null;
   completedAt: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -50,14 +53,24 @@ export interface SafetyTestAttemptWithRelations {
     firstName: string;
     lastName: string;
     email: string;
+    role?: string;
+    department?: string;
+    position?: string;
   };
   equipment: {
     id: string;
     name: string;
     serialNumber: string | null;
+    description: string | null;
+    category: string | null;
+    location: string | null;
   } | null;
   safetyTest: {
     id: string;
     name: string;
+    description: string | null;
+    manualUrl: string | null;
+    manualType: string | null;
+    frequency: string | null;
   } | null;
 }
